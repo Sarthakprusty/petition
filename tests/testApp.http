@@ -1,0 +1,19 @@
+GET http://localhost/rti/api/org/I/IntOrOut
+Content-Type: application/json
+
+{
+
+}
+
+###
+
+GET http://localhost/rti/applications
+###
+POST http://127.0.0.1:8000/api/login
+Content-Type: application/json
+
+{
+    "username": "Sayantan Saha",
+    "password": "test@1234"
+}
+###
