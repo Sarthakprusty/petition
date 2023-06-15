@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 Route::resource('applications', App\Http\Controllers\ApplicationController::class);
 
+Route::resource('authority', App\Http\Controllers\SignAuthorityController::class);
 
 Route::get('getFile/{filepath}',[App\Http\Controllers\ApplicationController::class,'getFile']);
 

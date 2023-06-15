@@ -28,6 +28,8 @@ class OrganizationController extends Controller
         ]);
         $organization = new Organization;
         $organization->org_desc = $request->org_desc;
+        $organization->org_type = $request->org_type;
+
 
         $organization->created_at = Carbon::now()->toDateTimeLocalString();
         $organization->last_updated_by = Auth::user()->user_id;
@@ -70,5 +72,23 @@ class OrganizationController extends Controller
         $organization->last_updated_from = $request->ip();
         $organization->save();
         return response(array($organization,"msg" => "as per your request your details has been deleted"),202);
+    }
+    public function getOrgByIntOrExt(String $char)
+    {
+        if ($char == 'M')
+            $id = 'M';
+        else if ($char == 'I')
+            $id = 'I';
+        else if ($char == 'S')
+            $id = 'S';
+        else
+            return response(array("code" => 400, "msg" => "value did not arrive"), 400);
+
+        $org = Organization::where('org_type', $id)->get();
+        if ($org)
+            return $org;
+        else
+            return response(array("code" => 400, "msg" => "org not found"), 400);
+
     }
 }

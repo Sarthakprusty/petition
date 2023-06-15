@@ -12,21 +12,35 @@ use App\Rules\Country;
 use App\Rules\Gender;
 use App\Rules\Language;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\View;
+use Dompdf\Dompdf;
+use Dompdf\Options;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Input;
+use App\Mail\SendPdfEmail;
+use Illuminate\Support\Facades\Mail;
 
+use App\Models\Status;
 class ApplicationController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
 
-    public function index()
+    public function index(Request $request)
     {
-    $applications = Application::where('active', 1)->get();
-    return view('application_list',compact('applications'));
+        $query = $request->query();
+        if(isset($query['status']) && $query['status']!=''){
+
+        }
+
+        $applications = Application::where('active', 1)->where('created_by',Auth::user()->id)->paginate(18);
+        return view('application_list', compact('applications'));
     }
 
     /**
@@ -37,8 +51,17 @@ class ApplicationController extends Controller
         $organizations = Organization::all();
         $states=State::all();
         $grievances=Grievance::all();
+
         $app = new Application();
         return view('application', compact('app','organizations','states','grievances'));
+
+//        $userOrganizationId = Auth::user()->org_id;
+//        $userRoleId = Auth::user()->roles()->where('user_id', Auth::user()->id)->pluck('role_id')->first();
+//        $allowNew = false;
+//        if($userOrganizationId == 3 && $userRoleId == 1)
+//            $allowNew = true;
+//        return view('application', compact('app','organizations','states','grievances','allowNew'));
+
     }
 
 
@@ -47,7 +70,8 @@ class ApplicationController extends Controller
      */
     public function store(Request $request)
     {
-      //  if ($request->input('submit') === 'Save') {
+        if($request->language_of_letter!='O'){
+        if ($request->input('submit') === 'Save') {
         $request->validate([
             'reg_no'=>'nullable',
             'applicant_title'=>'required',
@@ -76,7 +100,8 @@ class ApplicationController extends Controller
             'file_path' => 'file|mimes:pdf|max:2048',
 
         ]);
-    //}
+    }}
+
         $app = new Application();
         if(isset($request->id) && $request->id){
             $app = Application::find($request->id);
@@ -102,33 +127,11 @@ class ApplicationController extends Controller
         $app->action_org = $request->action_org;
         $app->min_dept_gov_code = $request->min_dept_gov_code;
         $app->remarks=$request->remarks;
-        $app->reply=$request->reply;
         $app->department_org_id=$request->department_org_id;
 
 
 
-        //reg_no
-        if(($request->reg_no) && $request->reg_no!='') {
-            $app->reg_no = $request->reg_no;
-        }
-        else{
-            $currentYear = Carbon::now()->format('y');
-            $currentMonth = Carbon::now()->format('m');
-            $currentDay = Carbon::now()->format('d');
-            if ($currentMonth >= 1 && $currentMonth <= 3) {
-                $financialYear = ($currentYear - 1) . '-' . $currentYear;
-            } else {
-                $financialYear = $currentYear . '-' . (Carbon::now()->addYear()->format('y'));
-            }
-            $matchingRowCount = Application::whereRaw("SUBSTRING(reg_no,-5) = ?", [$financialYear])->count();
-            $matchingRowCount++;
-            $rtiNumber = sprintf('%04d', $matchingRowCount);
-            $month = sprintf('%02d', $currentMonth);
-            $day=sprintf('%02d', $currentDay);
-            $givenString = Auth::user()->username;
-            $modifiedString = substr($givenString, 0, 2) . '/' . substr($givenString, 2);
-            $app->reg_no = $modifiedString.'/'.$day . $month . $currentYear.$rtiNumber;
-        }
+
 
 
 
@@ -166,32 +169,148 @@ class ApplicationController extends Controller
 //            }
 //        }
 
-        $app->created_at = Carbon::now()->toDateTimeLocalString();
-        $app->created_by = Auth::user()->id;
-        $app->created_from = $request->ip();
 
-        if ($request->input('submit') === 'Save') {
-            if ($app->save()) {
+
+
+
+
+
+
+        if ($request->input('submit') == 'Save') {
+
+                //reg_no
+                if (($request->reg_no) && $request->reg_no != '') {
+                    $app->reg_no = $request->reg_no;
+
+                    //if reg no exist it means it is getting updated that's why update details are here.
+                    $app->updated_at = Carbon::now()->toDateTimeLocalString();
+                    $app->last_updated_by = Auth::user()->id;
+                    $app->last_updated_from = $request->ip();
+                    $app->save();
+
+                } else {
+                    $currentYear = Carbon::now()->format('y');
+                    $currentMonth = Carbon::now()->format('m');
+                    $currentDay = Carbon::now()->format('d');
+                    if ($currentMonth >= 1 && $currentMonth <= 3) {
+                        $financialYear = ($currentYear - 1) . '-' . $currentYear;
+                    } else {
+                        $financialYear = $currentYear . '-' . (Carbon::now()->addYear()->format('y'));
+                    }
+                    $matchingRowCount = Application::whereRaw("SUBSTRING(reg_no,-5) = ?", [$financialYear])->count();
+                    $matchingRowCount++;
+                    $rtiNumber = sprintf('%04d', $matchingRowCount);
+                    $month = sprintf('%02d', $currentMonth);
+                    $day = sprintf('%02d', $currentDay);
+                    $givenString = Auth::user()->username;
+                    $modifiedString = substr($givenString, 0, 2) . '/' . substr($givenString, 2);
+                    $app->reg_no = $modifiedString . '/' . $day . $month . $currentYear . $rtiNumber;
+
+                    //if reg no does not exist it means it is a new record that's why create details are here.
+                    $app->created_at = Carbon::now()->toDateTimeLocalString();
+                    $app->created_by = Auth::user()->id;
+                    $app->created_from = $request->ip();
+                    $app->save();
+                }
+
+                //file save
                 if ($request->hasFile('file_path')) {
-                    $filename = time() .'.'. $request->file('file_path')->getClientOriginalExtension();
-                    $path = $request->file('file_path')->storeAs ( 'office_file', $filename, 'upload');
-                    $app->file_path=base64_encode($path);
-                    $app->update(['file_path'=>base64_encode($path)]);
+                    $filename = time() . '.' . $request->file('file_path')->getClientOriginalExtension();
+                    $path = $request->file('file_path')->storeAs('office_file', $filename, 'upload');
+                    $app->file_path = base64_encode($path);
+                    $app->update(['file_path' => base64_encode($path)]);
+                }
+
+                $applicationId = $app->id;
+                $status = $app->statuses()->wherePivot('active', 1)->get();
+                $app->statuses()->updateExistingPivot(
+                    $status,
+                    [
+                        'active' => 0,
+                        'created_from' => $request->ip(),
+                        'created_by' => Auth::user()->id
+                    ]
+                );
+                $statusId = 2;
+                $status = Status::find($statusId);
+                if ($status) {
+                    $app->statuses()->attach($status, [
+                        'created_from' => $request->ip(),
+                        'created_by' => Auth::user()->id
+                    ]);
                 }
                 return redirect()->route('applications.index')->with('success', 'Product created successfully.');
-            } else {
-                return back()->withErrors([
-                    'username' => 'Sorry, could not save the data.',
-                ]);
+    }
+
+        elseif ($request->input('submit') === 'Draft') {
+            if ($request->id)
+                $app->created_at = Carbon::now()->toDateTimeLocalString();
+            $app->created_by = Auth::user()->id;
+            $app->created_from = $request->ip();
+            if ($app->save()) {
+                if ($request->hasFile('file_path')) {
+                    $filename = time() . '.' . $request->file('file_path')->getClientOriginalExtension();
+                    $path = $request->file('file_path')->storeAs('office_file', $filename, 'upload');
+                    $app->file_path = base64_encode($path);
+                    $app->update(['file_path' => base64_encode($path)]);
+                }
+                $applicationId = $app->id;
+                $status = $app->statuses()->wherePivot('active', 1)->get();
+                $app->statuses()->updateExistingPivot(
+                    $status,
+                    [
+                        'active' => 0,
+                        'created_from' => $request->ip(),
+                        'created_by' => Auth::user()->id
+                    ]
+                );
+                $statusId = 5;
+                $status = Status::find($statusId);
+                if ($status) {
+                    $app->statuses()->attach($status, [
+                        'created_from' => $request->ip(),
+                        'created_by' => Auth::user()->id
+                    ]);
+                }
+                return redirect()->route('applications.index')->with('success', 'Draft created successfully.');
             }
-        } elseif ($request->input('submit') === 'Draft') {
-            return redirect()->route('applications.index')->with('success', 'Draft created successfully.');
-        } else {
+        }
+
+        elseif ($request->input('submit') === 'Send') {
+            $app = Application::findOrFail($request->id);
+            $app->reply = $request->input('reply');
+            $app->updated_at = Carbon::now()->toDateTimeLocalString();
+            $app->last_updated_by = Auth::user()->id;
+            $app->last_updated_from = $request->ip();
+//            $app->active = 0;
+            $app->save();
+
+//            if ($app->acknowledgement == 'Y' && $app->email_id !== null) {
+//                $content = Storage::disk('upload')->get(base64_decode($app->file_path));
+//                $email = $app->email_id;
+//                $subject = 'Your Subject Here';
+//                $details = $app->reply ;
+//
+//                Mail::raw($details, function ($message) use ($email, $subject, $content) {
+//                    $message->to($email)
+//                        ->subject($subject)
+//                        ->attachData($content, 'filename.pdf', [
+//                            'mime' => 'application/pdf',
+//                        ]);
+//                });
+//            }
+            return redirect()->route('applications.index')->with('success', 'sent successfully.');
+
+        }
+
+        else {
             return back()->withErrors([
-                'username' => 'Invalid action.',
+                'username' => 'Sorry, could not save the data.',
             ]);
         }
+
     }
+
 
 
 
@@ -203,8 +322,7 @@ class ApplicationController extends Controller
         $app = Application::find($id);
         if(!$app)
             abort(404);
-        return view('application_view',compact(['app']));
-
+        return view('application_view', compact('app'));
     }
 
     /**
@@ -217,15 +335,131 @@ class ApplicationController extends Controller
         $states=State::all();
         $grievances=Grievance::all();
         return view('application', compact('app','organizations','states','grievances'));
+//        $userOrganizationId = Auth::user()->org_id;
+//        $userRoleId = Auth::user()->roles()->where('user_id', Auth::user()->id)->pluck('role_id')->first();
+//        $allowNew = false;
+//        if($userOrganizationId == 3 && $userRoleId == 1)
+//            $allowNew = true;
+//        return view('application', compact('app','organizations','states','grievances','allowNew'));
+
     }
 
-    public function getFile( String $path)
+    public function getFile(String $path)
     {
+       // return response()->file(base64_decode($path));
         $content = Storage::disk('upload')->get(base64_decode($path));
         if($content!='')
-            return response($content, 200, ['Content-Type' => 'image/jpeg']);
+            return response()->make($content, 200, ['Content-Type' => 'applications/pdf','content-disposition'=>'inline']);
         else
-            return response(array("code" => 404, "msg" => "Employee not found"), 404);
+            return response(array("code" => 404, "msg" => "details not found"), 404);
 
     }
+    public function search(Request $request)
+    {
+        $query = Application::where('active', 1);
+        if ($request->applicant_name && $request->applicant_name != '') {
+            $query->where('applicant_name', 'like', '%' . $request->applicant_name . '%');
+        }
+
+        if ($request->rec_no && $request->rec_no != '') {
+            $query->where('reg_no', 'like', '%' . $request->rec_no . '%');
+        }
+
+        if ($request->app_date_from && $request->app_date_from != '' && $request->app_date_to == '') {
+            $query->whereDate('letter_date', '=', $request->app_date_from);
+        } elseif ($request->app_date_from && $request->app_date_to != '') {
+            $query->whereBetween('letter_date', [$request->app_date_from, $request->app_date_to]);
+        }
+
+        $applications = $query->paginate(18)->appends($request->all());
+
+        return view('application_list', compact('applications'));
+    }
+
+
+    public function updateStatus(Request $request,string $application_id)
+    {
+        $action = $request->input('submit');
+        $application = Application::findOrFail($application_id);
+        $status = $application->statuses()->wherePivot('active', 1)->get();
+            $application->statuses()->updateExistingPivot(
+                $status,
+                [
+                    'active' => 0,
+                    'created_from' => $request->ip(),
+                    'created_by' => Auth::user()->id
+                ]
+            );
+
+        $remarks = $request->input('remarks');
+        $user = auth()->user();
+        $role_ids = $user->roles()->pluck('role_id')->toArray();
+        if (in_array(2, $role_ids)) {
+            if ($action == 'Approve') {
+                $status_id = 3;
+            } elseif ($action == 'Return') {
+                $status_id = 1;
+            }
+        }
+        if (in_array(3, $role_ids)) {
+            if ($action == 'Approve') {
+                $status_id = 4;
+            } elseif ($action == 'Return') {
+                $status_id = 2;
+            }
+        } else
+            return redirect()->back()->with('error', 'role not found');
+
+        $status = Status::findOrFail($status_id);
+        $application->statuses()->attach(
+            $status,
+            [
+                'remarks' => $remarks,
+                'created_from' => $request->ip(),
+                'created_by' => Auth::user()->id
+            ]
+        );
+
+        return redirect()->route('applications.index')->with('success', 'Status created successfully.');
+    }
+
+
+    public function generateAcknowledgementLetter($id)
+    {
+        $application = Application::findOrFail($id);
+        return view('forwardletter',compact('application'));
+    }
+
+
 }
+
+/**
+ * generate and download dompdf
+ */
+//public function generateAcknowledgementLetter($id)
+//{
+//    $application = Application::findOrFail($id);
+//    $data = [
+//        'application' => $application,
+//    ];
+//
+//    // Configure dompdf options
+//    $options = new Options();
+//    $options->set('defaultFont', 'Arial');
+//    $dompdf = new Dompdf($options);
+//
+//    // Render the view to HTML
+//    $html = View::make('forwardletter', $data)->render();
+//
+//    // Load the HTML into dompdf
+//    $dompdf->loadHtml($html);
+//
+//    // (Optional) Set paper size and orientation
+//    $dompdf->setPaper('A4', 'portrait');
+//
+//    // Render the PDF
+//    $dompdf->render();
+//
+//    // Output the generated PDF
+//    return $dompdf->stream('acknowledgement_letter.pdf');
+//}

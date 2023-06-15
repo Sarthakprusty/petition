@@ -1,149 +1,444 @@
-@extends('layout')
+@extends('layoutTwo')
 
-@section('content')
-    <div class="details">
-        <div class="row" id="person details">
-            <label class="form-label" style="margin-left: 2%;">Applicant info:</label>
-            <div class="col">
-                <div class="card shadow">
-                    <div class="list-group">
-                        <div class="list-group-item">
-                            <span class="float-start" style="font-weight: bold">Registration number</span>
-                            <span class="float-end">{{$app->reg_no}}</span>
-                        </div>
-                        <div class="list-group-item">
-                            <span class="float-start" style="font-weight: bold">Applicant Name</span>
-                            <span class="float-end">{{$app->applicant_title}} {{$app->applicant_name}}</span>
-                        </div>
-                        <div class="list-group-item">
-                            <span class="float-start" style="font-weight: bold">Address</span>
-                            <span class="float-end" style="text-align: right">{{$app->address}}<br/>
-                                @if ($app->country === 'I')
-                                    INDIA
-                                @elseif ($app->country === 'O')
-                                    Others
+@section('contentView')
+    <nav aria-label="breadcrumb" style="background: #edeeee">
+        <ol class="breadcrumb">
+            <img src="https://cdn-icons-png.flaticon.com/512/2815/2815154.png" alt="Home" style="height: 40px; width: 40px;">
+            <li class="breadcrumb-item" style="font-size: 24px;"><a href={{route('applications.index')}} >Applications</a></li>
+            <li class="breadcrumb-item active" aria-current="page"style="font-size: 24px;">{{$app->reg_no}}</li>
+        </ol>
+    </nav>
+    <style>
+        body{margin-top:20px;
+            background:#eee;
+        }
+
+
+        .project-people img {
+            width: 32px;
+            height: 32px;
+        }
+        .project-title a {
+            font-size: 14px;
+            color: #676a6c;
+            font-weight: 600;
+        }
+        .project-list table tr td {
+            border-top: none;
+            border-bottom: 1px solid #e7eaec;
+            padding: 15px 10px;
+            vertical-align: middle;
+        }
+        .project-manager .tag-list li a {
+            font-size: 10px;
+            background-color: white;
+            padding: 5px 12px;
+            color: inherit;
+            border-radius: 2px;
+            border: 1px solid #e7eaec;
+            margin-right: 5px;
+            margin-top: 5px;
+            display: block;
+        }
+        .project-files li a {
+            font-size: 11px;
+            color: #676a6c;
+            margin-left: 10px;
+            line-height: 22px;
+        }
+
+        .profile-image img {
+            width: 96px;
+            height: 96px;
+        }
+
+        .feed-activity-list .feed-element {
+            border-bottom: 1px solid #e7eaec;
+        }
+        .feed-element:first-child {
+            margin-top: 0;
+        }
+        .feed-element {
+            padding-bottom: 15px;
+        }
+        .feed-element,
+        .feed-element .media {
+            margin-top: 15px;
+        }
+        .feed-element,
+        .media-body {
+            overflow: hidden;
+        }
+        .feed-element > .pull-left {
+            margin-right: 10px;
+        }
+        .feed-element img.img-circle,
+        .dropdown-messages-box img.img-circle {
+            width: 38px;
+            height: 38px;
+        }
+        .feed-element .well {
+            border: 1px solid #e7eaec;
+            box-shadow: none;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            padding: 10px 20px;
+            font-size: 11px;
+            line-height: 16px;
+        }
+        .feed-element .actions {
+            margin-top: 10px;
+        }
+        .feed-element .photos {
+            margin: 10px 0;
+        }
+        .feed-photo {
+            max-height: 180px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .file-list li {
+            padding: 5px 10px;
+            font-size: 11px;
+            border-radius: 2px;
+            border: 1px solid #e7eaec;
+            margin-bottom: 5px;
+        }
+        .file-list li a {
+            color: inherit;
+        }
+        .file-list li a:hover {
+            color: #1ab394;
+        }
+        .user-friends img {
+            width: 42px;
+            height: 42px;
+            margin-bottom: 5px;
+            margin-right: 5px;
+        }
+
+        .ibox {
+            clear: both;
+            margin-bottom: 25px;
+            margin-top: 0;
+            padding: 0;
+        }
+        .ibox.collapsed .ibox-content {
+            display: none;
+        }
+        .ibox.collapsed .fa.fa-chevron-up:before {
+            content: "\f078";
+        }
+        .ibox.collapsed .fa.fa-chevron-down:before {
+            content: "\f077";
+        }
+        .ibox:after,
+        .ibox:before {
+            display: table;
+        }
+        .ibox-title {
+            -moz-border-bottom-colors: none;
+            -moz-border-left-colors: none;
+            -moz-border-right-colors: none;
+            -moz-border-top-colors: none;
+            background-color: #ffffff;
+            border-color: #e7eaec;
+            border-image: none;
+            border-style: solid solid none;
+            border-width: 3px 0 0;
+            color: inherit;
+            margin-bottom: 0;
+            padding: 14px 15px 7px;
+            min-height: 48px;
+        }
+        .ibox-content {
+            background-color: #ffffff;
+            color: inherit;
+            padding: 15px 20px 20px 20px;
+            border-color: #e7eaec;
+            border-image: none;
+            border-style: solid solid none;
+            border-width: 1px 0;
+        }
+        .ibox-footer {
+            color: inherit;
+            border-top: 1px solid #e7eaec;
+            font-size: 90%;
+            background: #ffffff;
+            padding: 10px 15px;
+        }
+        ul.notes li,
+        ul.tag-list li {
+            list-style: none;
+        }
+        .button {
+            background-color: #90D70DFF; /* Green */
+            border: none;
+            color: black;
+            padding: 12% 21%;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 100%;
+        }
+        .buttonRed {
+            background-color: #C20606FF; /* Green */
+            border: none;
+            color: white;
+            padding: 12% 25%;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 100%;
+        }
+    </style>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9">
+                <div class="ibox-content">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="m-b-md">
+                                <div>
+                                    <h1 style="font-size: 250%; color: #005fff;">Applicant info</h1>
+                                </div>
+                            </div>
+                            <div class="spacing" style="margin-top: 2%;"></div>
+                            <dl class="dl-horizontal">
+                                <dt>Registration number</dt> <dd>
+                                    @if($app->reg_no)
+                                        <span class="label label-primary">{{$app->reg_no}}</span></dd>
                                 @else
-                                    USA
-                                @endif ,
-                                {{$app->state->state_name}},{{$app->pincode}}
-                            </span>
-                        </div>
-                        <div class="list-group-item">
-                            <span class="float-start" style="font-weight: bold">Designation/organization</span>
-                            <span class="float-end" style="text-align: right">{{$app->org_from}}</span>
-                        </div>
-                        <div class="list-group-item">
-                            <span class="float-start" style="font-weight: bold">Applicant Contact info</span>
-                            <span class="float-end" style="text-align: right">{{$app->phone_no}}, +91{{$app->mobile_no}}<br>{{$app->email_id}}</span>
-                        </div>
-                        <div class="list-group-item">
-                            <span class="float-start" style="font-weight: bold">Applicant Gender</span>
-                            <span class="float-end" style="text-align: right">
-                                @if ($app->gender === 'M')
-                                    Male
-                                @elseif ($app->gender === 'F')
-                                    Female
-                                @else
-                                    Others
+                                    <br>
                                 @endif
-                            </span>
+                            </dl>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="spacing" style="margin-top: 3%;"></div>
-        <div class="row" id="application details">
-            <label class="form-label" style="margin-left: 2%;">Application Details:</label>
-            <div class="col">
-                <div class="card shadow">
-                    <div class="list-group">
-                        <div class="list-group-item">
-                            <span class="float-start" style="font-weight: bold">Application Date</span>
-                            <span class="float-end" style="text-align: right">{{$app->letter_date->format("d/m/Y")}}</span>
+                    <div class="row">
+                        <div class="col-lg-5">
+                            <dl class="dl-horizontal">
+                                <dt>Applicant Name</dt>
+                                <dd>@if(($app->applicant_title)||($app->applicant_name))
+                                        @if ($app->applicant_title)
+                                            {{$app->applicant_title}}
+                                        @endif
+                                        {{$app->applicant_name}}
+                                    @else
+                                        <br>
+                                    @endif
+                                </dd>
+                                <div class="spacing" style="margin-top: 3px;"></div>
+
+                                <dt>Address:</dt> <dd> {{$app->address}}<br/>
+                                    @if(($app->country)||($app->state)||($app->pincode))
+                                        @if ($app->country === 'I')
+                                            INDIA
+                                        @elseif ($app->country === 'O')
+                                            Others
+                                        @elseif ($app->country === 'U')
+                                            USA
+                                        @endif
+                                        @if ($app->state)
+                                            {{ ($app->country === 'I' || $app->country === 'O') ? ', ' : '' }}{{$app->state->state_name}}
+                                        @endif
+                                        {{$app->state && $app->pincode ? ', ' : ''}}{{$app->pincode}}
+                                    @else
+                                        <br>
+                                    @endif
+                                </dd>
+                                <div class="spacing" style="margin-top: 3px;"></div>
+
+                                <dt>Applicant Contact info</dt> <dd>{{$app->phone_no}}
+                                    @if ($app->mobile_no)
+                                        , +91{{$app->mobile_no}}
+                                    @endif
+                                    <br>{{$app->email_id}}
+                                </dd>
+                            </dl>
                         </div>
-                        <div class="list-group-item">
-                            <span class="float-start" style="font-weight: bold">Application Lang.</span>
-                            <span class="float-end" style="text-align: right">
-                                @if ($app->language_of_letter === 'E')
-                                    English
-                                @elseif ($app->language_of_letter === 'O')
-                                    Others
-                                @else
-                                    Hindi
-                                @endif
-                            </span>
+                        <div class="col-lg-7" id="cluster_info">
+                            <dl class="dl-horizontal">
+                                <dt>Gender</dt> <dd>@if ($app->gender === 'M')
+                                        Male
+                                    @elseif ($app->gender === 'F')
+                                        Female
+                                    @elseif ($app->gender === 'O')
+                                        Others
+                                    @else
+                                        <br>
+                                    @endif</dd>
+                                <div class="spacing" style="margin-top: 3px;"></div>
+                                <dt>Designation/organization:</dt> <dd>
+                                    @if($app->org_from)
+                                        {{$app->org_from}}
+                                    @else
+                                        <br>
+                                    @endif
+                                </dd>
+                                <br>
+                                <div class="spacing" style="margin-top: 3px;"></div>
+                                <dt>Application Lang.</dt> <dd>  @if ($app->language_of_letter === 'E')
+                                        English
+                                    @elseif ($app->language_of_letter === 'O')
+                                        Others
+                                    @elseif ($app->language_of_letter === 'H')
+                                        Hindi
+                                    @else
+                                        <br>
+                                    @endif
+                                </dd>
+                            </dl>
                         </div>
-                        <div class="list-group-item">
-                            <span class="float-start" style="font-weight: bold">eOffice Diary No</span>
-                            <span class="float-end" style="text-align: right">{{$app->letter_no}}</span>
+                    </div>
+                    <div class="spacing" style="margin-top: 2%;"></div>
+                    <hr class="row-divider">
+                    <div class="spacing" style="margin-top: 2%;"></div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h1 style="font-size: 250%;margin-left: 1%; color: #005fff;">Application Details</h1>
                         </div>
-                        <div class="list-group-item">
-                            <span class="float-start" style="font-weight: bold">Letter Subject</span>
-                            <span class="float-end" style="text-align: right">{{$app->letter_subject}}</span>
+                        <div class="col-md-4" style="display: flex; flex-direction: row; justify-content: flex-end; align-items: center;">
+                            <dd style="font-size: 190%;">{{ $app->letter_date ? $app->letter_date->format("d/m/Y") : 'N/A' }}</dd>
                         </div>
-                        <div class="list-group-item">
-                            <span class="float-start" style="font-weight: bold">Letter Body</span>
-                            <span class="float-end" style="text-align: right">{{$app->letter_body}}</span>
-                        </div>
-                        <div class="list-group-item">
-                            <span class="float-start" style="font-weight: bold">Acknowledgement</span>
-                            <span class="float-end" style="text-align: right">
-                                @if ($app->acknowledgement === 'Y')
-                                    YES
-                                @else
-                                    NO
-                                @endif
-                            </span>
-                        </div>
-                        <div class="list-group-item">
-                            <span class="float-start" style="font-weight: bold">Grievances Subject</span>
-                            <span class="float-end" style="text-align: right">{{$app->grievance_category->grievances_desc}}</span>
-                        </div>
-                        <div class="list-group-item">
-                            <span class="float-start" style="font-weight: bold">Action</span>
-                            <span class="float-end" style="text-align: right">
-                            @if ($app->fee_received_place === 'N')
-                                   No Action
-                                @elseif ($app->fee_received_place === 'F')
-                                    Forward to Central Govt. Ministry/Department
-                                @else
-                                    Miscellaneous
-                                @endif
-                        </span>
-                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="spacing" style="margin-top: 1%;"></div>
+                        <div class="list-group">
+                            <div class="list-group-item">
+                                <span class="float-start" style="font-weight: bold">eOffice Diary No</span>
+                                <span class="float-end" style="text-align: right">{{$app->letter_no}}</span>
+                            </div>
+                            <div class="list-group-item">
+                                <span class="float-start" style="font-weight: bold">Letter Subject</span>
+                                <span class="float-end" style="text-align: right">{{$app->letter_subject}}</span>
+                            </div>
+                            <div class="list-group-item">
+                                <span class="float-start" style="font-weight: bold">Letter Body</span>
+                                <span class="float-end" style="text-align: right">{{$app->letter_body}}</span>
+                            </div>
+                            <div class="list-group-item">
+                                <span class="float-start" style="font-weight: bold">Acknowledgement</span>
+                                <span class="float-end" style="text-align: right">
+                                    @if ($app->acknowledgement === 'Y')
+                                        YES
+                                    @else
+                                        NO
+                                    @endif
+                                </span>
+                            </div>
+                            <div class="list-group-item">
+                                <span class="float-start" style="font-weight: bold">Grievances Subject</span>
+                                <span class="float-end" style="text-align: right">
+                                    {{$app->grievance_category ? $app->grievance_category->grievances_desc : ''}}
+                                </span>
+                            </div>
+                            <div class="list-group-item">
+                                <span class="float-start" style="font-weight: bold">Action</span>
+                                <span class="float-end" style="text-align: right">
+                                                    @if ($app->fee_received_place === 'N')
+                                        No Action
+                                    @elseif ($app->fee_received_place === 'F')
+                                        Forward to Central Govt. Ministry/Department
+                                    @elseif ($app->fee_received_place === 'M')
+                                        Miscellaneous
+                                    @else
+                                    @endif
+                                </span>
+                            </div>
                             <div class="list-group-item">
                                 <span class="float-start" style="font-weight: bold">Min/Dept/Gov Code</span>
                                 <span class="float-end" style="text-align: right">{{$app->min_dept_gov_code}}</span>
                             </div>
                             <div class="list-group-item">
                                 <span class="float-start" style="font-weight: bold">Ministry/Department</span>
-                                <span class="float-end" style="text-align: right">{{$app->department_org->org_desc}}</span>
+                                <span class="float-end" style="text-align: right">
+                                                {{$app->department_org ? $app->department_org->org_desc : ''}}</span>
                             </div>
                             <div class="list-group-item">
                                 <span class="float-start" style="font-weight: bold">Remark</span>
                                 <span class="float-end" style="text-align: right">{{$app->remarks}}</span>
                             </div>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="spacing" style="margin-top: 3%;"></div>
-                <form method="post" action="{{ route('reply', [$app->id]) }}">
-                    <div class="row">
-                        <button type="submit" class="btn btn-primary">Reply</button>
-                    </div>
-                </form>
+            @if (isset($_GET['submit']) && $_GET['submit'] === 'Details')
+                <div class="col-md-3">
+                    <form method="post" action="{{ route('applications.updateStatus', ['application_id' => $app->id]) }}">
+                        @csrf
+                        <div class="wrapper wrapper-content project-manager">
+                            <div class="spacing" style="margin-top: 3%;"></div>
+                            <strong><label style="font-size: 130%" for="remarks">Remarks:</label></strong>
+                            <div class="row" style="margin-left: 0%; margin-right: 1.5%;">
+                            @if($app->statuses->first()->pivot->remarks)
+                                {{$app->statuses->first()->pivot->remarks}}
+                            @endif
+                            </div>
+                            <div class="spacing" style="margin-top: 2%;"></div>
+                            <div class="row" style="margin-left: 0%; margin-right: 1.5%;">
+                                @if($app->statuses->first()->pivot->remarks)
+                                <textarea class="form-control" id="remarks" name="remarks" style="height: 200px;" placeholder="abc....">{{ old('remarks')?: $app->statuses->first()->pivot->remarks }}</textarea>
+                                @else
+                                    <textarea class="form-control" id="remarks" name="remarks" style="height: 200px;" placeholder="abc....">{{ old('remarks') }}</textarea>
+
+                                @endif
+                            </div>
+                            <div class="row">
+                                <div class="col-6" style="text-align: right">
+                                    <input type="submit" class="button" name="submit" value="Approve">
+                                </div>
+                                <div class="col-6" style="text-align: left">
+                                    <input type="submit" class="buttonRed" name="submit" value="Return">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+            @elseif (isset($_GET['submit']) && $_GET['submit'] === 'final reply')
+                <div class="col-md-3">
+                    <form method="POST" action="{{route('applications.store')}}" >
+                        @csrf
+                        @if(isset($app->id))
+                            <input type="hidden" value="{{$app->id}}" name="id" >
+                        @endif
+                        <div class="wrapper wrapper-content project-manager">
+                            <div class="spacing" style="margin-top: 3%;"></div>
+                            <strong><label style="font-size: 130%" for="reply">Final Reply:</label></strong>
+                            <div class="spacing" style="margin-top: 2%;"></div>
+                            <div class="row" style="margin-left: 0%; margin-right: 1.5%;">
+                                <textarea class="form-control" id="reply" name="reply" style="height: 200px;" placeholder="abc....">{{ old('reply') }}</textarea>
+                            </div>
+                            <div class="row">
+                                <div style="text-align: center">
+                                    <input style="padding: 5% 10%" type="submit" class="button" name="submit" value="Send">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            @endif
+
+
+
+{{--                    <script>--}}
+{{--                        $(document).ready(function() {--}}
+{{--                            $('.list-group-item').each(function() {--}}
+{{--                                var fieldValue = $(this).find('.float-end').text().trim(); // Get the value of the field inside each list-group-item--}}
+
+{{--                                if (fieldValue === '') {--}}
+{{--                                    $(this).hide(); // Hide the list-group-item if the field value is empty--}}
+{{--                                }--}}
+{{--                            });--}}
+{{--                        });--}}
+{{--                    </script>--}}
         </div>
-    <script>
-        $(document).ready(function() {
-            $('.list-group-item').each(function() {
-                var fieldValue = $(this).find('.float-end').text().trim(); // Get the value of the field inside each list-group-item
-
-                if (fieldValue === '') {
-                    $(this).hide(); // Hide the list-group-item if the field value is empty
-                }
-            });
-        });
-    </script>
     </div>
+
+
 @endsection
+

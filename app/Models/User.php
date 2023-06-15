@@ -55,6 +55,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Officer::class);
     }
+    public function applications(): BelongsTo
+    {
+        return $this->belongsTo(Application::class, 'created_by', 'id');
+    }
 }
 
 

@@ -28,86 +28,16 @@
 <body>
 @include('common.pre-header')
 @include('common.header')
+
 <div class="main-body">
     <div class="container-fluid">
+
         <div class="row">
-            <div class="col-md-4 col-lg-3">
-                <div class="accordion" id="side-menue">
-                    <div class="card accordion-item" style="margin-bottom: 20px;">
-                        <h2 class="accordion-header" id="headingOne">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseForm" aria-expanded="true" aria-controls="collapseForm">
-                                Request/Grievance
-                            </button>
-                        </h2>
-                        <div id="collapseForm" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#side-menue">
-                            <div class="accordion-body">
-                                <div class="list-group list-group-flush">
-                                    <div class="list-group-item">
-                                        <a href="{{route('applications.index')}}">Applications</a>
-                                    </div>
-                                    <div class="list-group-item">
-                                        <a href="{{route('applications.create')}}">Entry Form</a>
-                                    </div>
-                                    <div class="list-group-item">
-                                        <a href="{{route('applications.create')}}">Final Reply</a>
-                                    </div>
-                                    <div class="list-group-item">
-                                        <a href="{{route('applications.index')}}">Returned Applications</a>
-                                    </div>
-                                    <div class="list-group-item">
-                                        <a href="{{route('authority.create')}}">Authority</a>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card accordion-item" style="margin-bottom: 20px;">
-                        <h2 class="accordion-header" id="headingTwo">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUpdate" aria-expanded="false" aria-controls="collapseUpdate">
-                                Report
-                            </button>
-                        </h2>
-                        <div id="collapseUpdate" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#side-menue">
-                            <div class="accordion-body">
-                                <div class="list-group list-group-flush">
-                                    <div class="list-group-item">
-                                        <a href="{{ route('applications.edit', ['id' ,1]) }}">Ministry/State Forwarded Cases</a>
-                                    </div>
-                                    <div class="list-group-item">
-                                        <a href="{{route('applications.create')}}">Forwarded Cases(HTML)</a>
-                                    </div>
-                                    <div class="list-group-item">
-                                        <a href="{{route('applications.create')}}">Final Reply Cases</a>
-                                    </div>
-                                    <div class="list-group-item">
-                                        <a href="{{route('applications.create')}}">Reg. no Wise Forwarding Letter</a>
-                                    </div>
-                                    <div class="list-group-item">
-                                        <a href="{{route('applications.create')}}">Date Wise Acknowledgement Letter</a>
-                                    </div>
-                                    <div class="list-group-item">
-                                        <a href="{{route('applications.create')}}">Dispatch (Complete)</a>
-                                    </div>
-                                    <div class="list-group-item">
-                                        <a href="{{route('applications.create')}}">Dispatch (Only Ack.)</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-8 col-lg-9">
-                @yield('content')
-            </div>
+    @yield('contentView')
         </div>
-
     </div>
 </div>
-@yield('modal')
 <script>
-
     tinymce.init({
         selector: 'textarea.editor',
         plugins: 'preview importcss searchreplace autolink directionality visualblocks visualchars link table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount quickbars',
@@ -125,9 +55,5 @@
 @include('common.footer')
 </body>
 </html>
-
-
-
-
 
 

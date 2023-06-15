@@ -45,7 +45,7 @@ class Application extends Model
     public function statuses(): BelongsToMany
     {
         return $this->belongsToMany(Status::class)
-            //->wherePivot('active','=','1')
+            ->wherePivot('active','=','1')
             ->withPivot(['remarks','created_at','created_by'])
             ->withTimestamps();
     }
