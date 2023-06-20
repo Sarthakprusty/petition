@@ -61,12 +61,7 @@ return [
             'throw' => false,
             'visibility' => 'public',
         ],
-        'sign' => [
-            'driver' => 'local',
-            'root' => env('SIGN_ROOT_PATH'),
-            'throw' => false,
-            'visibility' => 'public',
-        ],
+
 
     ],
 

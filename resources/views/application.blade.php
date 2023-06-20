@@ -1,6 +1,9 @@
 @extends('layout')
 
 @section('content')
+{{--    @php--}}
+{{--        print_r( session()->all());--}}
+{{--    @endphp--}}
     @if ($errors->any())
         <div class="alert alert-danger" xmlns="http://www.w3.org/1999/html">
             <strong>Whoops!</strong> There were some problems with your input.<br><br>
@@ -12,13 +15,47 @@
         </div>
     @endif
 
-        @if($app->statuses->first() && $app->statuses->first()->pivot->remarks)
-        <div class="card shadow" xmlns="http://www.w3.org/1999/html">
-            <div class="card-body" style="background: yellow">
-            note: {{$app->statuses->first()->pivot->remarks}}
+    @php
+        $statuses = $app->statuses()
+            ->whereIn('application_status.active', [0, 1])
+            ->whereNotNull('remarks')
+            ->get();
+    @endphp
+
+    @if ($statuses->isNotEmpty())
+        <div class="card text-white bg-info mb-3">
+            <div class="card-header">Note:</div>
+            <div class="card-body">
+                @foreach ($statuses as $status)
+                    @php
+                        $user = \App\Models\User::findorfail($status->pivot->created_by);
+                    @endphp
+                    <p class="card-text">
+                        {{ $user ? $user->username : 'N/A' }} - {{ $status->pivot->remarks }}
+                    </p>
+                @endforeach
             </div>
         </div>
-        @endif
+    @endif
+
+
+
+
+
+
+
+    {{--    @if($appStatusRemark->isNotEmpty())--}}
+    {{--        <div class="card text-white bg-info mb-3">--}}
+    {{--            <div class="card-header">Note:</div>--}}
+    {{--            <div class="card-body">--}}
+    {{--                @foreach($appStatusRemark as $remark)--}}
+    {{--                    <p class="card-text">Created by: {{ $remark->created_by }}</p>--}}
+    {{--                    <p class="card-text">{{ $remark }}</p>--}}
+    {{--                @endforeach--}}
+    {{--            </div>--}}
+    {{--        </div>--}}
+    {{--    @else--}}
+    {{--    @endif--}}
 
     <div class="row"></div>
     <div class="card shadow" xmlns="http://www.w3.org/1999/html">
@@ -134,19 +171,19 @@
                                 </label>
                             </div>
                             <div class="col-md-3" style="text-align: right">
-                                <label class="form-label" for="mobile_no">Mobile number:</label>
+                                <label class="form-label" for="mobile_no" >Mobile number:</label>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group row">
-                                    <input type="text" class="form-control"  name="mobile_no" id="mobile_no" placeholder="mobile no" style="width: 89%; margin-left: 5%;" value="{{ old('mobile_no') ?: $app->mobile_no}}">
+                                    <input type="text" class="form-control" title="If acknowledgement is received, this mobile number will be used for sending SMS to the applicant." name="mobile_no" id="mobile_no" pattern="[0-9]{10}" minlength="10" maxlength="10" placeholder="mobile no" style="width: 89%; margin-left: 5%;" value="{{ old('mobile_no') ?: substr($app->mobile_no, 3)}}">
                                 </div>
                             </div>
                             <div class="col-md-3" style="text-align: right">
-                                <label class="form-label" for="phone_no">Phone Number:</label>
+                                <label class="form-label" for="phone_no">Telephone Number:</label>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group row">
-                                    <input type="text" class="form-control"  name="phone_no" id="phone_no" placeholder="phone no" style="width: 89%; margin-left: 5%;" value="{{ old('phone_no') ?: $app->phone_no}}">
+                                    <input type="text" class="form-control"  name="phone_no" id="phone_no" pattern="[0-9]{11}" minlength="11" maxlength="11" placeholder="phone no" style="width: 89%; margin-left: 5%;" value="{{ old('phone_no') ?: $app->phone_no}}">
                                 </div>
                             </div>
 
@@ -155,7 +192,7 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group ">
-                                    <input type="email" class="form-control" name="email_id" id="email_id" placeholder="email" value="{{ old('email_id') ?: $app->email_id }}">
+                                    <input type="email" class="form-control" name="email_id" id="email_id" title="If acknowledgement is received, this email will be used for sending mailte to the applicant." placeholder="email" value="{{ old('email_id') ?: $app->email_id }}">
                                 </div>
                             </div>
                         </div>
@@ -164,11 +201,11 @@
 
                         <div class="row" id="alignment">
                             <div class="col-md-3" style="text-align: right">
-                                <label class="form-label" for="letter_no">Letter No:</label>
+                                <label class="form-label" for="letter_no">Letter No:<span style="color: red;" >*</span></label>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group row">
-                                    <input type="text" class="form-control" name="letter_no" id="letter_no" style="width: 89%; margin-left: 5%;" placeholder="letter no"  value="{{ old('letter_no') ?: $app->letter_no}}">
+                                    <input type="text" class="form-control" name="letter_no" id="letter_no" style="width: 89%; margin-left: 5%;" placeholder="letter no"  value="{{ old('letter_no') ?: $app->letter_no}}" required>
                                 </div>
                             </div>
 
@@ -211,7 +248,7 @@
                                     Yes
                                 </label>
                                 <label class="form-check-label">
-                                    <input type="radio" name="acknowledgement" value="N" {{ (old('acknowledgement') == 'N' || $app->acknowledgement == 'N') ? 'checked' : '' }}>
+                                    <input type="radio" name="acknowledgement" value="N" {{ (old('acknowledgement') == 'N' || $app->acknowledgement == 'N') ? 'checked' : '' }} checked>
                                     No
                                 </label>
                             </div>
@@ -280,10 +317,10 @@
 
                         <div class="row">
                             <div class="col-md-3" style="text-align: right">
-                                <label class="form-label" for="department_org_id">Ministry/Department:</label>
+                                <label class="form-label" for="department_org_id">Ministry/Department:<span style="color: red;" >*</span></label>
                             </div>
                             <div class="col-md-9">
-                                <select class="form-control" name="department_org_id" id="department_org_id">
+                                <select class="form-control" name="department_org_id" id="department_org_id" required>
                                     <option value="">Select a Ministry/Department</option>
                                     @foreach($organizations as $organization)
                                         <option value="{{ $organization->id }}" data-org-type="{{ $organization->org_type }}" {{ old('department_org_id') == $organization->id || $app->department_org_id == $organization->id ? 'selected' : '' }}>
@@ -305,34 +342,45 @@
 
                         <hr class="row-divider">
 
-                        <div class="row">
-                            <div class="col-6" style="text-align: right">
-                                @if($app->file_path)
+                        @if($app->file_path)
+                            <div class="row">
+                                <div class="col-6" style="text-align: right">
                                     <a href="/api/getFile/{{$app->file_path}}" target="_blank">
-                                        <button type="button" class="btn btn-primary">View File</button>
+                                        <button type="button" class="btn btn-outline-primary">View File</button>
                                     </a>
-                                @endif
-                            </div>
-                            <div class="col-6" >
-                                <div class="input-group">
-                                    <div class="custom-file">
-                                        <input type="file" class="custom-file-input" id="file_path" name="file_path" accept=".pdf">
+                                </div>
+                                <div class="col-6" >
+                                    <div class="input-group">
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input" id="file_path" name="file_path" accept=".pdf">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                            <hr class="row-divider">
+                        @else
+                            <div class="row">
+                                <div class="col-md-6 offset-md-4" style="margin-left: 38%">
+                                    <div class="input-group">
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input" id="file_path" name="file_path" accept=".pdf">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        <hr class="row-divider">
 
 
 
                         <div class="row">
                             <span id="file-status"></span>
-                            @if($app->statuses->isEmpty() || $app->statuses->first()->pivot->status_id ==5 )
-                            <div class="col-6" style="text-align: right">
-                                <input type="submit" class="btn btn-outline-warning" name="submit" value="Draft"></div>
-                            <div class="col-6" style="text-align: left">
-                                <input type="submit" class="btn btn-outline-success" name="submit" value="Save">
-                            </div>
+                            @if($app->statuses->isEmpty() || $app->statuses->first()->pivot->status_id ==0 )
+                                <div class="col-6" style="text-align: right">
+                                    <input type="submit" class="btn btn-outline-warning" name="submit" value="Draft"></div>
+                                <div class="col-6" style="text-align: left">
+                                    <input type="submit" class="btn btn-outline-success" name="submit" value="Save">
+                                </div>
                             @else
                                 <div style="text-align: center">
                                     <input type="submit" class="btn btn-outline-success" name="submit" value="Save">
@@ -506,7 +554,7 @@
                 }
             });
 
-           // Function to toggle fields based on the selected language
+            // Function to toggle fields based on the selected language
             function toggleFields() {
                 if ($('input[name="language_of_letter"]:checked').val() === 'O') {
                     $('#applicant_title').removeAttr('required');

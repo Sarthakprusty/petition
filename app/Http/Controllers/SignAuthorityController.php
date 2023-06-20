@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organization;
 use App\Models\SignAuthority;
+use App\Models\State;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class SignAuthorityController extends Controller
 {
@@ -14,14 +18,20 @@ class SignAuthorityController extends Controller
      */
     public function index()
     {
-        return SignAuthority::all()->where('active', 1);
+        $states = State::all();
+        $organizations = Organization::all();
+        $authority_id= Auth::user()->sign_id;
+        $authority = SignAuthority::findorfail($authority_id);
+        return view('sign_authority_list', compact('authority','organizations','states'));
 
     }
 
     public function create()
     {
+        $states = State::all();
+        $organizations = Organization::all();
         $signAuthority = new SignAuthority();
-        return view('sign_authority', compact('signAuthority'));
+        return view('sign_authority', compact('signAuthority','organizations','states'));
     }
 
     /**
@@ -30,25 +40,33 @@ class SignAuthorityController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'Sign_path'=>'file|mimes:pdf|max:100',
+            'Sign_path'=>'nullable|file|mimes:png|max:1000',
             'name'=>'required',
-            'desg'=>'required',
+//            'dept_id'=>'nullable',
             'from_date'=>'required|date_format:Y-m-d|after_or_equal:today',
             'to_date'=>'nullable|date_format:Y-m-d|after:from_date',
 
         ]);
         $signAuthority = new SignAuthority;
-        $signAuthority->Sign_path = $request->Sign_path;
+
         $signAuthority->name = $request->name;
         $signAuthority->from_date = $request->from_date;
-        $signAuthority->desg = $request->desg;
-        $signAuthority->to_date = $request->to_date;
+//        $signAuthority->dept_id = $request->dept_id;
+
 
         $signAuthority->created_at = Carbon::now()->toDateTimeLocalString();
-        $signAuthority->last_updated_by = Auth::user()->user_id;
-        $signAuthority->last_updated_from = $request->ip();
+        $signAuthority->created_by = Auth::user()->id;
+        $signAuthority->created_from = $request->ip();
 
         if ($request->input('submit') == 'Save') {
+            SignAuthority::where('created_by', auth()->user()->id)
+                ->update([
+                    'active' => 0,
+                    'to_date' => Carbon::now()->toDateString(),
+                    'last_updated_by' =>Auth::user()->id,
+                    'last_updated_from'=>$request->ip()
+                ]);
+
             if ($signAuthority->save()) {
                 if ($request->hasFile('Sign_path')) {
                     $filename = time() . '.' . $request->file('Sign_path')->getClientOriginalExtension();
@@ -56,13 +74,37 @@ class SignAuthorityController extends Controller
                     $signAuthority->Sign_path = base64_encode($path);
                     $signAuthority->update(['Sign_path' => base64_encode($path)]);
                 }
-                return redirect()->route('applications.index')->with('success', 'Authority Assigned successfully.');
+                $user = Auth::user();
+                $user->sign_id = $signAuthority->id;
+                $user->save();
+                return redirect()->route('authority.index')->with('success', 'Authority Assigned successfully.');
             }
         }
             else
                 return back()->withErrors([
                     'username' => 'Sorry, could not save the data.',
                 ]);
+    }
+
+//    public function edit(string $id)
+//    {
+//        $signAuthority = SignAuthority::findorfail($id);
+//        $organizations = Organization::all();
+//        $states=State::all();
+//        return view('sign_authority', compact('signAuthority','organizations','states'));
+//    }
+
+    public function signFile(String $path)
+    {
+        // return response()->file(base64_decode($path));
+        $content = Storage::disk('upload')->get(base64_decode($path));
+        if ($content != '') {
+            return response($content, 200)
+                ->header('Content-Type', 'image/png')
+                ->header('Content-Disposition', 'inline');
+        } else {
+            return response()->json(['code' => 404, 'msg' => 'Details not found'], 404);
+        }
     }
 
     /**

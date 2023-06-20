@@ -6,7 +6,8 @@
 
 }
 .container-fluid{
-    width: 90%;
+    /*width: 92%;*/
+    width: 100%;
 }
 header{
     background-color: #FFE6C3;
@@ -81,7 +82,7 @@ body{
 .main-body{
     position: relative;
     z-index: 2;
-    margin-top:135px;
+    margin-top:133px;
     margin-bottom:100px;
 }
 footer{
@@ -100,21 +101,12 @@ footer{
 .row-divider{
     margin-bottom: 10px;
 }
-.letter {
-    font-family: Arial, sans-serif;
-    size: A4;
-    width: 210mm;
-    height: 297mm;
-    margin-left: 10%;
-    padding: 15mm;
-    border: 1px solid #ccc;
-    background-color: #FBD485;
-}
-.centered {
-    text-align: center;
-}
-@media print {
-    .letter {
-        page-break-after:always;
-    }
+
+
+
+ .modal-content {
+     width: 130% !important;
+ }
+.dropdown-menu[data-bs-popper] {
+    left: -245% !important;
 }

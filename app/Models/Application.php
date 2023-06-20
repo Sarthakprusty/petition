@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Application extends Model
 {
@@ -42,10 +43,21 @@ class Application extends Model
     {
         return $this->belongsTo(Organization::class,'department_org_id','id');
     }
+
+    public function authority(): HasOne
+    {
+        return $this->hasOne(SignAuthority::class,'Authority_id','id');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public function statuses(): BelongsToMany
     {
         return $this->belongsToMany(Status::class)
-            ->wherePivot('active','=','1')
+//            ->wherePivot('active','=','1')
             ->withPivot(['remarks','created_at','created_by'])
             ->withTimestamps();
     }

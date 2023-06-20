@@ -339,19 +339,19 @@
         <p>
         <div class="password-wrapper">
             <input type="password" id="password" name="password" placeholder="Password" required>
-            <button id="togglePassword" type="button" value="eye"></button>
         </div>
-        <i class="validation"><span></span><span></span></i>
         </p>
-        <p>
+        <div class="row">&nbsp;</div>
+        <p style="padding-bottom: 5px;padding-top: 5px;">
             <input type="submit" id="login" value="Login">
         </p>
     </form>
     <div id="create-account-wrap">
-        <p>Not a member? <a href="#">Create Account</a></p>
+{{--        <p>Not a member? <a href="#">Create Account</a></p>--}}
         <p>Developed by NIC</p>
     </div>
 </div>
+
 {{--<script>--}}
 {{--    var passwordInput = document.getElementById("password");--}}
 {{--    var togglePassword = document.getElementById("togglePassword");--}}

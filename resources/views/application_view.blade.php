@@ -2,10 +2,10 @@
 
 @section('contentView')
     <nav aria-label="breadcrumb" style="background: #edeeee">
-        <ol class="breadcrumb">
-            <img src="https://cdn-icons-png.flaticon.com/512/2815/2815154.png" alt="Home" style="height: 40px; width: 40px;">
-            <li class="breadcrumb-item" style="font-size: 24px;"><a href={{route('applications.index')}} >Applications</a></li>
-            <li class="breadcrumb-item active" aria-current="page"style="font-size: 24px;">{{$app->reg_no}}</li>
+        <ol class="breadcrumb" style="margin-left: 4%">
+            <img src="https://cdn-icons-png.flaticon.com/512/2815/2815154.png" alt="Home" style="width: 3.5%; cursor: pointer;" onclick="window.location.href='{{ route('applications.index') }}';">
+            <li class="breadcrumb-item" style="font-size: 160%;color: #1d00ff"><a href={{route('applications.index')}}>Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page"style="font-size: 160%;">Applications / {{$app->reg_no}}</li>
         </ol>
     </nav>
     <style>
@@ -174,7 +174,7 @@
             list-style: none;
         }
         .button {
-            background-color: #90D70DFF; /* Green */
+            background-color: #90D70DFF;
             border: none;
             color: black;
             padding: 12% 21%;
@@ -184,7 +184,7 @@
             font-size: 100%;
         }
         .buttonRed {
-            background-color: #C20606FF; /* Green */
+            background-color: #C20606FF;
             border: none;
             color: white;
             padding: 12% 25%;
@@ -195,9 +195,55 @@
         }
     </style>
 
-    <div class="container">
+    <div class="container" style="width: 90%">
         <div class="row">
-            <div class="col-md-9">
+            @if (isset($_GET['submit']) && $_GET['submit'] === 'Details')
+                @if((auth()->check() && auth()->user()->roles->pluck('id')->contains(2) &&
+                     $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))
+                     ||
+                     (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) &&
+                     $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)))
+                    <div class="col-md-9">
+                @endif
+            @endif
+            @if (isset($_GET['submit']) && $_GET['submit'] === 'final reply' && (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) &&
+                     $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(4)&& $app->reply==''))
+                <div class="col-md-9">
+            @endif
+            @if($app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains<=3)
+                    @php
+                        $statuses = $app->statuses()
+                            ->whereIn('application_status.active', [0, 1])
+                            ->whereNotNull('remarks')
+                            ->get();
+                    @endphp
+
+                    @if ($statuses->isNotEmpty())
+                        <div class="card text-white bg-info mb-3">
+                            <div class="card-header">Note:</div>
+                            <div class="card-body">
+                                @foreach ($statuses as $status)
+                                    @php
+                                        $user = \App\Models\User::findorfail($status->pivot->created_by);
+                                    @endphp
+                                    <p class="card-text">
+                                        {{ $user ? $user->username : 'N/A' }} - {{ $status->pivot->remarks }}
+                                    </p>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                    @endif
+                    @if($app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(5))
+                    @if($app->reply)
+                        <div class="card text-white bg-warning mb-3">
+                            <div class="card-header">Final Reply:</div>
+                            <div class="card-body">
+                                {{$app->reply}}
+                            </div>
+                        </div>
+                    @endif
+                    @endif
                 <div class="ibox-content">
                     <div class="row">
                         <div class="col-lg-12">
@@ -251,9 +297,12 @@
                                 </dd>
                                 <div class="spacing" style="margin-top: 3px;"></div>
 
-                                <dt>Applicant Contact info</dt> <dd>{{$app->phone_no}}
+                                <dt>Applicant Contact info</dt> <dd>
+                                    @if ($app->phone_no)
+                                        {{$app->phone_no}},
+                                    @endif
                                     @if ($app->mobile_no)
-                                        , +91{{$app->mobile_no}}
+                                         {{$app->mobile_no}}
                                     @endif
                                     <br>{{$app->email_id}}
                                 </dd>
@@ -338,11 +387,11 @@
                             <div class="list-group-item">
                                 <span class="float-start" style="font-weight: bold">Action</span>
                                 <span class="float-end" style="text-align: right">
-                                                    @if ($app->fee_received_place === 'N')
+                                                    @if ($app->action_org === 'N')
                                         No Action
-                                    @elseif ($app->fee_received_place === 'F')
+                                    @elseif ($app->action_org === 'F')
                                         Forward to Central Govt. Ministry/Department
-                                    @elseif ($app->fee_received_place === 'M')
+                                    @elseif ($app->action_org === 'M')
                                         Miscellaneous
                                     @else
                                     @endif
@@ -355,37 +404,57 @@
                             <div class="list-group-item">
                                 <span class="float-start" style="font-weight: bold">Ministry/Department</span>
                                 <span class="float-end" style="text-align: right">
-                                                {{$app->department_org ? $app->department_org->org_desc : ''}}</span>
+                                    {{$app->department_org ? $app->department_org->org_desc : ''}}</span>
                             </div>
                             <div class="list-group-item">
                                 <span class="float-start" style="font-weight: bold">Remark</span>
                                 <span class="float-end" style="text-align: right">{{$app->remarks}}</span>
                             </div>
+                            <div class="list-group-item">
+                                <span class="float-start" style="font-weight: bold">File</span>
+                                @if($app->file_path)
+                                    <span class="float-end" style="text-align: right;text-decoration: underline;color: #1d00ff">
+                                        <a href="/api/getFile/{{$app->file_path}}" target="_blank">
+                                          View File
+                                        </a>
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+
+
+                @if (isset($_GET['submit']) && $_GET['submit'] === 'Details')
+                    @if((auth()->check() && auth()->user()->roles->pluck('id')->contains(2) &&
+                         $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))
+                         ||
+                         (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) &&
+                         $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)))
+                        </div>
+                    @endif
+                @endif
+
+                @if (isset($_GET['submit']) && $_GET['submit'] === 'final reply')
+                        </div>
+                @endif
 
             @if (isset($_GET['submit']) && $_GET['submit'] === 'Details')
+                @if((auth()->check() && auth()->user()->roles->pluck('id')->contains(2) &&
+                      $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))
+                      ||
+                      (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) &&
+                      $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)))
                 <div class="col-md-3">
                     <form method="post" action="{{ route('applications.updateStatus', ['application_id' => $app->id]) }}">
                         @csrf
                         <div class="wrapper wrapper-content project-manager">
                             <div class="spacing" style="margin-top: 3%;"></div>
-                            <strong><label style="font-size: 130%" for="remarks">Remarks:</label></strong>
-                            <div class="row" style="margin-left: 0%; margin-right: 1.5%;">
-                            @if($app->statuses->first()->pivot->remarks)
-                                {{$app->statuses->first()->pivot->remarks}}
-                            @endif
-                            </div>
+                            <strong><label style="font-size: 130%" for="remarks">Note:</label></strong>
+
                             <div class="spacing" style="margin-top: 2%;"></div>
                             <div class="row" style="margin-left: 0%; margin-right: 1.5%;">
-                                @if($app->statuses->first()->pivot->remarks)
-                                <textarea class="form-control" id="remarks" name="remarks" style="height: 200px;" placeholder="abc....">{{ old('remarks')?: $app->statuses->first()->pivot->remarks }}</textarea>
-                                @else
-                                    <textarea class="form-control" id="remarks" name="remarks" style="height: 200px;" placeholder="abc....">{{ old('remarks') }}</textarea>
-
-                                @endif
+                                <textarea class="form-control" id="remarks" name="remarks" style="height: 200px;" placeholder="abc....">{{ old('remarks') }}</textarea>
                             </div>
                             <div class="row">
                                 <div class="col-6" style="text-align: right">
@@ -398,9 +467,11 @@
                         </div>
                     </form>
                 </div>
+                @endif
 
-            @elseif (isset($_GET['submit']) && $_GET['submit'] === 'final reply')
-                <div class="col-md-3">
+            @elseif (isset($_GET['submit']) && $_GET['submit'] === 'final reply' && (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) &&
+                     $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(4)&& $app->reply==''))
+                        <div class="col-md-3">
                     <form method="POST" action="{{route('applications.store')}}" >
                         @csrf
                         @if(isset($app->id))
@@ -410,12 +481,14 @@
                             <div class="spacing" style="margin-top: 3%;"></div>
                             <strong><label style="font-size: 130%" for="reply">Final Reply:</label></strong>
                             <div class="spacing" style="margin-top: 2%;"></div>
+                            <div class="spacing" style="margin-top: 2%;"></div>
                             <div class="row" style="margin-left: 0%; margin-right: 1.5%;">
                                 <textarea class="form-control" id="reply" name="reply" style="height: 200px;" placeholder="abc....">{{ old('reply') }}</textarea>
                             </div>
+
                             <div class="row">
                                 <div style="text-align: center">
-                                    <input style="padding: 5% 10%" type="submit" class="button" name="submit" value="Send">
+                                    <input style="padding: 5% 10%" type="submit" class="button" name="submit" value="Submit">
                                 </div>
                             </div>
                         </div>

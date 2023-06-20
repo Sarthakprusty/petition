@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\OrganizationRequest;
 use App\Models\Organization;
+use App\Rules\Orgtype;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,12 +24,20 @@ class OrganizationController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'grievances_desc'=>'sometimes|nullable',
+            'org_desc'=>'nullable',
+            'org_type'=>['nullable', new Orgtype],
+            'org_head'=>'nullable',
+            'org_head_hi'=>'nullable',
+            'org_address'=>'nullable',
+            'mail' => 'nullable',
         ]);
         $organization = new Organization;
         $organization->org_desc = $request->org_desc;
         $organization->org_type = $request->org_type;
-
+        $organization->org_head = $request->org_head;
+        $organization->org_head_hi = $request->org_head_hi;
+        $organization->org_address = $request->org_address;
+        $organization->mail = $request->mail;
 
         $organization->created_at = Carbon::now()->toDateTimeLocalString();
         $organization->last_updated_by = Auth::user()->user_id;

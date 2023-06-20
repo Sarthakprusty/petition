@@ -40,6 +40,7 @@ Route::resource('applications', App\Http\Controllers\ApplicationController::clas
 Route::resource('authority', App\Http\Controllers\SignAuthorityController::class);
 
 Route::get('getFile/{filepath}',[App\Http\Controllers\ApplicationController::class,'getFile']);
+Route::get('signFile/{filepath}',[App\Http\Controllers\SignAuthorityController::class,'signFile']);
 
 Route::resource('organizations', App\Http\Controllers\OrganizationController::class);
 Route::resource('grievances', App\Http\Controllers\GrievanceController::class);

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -50,14 +51,18 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id');
     }
-
-    public function officers():HasMany
+    public function organizations(): BelongsToMany
     {
-        return $this->hasMany(Officer::class);
+        return $this->belongsToMany(Role::class, 'user_organization', 'user_id', 'org_id');
     }
-    public function applications(): BelongsTo
+
+    public function applications(): HasMany
     {
-        return $this->belongsTo(Application::class, 'created_by', 'id');
+        return $this->hasMany(Application::class, 'created_by', 'id');
+    }
+    public function authority(): HasOne
+    {
+        return $this->hasone(SignAuthority::class, 'id', 'sign_id');
     }
 }
 

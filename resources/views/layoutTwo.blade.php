@@ -33,7 +33,8 @@
     <div class="container-fluid">
 
         <div class="row">
-    @yield('contentView')
+            @yield('content')
+            @yield('contentView')
         </div>
     </div>
 </div>
