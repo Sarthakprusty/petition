@@ -197,7 +197,14 @@
 
     <div class="container">
         <div class="row">
-            <div class="col-md-9">
+            @if (isset($_GET['submit']) && $_GET['submit'] === 'Details')
+                @if(Auth::user()->roles->first()->pivot->role_id > 1)
+                    <div class="col-md-9">
+                @endif
+            @endif
+            @if (isset($_GET['submit']) && $_GET['submit'] === 'final reply')
+                <div class="col-md-9">
+            @endif
                 <div class="ibox-content">
                     <div class="row">
                         <div class="col-lg-12">
@@ -364,15 +371,24 @@
                         </div>
                     </div>
                 </div>
-            </div>
+                @if (isset($_GET['submit']) && $_GET['submit'] === 'Details')
+                    @if(Auth::user()->roles->first()->pivot->role_id > 1)
+                        </div>
+                    @endif
+                @endif
+
+                @if (isset($_GET['submit']) && $_GET['submit'] === 'final reply')
+                        </div>
+                @endif
 
             @if (isset($_GET['submit']) && $_GET['submit'] === 'Details')
+                @if(Auth::user()->roles->first()->pivot->role_id > 1)
                 <div class="col-md-3">
                     <form method="post" action="{{ route('applications.updateStatus', ['application_id' => $app->id]) }}">
                         @csrf
                         <div class="wrapper wrapper-content project-manager">
                             <div class="spacing" style="margin-top: 3%;"></div>
-                            <strong><label style="font-size: 130%" for="remarks">Remarks:</label></strong>
+                            <strong><label style="font-size: 130%" for="remarks">Note:</label></strong>
                             <div class="row" style="margin-left: 0%; margin-right: 1.5%;">
                             @if($app->statuses->first()->pivot->remarks)
                                 {{$app->statuses->first()->pivot->remarks}}
@@ -398,6 +414,7 @@
                         </div>
                     </form>
                 </div>
+                @endif
 
             @elseif (isset($_GET['submit']) && $_GET['submit'] === 'final reply')
                 <div class="col-md-3">
@@ -410,9 +427,14 @@
                             <div class="spacing" style="margin-top: 3%;"></div>
                             <strong><label style="font-size: 130%" for="reply">Final Reply:</label></strong>
                             <div class="spacing" style="margin-top: 2%;"></div>
+                            @if($app->email_id)
+                                <DIV>Acknowledgement letter will be sent on {{$app->email_id}} this email id</DIV>
+                            @endif
+                            <div class="spacing" style="margin-top: 2%;"></div>
                             <div class="row" style="margin-left: 0%; margin-right: 1.5%;">
                                 <textarea class="form-control" id="reply" name="reply" style="height: 200px;" placeholder="abc....">{{ old('reply') }}</textarea>
                             </div>
+
                             <div class="row">
                                 <div style="text-align: center">
                                     <input style="padding: 5% 10%" type="submit" class="button" name="submit" value="Send">

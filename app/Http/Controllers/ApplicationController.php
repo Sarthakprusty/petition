@@ -39,8 +39,9 @@ class ApplicationController extends Controller
 
         }
 
-        $applications = Application::where('active', 1)->where('created_by',Auth::user()->id)->paginate(18);
-        return view('application_list', compact('applications'));
+        $applications = Application::where('active', 1)->paginate(18);
+        $source = 'application';
+        return view('application_list', compact('applications','source'));
     }
 
     /**
@@ -53,6 +54,7 @@ class ApplicationController extends Controller
         $grievances=Grievance::all();
 
         $app = new Application();
+      //  $appStatusRemark = $app->statuses()->wherePivot('active', 0)->pluck('pivot.remarks')->with('created by');
         return view('application', compact('app','organizations','states','grievances'));
 
 //        $userOrganizationId = Auth::user()->org_id;
@@ -188,23 +190,44 @@ class ApplicationController extends Controller
                     $app->last_updated_from = $request->ip();
                     $app->save();
 
-                } else {
+                }
+                else {
                     $currentYear = Carbon::now()->format('y');
                     $currentMonth = Carbon::now()->format('m');
                     $currentDay = Carbon::now()->format('d');
-                    if ($currentMonth >= 1 && $currentMonth <= 3) {
-                        $financialYear = ($currentYear - 1) . '-' . $currentYear;
-                    } else {
-                        $financialYear = $currentYear . '-' . (Carbon::now()->addYear()->format('y'));
-                    }
-                    $matchingRowCount = Application::whereRaw("SUBSTRING(reg_no,-5) = ?", [$financialYear])->count();
-                    $matchingRowCount++;
-                    $rtiNumber = sprintf('%04d', $matchingRowCount);
-                    $month = sprintf('%02d', $currentMonth);
-                    $day = sprintf('%02d', $currentDay);
+
                     $givenString = Auth::user()->username;
                     $modifiedString = substr($givenString, 0, 2) . '/' . substr($givenString, 2);
-                    $app->reg_no = $modifiedString . '/' . $day . $month . $currentYear . $rtiNumber;
+
+                    if ($currentMonth >= 4) {
+                        // Financial year starts from April of the current year
+                        $startYear = $currentYear;
+                        $endYear = Carbon::now()->addYear()->format('y');
+                    } else {
+                        // Financial year starts from April of the previous year
+                        $startYear = Carbon::now()->subYear()->format('y');
+                        $endYear = $currentYear;
+                    }
+
+                    $startDate = Carbon::createFromFormat('y-m-d', $startYear . '-04-01')->startOfDay();
+                    $endDate = Carbon::createFromFormat('y-m-d', $endYear . '-03-31')->endOfDay();
+
+                    $matchingRowCount = Application::whereBetween('letter_date', [$startDate, $endDate])
+                        ->whereNotNull('reg_no')
+                        ->where('reg_no', 'LIKE', $modifiedString . '%')
+                        ->count();
+
+                    $count = ($matchingRowCount > 0) ? $matchingRowCount + 1 : 1;
+                    if ($count <= 9999) {
+                        $petitionNumber = sprintf('%04d', $count);
+                    } else {
+                        $petitionNumber = $count;
+                    }
+
+                    $month = sprintf('%02d', $currentMonth);
+                    $day = sprintf('%02d', $currentDay);
+
+                    $app->reg_no = $modifiedString . '/' . $day . $month . $currentYear . $petitionNumber;
 
                     //if reg no does not exist it means it is a new record that's why create details are here.
                     $app->created_at = Carbon::now()->toDateTimeLocalString();
@@ -240,13 +263,13 @@ class ApplicationController extends Controller
                     ]);
                 }
                 return redirect()->route('applications.index')->with('success', 'Product created successfully.');
-    }
+        }
 
         elseif ($request->input('submit') === 'Draft') {
             if ($request->id)
                 $app->created_at = Carbon::now()->toDateTimeLocalString();
-            $app->created_by = Auth::user()->id;
-            $app->created_from = $request->ip();
+                $app->created_by = Auth::user()->id;
+                $app->created_from = $request->ip();
             if ($app->save()) {
                 if ($request->hasFile('file_path')) {
                     $filename = time() . '.' . $request->file('file_path')->getClientOriginalExtension();
@@ -278,28 +301,63 @@ class ApplicationController extends Controller
 
         elseif ($request->input('submit') === 'Send') {
             $app = Application::findOrFail($request->id);
+            $app->acknowledgement=$request->acknowledgement;
             $app->reply = $request->input('reply');
             $app->updated_at = Carbon::now()->toDateTimeLocalString();
             $app->last_updated_by = Auth::user()->id;
             $app->last_updated_from = $request->ip();
 //            $app->active = 0;
             $app->save();
+            $applicationId = $app->id;
+            $status = $app->statuses()->wherePivot('active', 1)->get();
+            $app->statuses()->updateExistingPivot(
+                $status,
+                [
+                    'active' => 0,
+                    'created_from' => $request->ip(),
+                    'created_by' => Auth::user()->id
+                ]
+            );
+            $statusId = 6;
+            $status = Status::find($statusId);
+            if ($status) {
+                $app->statuses()->attach($status, [
+                    'created_from' => $request->ip(),
+                    'created_by' => Auth::user()->id
+                ]);
+            }
 
-//            if ($app->acknowledgement == 'Y' && $app->email_id !== null) {
-//                $content = Storage::disk('upload')->get(base64_decode($app->file_path));
-//                $email = $app->email_id;
-//                $subject = 'Your Subject Here';
-//                $details = $app->reply ;
-//
-//                Mail::raw($details, function ($message) use ($email, $subject, $content) {
-//                    $message->to($email)
-//                        ->subject($subject)
-//                        ->attachData($content, 'filename.pdf', [
-//                            'mime' => 'application/pdf',
-//                        ]);
-//                });
-//            }
-            return redirect()->route('applications.index')->with('success', 'sent successfully.');
+            if ($app->acknowledgement == 'Y' && $app->email_id !== null  ) {
+                if($app->mail_sent == 0 || $app->mail_sent == '') {
+                    $content = Storage::disk('upload')->get(base64_decode($app->file_path));
+                    $email = $app->email_id;
+                    $subject = 'Reply From Rashtrapati Bhawan';
+                    $details = $app->reply;
+                    try {
+                        Mail::raw($details, function ($message) use ($email, $subject, $content) {
+                            $message->to($email)
+                                ->subject($subject)
+                                ->attachData($content, 'filename.pdf', [
+                                    'mime' => 'application/pdf',
+                                ]);
+                        });
+
+                        // Update the mail_sent status to true if the email is sent successfully
+                        $app->mail_sent = 1;
+                        $app->save();
+                        return redirect()->route('applications.index')->with('success', 'sent successfully.');
+
+                    } catch (\Exception $e) {
+                        // Handle the exception, log errors, or take any necessary action
+                        // Update the mail_sent status to false if the email sending fails
+                        $app->mail_sent = 0;
+                        $app->save();
+                        return redirect()->route('applications.index')->with('failed', 'error');
+
+                    }
+                }
+            }
+                return redirect()->route('applications.index')->with('success', 'reply saved');
 
         }
 
@@ -308,6 +366,10 @@ class ApplicationController extends Controller
                 'username' => 'Sorry, could not save the data.',
             ]);
         }
+
+        return back()->withErrors([
+            'username' => 'Sorry, something got wrong',
+        ]);
 
     }
 
@@ -348,32 +410,51 @@ class ApplicationController extends Controller
     {
        // return response()->file(base64_decode($path));
         $content = Storage::disk('upload')->get(base64_decode($path));
-        if($content!='')
-            return response()->make($content, 200, ['Content-Type' => 'applications/pdf','content-disposition'=>'inline']);
-        else
-            return response(array("code" => 404, "msg" => "details not found"), 404);
+        if ($content != '') {
+            return response($content, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline');
+        } else {
+            return response()->json(['code' => 404, 'msg' => 'Details not found'], 404);
+        }
+
 
     }
     public function search(Request $request)
     {
         $query = Application::where('active', 1);
-        if ($request->applicant_name && $request->applicant_name != '') {
-            $query->where('applicant_name', 'like', '%' . $request->applicant_name . '%');
-        }
-
         if ($request->rec_no && $request->rec_no != '') {
             $query->where('reg_no', 'like', '%' . $request->rec_no . '%');
         }
 
-        if ($request->app_date_from && $request->app_date_from != '' && $request->app_date_to == '') {
+        // date filter with name.
+        if ( $request->app_date_from == '' && $request->app_date_to == '' && $request->applicant_name && $request->applicant_name != '') {
+            $query->where('applicant_name', 'like', '%' . $request->applicant_name . '%');
+        }
+
+        if ($request->app_date_from && $request->app_date_from != '' && $request->app_date_to == ''  && $request->applicant_name == '') {
             $query->whereDate('letter_date', '=', $request->app_date_from);
-        } elseif ($request->app_date_from && $request->app_date_to != '') {
+        }
+
+        if ($request->app_date_from && $request->app_date_from != '' && $request->app_date_to && $request->app_date_to != '' && $request->applicant_name == '') {
             $query->whereBetween('letter_date', [$request->app_date_from, $request->app_date_to]);
         }
 
+        if ($request->app_date_from && $request->app_date_from != '' && $request->app_date_to == '' && $request->applicant_name && $request->applicant_name != '') {
+            $query->whereDate('letter_date', '=', $request->app_date_from)
+                ->where('applicant_name', 'like', '%' . $request->applicant_name . '%');
+        }
+
+        if ($request->app_date_from && $request->app_date_from != '' && $request->app_date_to && $request->app_date_to != '' && $request->applicant_name && $request->applicant_name != ''){
+            $query->whereBetween('letter_date', [$request->app_date_from, $request->app_date_to])
+                ->where('applicant_name', 'like', '%' . $request->applicant_name . '%');
+        }
+
+        /** TODO submitted , pending ,draft, section WISE */
+        $source='search';
         $applications = $query->paginate(18)->appends($request->all());
 
-        return view('application_list', compact('applications'));
+        return view('application_list', compact('applications','source'));
     }
 
 

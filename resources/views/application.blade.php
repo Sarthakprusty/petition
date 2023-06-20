@@ -12,13 +12,28 @@
         </div>
     @endif
 
-        @if($app->statuses->first() && $app->statuses->first()->pivot->remarks)
-        <div class="card shadow" xmlns="http://www.w3.org/1999/html">
-            <div class="card-body" style="background: yellow">
-            note: {{$app->statuses->first()->pivot->remarks}}
-            </div>
+    @if($app->statuses->first() && $app->statuses->first()->pivot->remarks)
+    <div class="card text-white bg-info mb-3" >
+        <div class="card-header">Note:</div>
+        <div class="card-body">
+{{--            <h5 class="card-title">Info card title</h5>--}}
+            <p class="card-text">{{$app->statuses->first()->pivot->remarks}}</p>
         </div>
-        @endif
+    </div>
+    @endif
+
+{{--    @if($appStatusRemark->isNotEmpty())--}}
+{{--        <div class="card text-white bg-info mb-3">--}}
+{{--            <div class="card-header">Note:</div>--}}
+{{--            <div class="card-body">--}}
+{{--                @foreach($appStatusRemark as $remark)--}}
+{{--                    <p class="card-text">Created by: {{ $remark->created_by }}</p>--}}
+{{--                    <p class="card-text">{{ $remark }}</p>--}}
+{{--                @endforeach--}}
+{{--            </div>--}}
+{{--        </div>--}}
+{{--    @else--}}
+{{--    @endif--}}
 
     <div class="row"></div>
     <div class="card shadow" xmlns="http://www.w3.org/1999/html">
@@ -305,13 +320,12 @@
 
                         <hr class="row-divider">
 
+                            @if($app->file_path)
                         <div class="row">
                             <div class="col-6" style="text-align: right">
-                                @if($app->file_path)
                                     <a href="/api/getFile/{{$app->file_path}}" target="_blank">
                                         <button type="button" class="btn btn-primary">View File</button>
                                     </a>
-                                @endif
                             </div>
                             <div class="col-6" >
                                 <div class="input-group">
@@ -321,6 +335,21 @@
                                 </div>
                             </div>
                         </div>
+                            @else
+                            <div class="row">
+                                <div class="col-md-6 offset-md-4" style="margin-left: 38%">
+                                    <div class="input-group">
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input" id="file_path" name="file_path" accept=".pdf">
+                                        </div>
+                                        @if($app->file_path!='')
+                                            <a href="/api/getFile/{{$app->file_path}}" target="_blank">View File</a>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
                             <hr class="row-divider">
 
 
