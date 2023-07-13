@@ -23,4 +23,9 @@ class Organization extends Model
     {
         return $this->belongsToMany(User::class, 'user_organization', 'org_id', 'user_id');
     }
+    public function state(): BelongsTo
+    {
+        return $this->belongsTo(State::class, 'id', 'state_id');
+    }
+
 }

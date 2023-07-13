@@ -4,17 +4,14 @@
 {{--    <div class="row"></div>--}}
     <div id="myDiv">
         <style>
-            @font-face {
-                font-family: 'DejaVu Sans';
-                src: url('/public/fonts/DejaVuSans.ttf') format('truetype');
-            }
+
             * {
                 margin: 0;
                 padding: 0;
                 border: none;
             }
             .letter {
-                font-family: Arial, "DejaVu Sans", sans-serif;
+                font-family: Arial, sans-serif;
                 size: A4;
                     /*width: 210mm;*/
                 height: 265mm;
@@ -78,15 +75,15 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div style="font-weight: bold; white-space: nowrap;">Sl.No:{{$application->reg_no}}</div>
             <div>
-                <div style="white-space: nowrap;">दिनांक/Dated:
-                    @php
-                        $statusId = 4;
-                        $pivot = $application->statuses->first(function ($status) use ($statusId) {
-                            return $status->pivot->status_id === $statusId;
-                        });
-                        $createdAt = $pivot ? $pivot->pivot->created_at : null;
-//                    @endphp
-                    {{ $createdAt ? \Carbon\Carbon::parse($createdAt)->format('d/m/Y') : '' }}
+                <div style="white-space: nowrap;">दिनांक/Dated:{{now()->format('d/m/Y')}}
+{{--                    @php--}}
+{{--                        $statusId = 4;--}}
+{{--                        $pivot = $application->statuses->first(function ($status) use ($statusId) {--}}
+{{--                            return $status->pivot->status_id === $statusId;--}}
+{{--                        });--}}
+{{--                        $createdAt = $pivot ? $pivot->pivot->created_at : null;--}}
+{{--//                    @endphp--}}
+{{--                    {{ $createdAt ? \Carbon\Carbon::parse($createdAt)->format('d/m/Y') : '' }}--}}
                 </div>
             </div>
         </div>

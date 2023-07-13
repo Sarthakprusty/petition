@@ -1,14 +1,14 @@
 @extends('layoutTwo')
 
 @section('content')
-
-    <nav aria-label="breadcrumb" style="background: #F7F8EF">
-        <ol class="breadcrumb">
+    <nav aria-label="breadcrumb" style="background: #f8f5ef">
+        <ol class="breadcrumb" style="margin-left: 4%">
             <img src="https://cdn-icons-png.flaticon.com/512/2815/2815154.png" alt="Home" style="width: 3.5%; cursor: pointer;" onclick="window.location.href='{{ route('applications.index') }}';">
-            <li class="breadcrumb-item" style="font-size: 160%;color: #1d00ff"><a href={{route('applications.index')}} >Applications</a></li>
+            <li class="breadcrumb-item" style="font-size: 160%;color: #1d00ff"><a href={{route('applications.index')}}>Home</a></li>
             <li class="breadcrumb-item active" aria-current="page"style="font-size: 160%;">Final Reply Report</li>
         </ol>
     </nav>
+
     <div class="row">
         <div style="text-align: center">
             <button class="btn btn-outline-danger" style="margin-left: 3%" onclick="printLetter()">Print</button>
@@ -25,6 +25,7 @@
             @media print {
                 .letter {
                     page-break-after:always;
+
                 }
             }
         </style>
@@ -41,7 +42,7 @@
             <div>Rashtrapati Bhavan</div>
             <div>New Delhi - 110004</div>
             <br>
-            <div>Following Requests/Grievances addressed to the President of India are being forwarded to during the peroid from {{$date_from}} To {{$date_to}} for appropriate attention. Kindly expedite disposal/status report to the petitioner:
+            <div>Following Requests/Grievances addressed to the President of India are being forwarded to {{$name}} during the peroid from {{$date_from}} To {{$date_to}} for appropriate attention. Kindly expedite disposal/status report to the petitioner:
             </div>
         </div>
 <br>
@@ -94,19 +95,31 @@
                         @else
                             <br>
                         @endif</td>
-                    <td>{{ $app->department_org->org_desc }}</td>
+                    <td>
+                        {{$application->department_org ? $application->department_org->org_desc : ''}}
+                    </td>
                     <td>{{ $application->reply }}</td>
                 </tr>
             @endforeach
             </tbody>
         </table>
         </div>
-
+        <br><br><br>
+        <div class="row" >
+            <div class="col-2" style="text-align: right">
+                <label class="form-label" for="letter_no">Date-{{now()->format('d/m/Y')}}</label>
+            </div>
+            <div class="col-10" style="text-align: right">
+                <label class="form-label" for="letter_date">(US)</label>
+            </div>
+        </div>
 
 
     </div>
+
     <script>
         function printLetter() {
+            //alert('hii');
             var printContents = document.getElementById('myDiv').innerHTML;
             var originalContents = document.body.innerHTML;
             document.body.innerHTML = printContents;
@@ -114,5 +127,4 @@
             document.body.innerHTML = originalContents;
         }
     </script>
-
 @endsection

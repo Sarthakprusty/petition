@@ -131,7 +131,7 @@
                         <div class="mb-3">
                             <label for="status" class="form-label">Choose Status</label>
                             <select name="status" id="status" class="form-select">
-                                <option value="">-Select Status-</option>
+                                <option value="">All</option>
                                 <option value="0">Draft</option>
                                 <option value="1">Pending at DH</option>
                                 <option value="2">Pending at SO</option>
@@ -250,17 +250,18 @@
                             <div class="mb-3">
                                 <label class="form-label" for="organizationType">Organization:</label>
                                 <select class="form-control" name="orgType">
-                                    <option id="typeOrganizationType" value="type" selected>Organization Type</option>
-                                    <option id="typeOrganizationName" value="name">Organization Name</option>
+                                    <option id="typeOrganizationType" value="type" selected>Organization State-wise</option>
+                                    <option id="typeOrganizationName" value="name">Organization Name-wise</option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="mb-3" id="organizationTypeDropdown" style="display: block;">
-                            <select class="form-control" id="orgType" name="orgType">
-                                <option value="">Select an Organization Type</option>
-                                <option value="S">State wise</option>
-                                <option value="M">Ministry wise</option>
+                            <select class="form-control" id="orgType" name="state">
+                                <option value="">Select an State</option>
+                                @foreach($states as $state)
+                                    <option value="{{ $state->id }}">{{ $state->state_name }}</option>
+                                @endforeach
                             </select>
                         </div>
 

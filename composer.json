@@ -18,6 +18,8 @@
         "laravel/ui": "^4.2",
         "livewire/livewire": "^2.11",
         "phpoffice/phpword": "^1.1",
+        "setasign/fpdf": "^1.8",
+        "setasign/fpdi": "^2.3",
         "tecnickcom/tcpdf": "^6.6",
         "tightenco/ziggy": "^1.0",
         "twilio/sdk": "^7.5"

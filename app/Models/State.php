@@ -14,4 +14,9 @@ class State extends Model
     {
         return $this->hasMany(Application::class);
     }
+    public function organizations(): HasMany
+    {
+        return $this->hasMany(Application::class, 'state_id', 'id');
+    }
+
 }

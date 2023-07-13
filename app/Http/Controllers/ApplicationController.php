@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 use TCPDF;
+use setasign\Fpdi\Tcpdf\Fpdi;
+
 use App\Models\Application;
 use App\Models\Grievance;
 use App\Models\Organization;
@@ -267,7 +269,7 @@ class ApplicationController extends Controller
             //file save
             if ($request->hasFile('file_path')) {
                 $filename = time() . '.' . $request->file('file_path')->getClientOriginalExtension();
-                $path = $request->file('file_path')->storeAs('applications', $filename, 'upload');
+                $path = $request->file('file_path')->storeAs('applications/' . $app->id . '/', $filename, 'upload');
                 $app->file_path = base64_encode($path);
                 $app->update(['file_path' => base64_encode($path)]);
             }
@@ -308,7 +310,8 @@ class ApplicationController extends Controller
             if ($app->save()) {
                 if ($request->hasFile('file_path')) {
                     $filename = time() . '.' . $request->file('file_path')->getClientOriginalExtension();
-                    $path = $request->file('file_path')->storeAs('applications' ,$filename, 'upload');
+                    $path = $request->file('file_path')->storeAs('applications/' . $app->id . '/', $filename, 'upload');
+
                     $app->file_path = base64_encode($path);
                     $app->update(['file_path' => base64_encode($path)]);
                 }
@@ -409,7 +412,9 @@ class ApplicationController extends Controller
                 $application->save();
                 $status_id = 4;
 
-                if ($application->acknowledgement == 'Y') {
+                if ($application->acknowledgement === 'Y') {
+
+//                    CURL
 //                    $html = view('acknowledgementletter', compact('application'))->render();
 //                    $postParameter = array(
 //                        'content' => $html
@@ -433,64 +438,59 @@ class ApplicationController extends Controller
 //                    }
 //                }
 
-//                    $dompdf = new Dompdf();
-//                    $options = new Options();
-//                    $options->setFontDir('/path/to/fonts');
-//                    $options->setDefaultFont('DejaVu Sans');
-//                    $options->set('isRemoteEnabled', true);
-//                    $dompdf->setOptions($options);
-//                    $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
-//                    $imageData = file_get_contents($imagePath);
-//                    $imageBase64 = base64_encode($imageData);
-//                    $html = View::make('acknowledgementletter', compact('application','imageBase64'))->render();
-//                    $dompdf->loadHtml($html);
-//                    $dompdf->setPaper('A4', 'portrait');
-//                    $dompdf->getOptions()->set('isFontSubsettingEnabled', false);
-//                    $dompdf->render();
-//                    $pdffile = $dompdf->output();
-//                    $fileName = 'acknowledgement.pdf';
-//                    $path = 'applications/' . $application->id . '/' . $fileName;
-//                    if (Storage::disk('upload')->put($path, $pdffile)) {
-//                        $application->acknowledgement_path = base64_encode($path);
-//                        $application->save();
-//                    }
-
-
+                    $dompdf = new Dompdf();
+                    $options = new Options();
+                    $options->setFontDir('/path/to/fonts');
+                    $options->setDefaultFont('DejaVu Sans');
+                    $options->set('isRemoteEnabled', true);
+                    $dompdf->setOptions($options);
                     $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
                     $imageData = file_get_contents($imagePath);
                     $imageBase64 = base64_encode($imageData);
                     $html = View::make('acknowledgementletter', compact('application','imageBase64'))->render();
-                    // Generate the PDF using SnappyPdf
-                    $pdf = SnappyPdf::loadHTML($html);
-                    $binaryPdf = $pdf->output();
-
-                    // Define the file path
+                    $dompdf->loadHtml($html);
+                    $dompdf->setPaper('A4', 'portrait');
+                    $dompdf->getOptions()->set('isFontSubsettingEnabled', false);
+                    $dompdf->render();
+//                    $dompdf->stream('acknowledgement.pdf');
+                    $pdffile = $dompdf->output();
                     $fileName = 'acknowledgement.pdf';
                     $path = 'applications/' . $application->id . '/' . $fileName;
+                    if (Storage::disk('upload')->put($path, $pdffile)) {
+                        $application->acknowledgement_path = base64_encode($path);
+                        $application->save();
+                    }
 
-                    // Store the PDF using the Storage facade
-                    Storage::disk('upload')->put($path, $binaryPdf);
+//                      SNAPPYPDF
+//                    $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
+//                    $imageData = file_get_contents($imagePath);
+//                    $imageBase64 = base64_encode($imageData);
+//                    $html = View::make('acknowledgementletter', compact('application','imageBase64'))->render();
+//                    $pdf = SnappyPdf::loadHTML($html);
+//                    $binaryPdf = $pdf->output();
+//                    $fileName = 'acknowledgement.pdf';
+//                    $path = 'applications/' . $application->id . '/' . $fileName;
+//                    Storage::disk('upload')->put($path, $binaryPdf);
+//                    $application->acknowledgement_path = base64_encode($path);
+//                    $application->save();
 
-                    // Update the application model with the encoded path
-                    $application->acknowledgement_path = base64_encode($path);
-                    $application->save();
 
 
-
-                    if ($application->email_id !== null) {
+                    if ($application->email_id != null) {
 //                    if($application->mail_sent == 0 || $application->mail_sent == '' ) {
 //                        $email = $application->email_id;
                         $email = 'prustysarthak123@gmail.com';
                         $cc = 'sayantan.saha@gov.in';
                         $subject = 'Reply From Rashtrapati Bhavan';
-                        $details = '<p>Hello, Mr/Mrs.' . $application->applicant_name . ',<br/>Your Petition has been received in Rashtrapati Bhavan with ref no ' . $application->reg_no . ' and forwarded to ' . $application->department_org->org_desc . ' for further necessary action.</p>';
-                        $details = str_replace("\n", '<br>', $details);
+                        $details = 'Hello, Mr/Mrs. ' . $application->applicant_name . ',<br><br>'
+                            . 'Your Petition has been received in Rashtrapati Bhavan with ref no ' . $application->reg_no . ' and forwarded to ' . $application->department_org->org_desc . ' for further necessary action.';
                         $content = storage::disk('upload')->get(base64_decode($application->acknowledgement_path));
                         try {
-                            Mail::raw($details, function ($message) use ($email, $subject, $content, $cc) {
+                            Mail::send([], [], function ($message) use ($email, $subject, $details, $content, $cc) {
                                 $message->to($email)->cc($cc)
                                     ->subject($subject)
-                                    ->attachData($content, 'filename.pdf', [
+                                    ->html($details)
+                                    ->attachData($content, 'acknowledgement.pdf', [
                                         'mime' => 'application/pdf',
                                     ]);
                             });
@@ -552,7 +552,7 @@ class ApplicationController extends Controller
                     $fileName = 'forward.pdf';
                     $path = 'applications/' . $application->id . '/' . $fileName;
                     if (Storage::disk('upload')->put($path, $pdffile)) {
-                        $application->acknowledgement_path = base64_encode($path);
+                        $application->forwarded_path = base64_encode($path);
                         $application->save();
                     }
 
@@ -580,13 +580,13 @@ class ApplicationController extends Controller
                         $email = 'prustysarthak123@gmail.com';
                         $cc = 'sayantan.saha@gov.in';
                         $subject = 'REQUEST FOR ATTENTION ON HIS/HER PETITION';
-                        $details = 'Kindly find attached the forwarding for petition received Rashtrapati Bhavan';
+                        $details = 'Kindly find the attached forwarded file for petition received in Rashtrapati Bhavan';
                         $content = storage::disk('upload')->get(base64_decode($application->forwarded_path));
                         try {
                             Mail::raw($details, function ($message) use ($email, $subject, $content, $cc) {
                                 $message->to($email)->cc($cc)
                                     ->subject($subject)
-                                    ->attachData($content, 'filename.pdf', [
+                                    ->attachData($content, 'forward letter.pdf', [
                                         'mime' => 'application/pdf',
                                     ]);
                             });
@@ -719,7 +719,10 @@ class ApplicationController extends Controller
 
     public function reportprint(Request $request)
     {
+        $organizationIds="";
+        $name="";
         $organizations = Organization::all();
+        $ar=[];
         $arr = [];
         $arr[] = ['active', 1];
         if ($request->reg_no && $request->reg_no != '') {
@@ -736,36 +739,78 @@ class ApplicationController extends Controller
         }
         if ($request->orgDesc && $request->orgDesc != '') {
             $arr[] = ['department_org_id', $request->orgDesc];
+            $org = Organization::findOrFail($request->orgDesc);
+            $name = $org->org_desc;
         }
 
+        if ($request->state && $request->state != '') {
+            $state= State::findOrFail($request->state);
+            $name = $state->state_name;
+            $organizationIds = Organization::where('state_id',$request->state)->pluck('id')->toArray();
+            $ar[] = ['department_org_id', $organizationIds];
+        }
 
         if ($request->input('submit') === 'acknowledgement')
         {
             $applications = Application::where($arr)
             ->where('acknowledgement_path', '!=', null)
             ->whereHas('statuses', function ($query) {
-                $query->where('status_id', [4, 5])
+                $query->wherein('status_id', [4, 5])
                     ->where('application_status.active', 1);
             })
             ->get();
 
-        $pdf = new TCPDF();
-        $pdf->setPrintHeader(false);
-        $pdf->setPrintFooter(false);
-        $pdf->SetMargins(10, 10, 10);
-        $pdf->SetAutoPageBreak(true, 10);
-        $pdf->AddPage();
-        foreach ($applications as $application) {
-            $pdfPath = base64_decode($application->acknowledgement_path);
-            $pdfData = Storage::disk('upload')->get($pdfPath);
-            $pdf->writeHTML($pdfData);
-            $pdf->AddPage();
-        }
-        $pdfContent = $pdf->Output('', 'S');
-        $tempPdfPath = storage_path('app/temp/merged_pdf.pdf');
-        file_put_contents($tempPdfPath, $pdfContent);
-        $pdfUrl = asset('storage/temp/merged_pdf.pdf');
-        return view('pdfmerge', compact('pdfUrl'));
+//            $pdfFiles = [
+//                'C:\Users\prust\OneDrive\Desktop\petition\applications\80\1689256090.pdf',
+//                'C:\Users\prust\OneDrive\Desktop\petition\applications\80\forward.pdf',
+//                // Add more PDF files here
+//            ];
+//
+//            $pdf = new Fpdi();
+//// Loop through the PDF files and add them to the merged PDF
+//            foreach ($pdfFiles as $file) {
+//                $pageCount = $pdf->setSourceFile($file);
+//                for ($pageNumber = 1; $pageNumber <= $pageCount; $pageNumber++) {
+//                    $pdf->AddPage();
+//                    $template = $pdf->importPage($pageNumber);
+//                    $pdf->useTemplate($template);
+//                }
+//            }
+//        $pdf = new Fpdi();
+//        $pdf->setPrintHeader(false);
+//        $pdf->setPrintFooter(false);
+//        $pdf->SetMargins(10, 10, 10);
+//        $pdf->SetAutoPageBreak(true, 10);
+//        $pdf->AddPage();
+//        foreach ($applications as $application) {
+//            $pdfPath = base64_decode($application->acknowledgement_path);
+//            $pdfData = Storage::disk('upload')->get($pdfPath);
+//            $pdf->writeHTML($pdfData);
+//            $pdf->AddPage();
+//        }
+//            upar foreach nahele tala ta
+//            foreach ($applications as $application) {
+//                $pdfPath = base64_decode($application->acknowledgement_path);
+//                $pdfData = Storage::disk('upload')->get($pdfPath);
+//                $pdf->AddPage();
+//
+//                // Create a temporary stream resource for the PDF data
+//                $pdfStream = fopen('php://temp', 'rb+');
+//                fwrite($pdfStream, $pdfData);
+//                rewind($pdfStream);
+//
+//                // Set the source file and import the first page
+//                $pageCount = $pdf->setSourceFile($pdfStream);
+//                $tplIdx = $pdf->importPage(1);
+//
+//                // Use the imported page as a template
+//                $pdf->useTemplate($tplIdx, 10, 10, 190, 270);
+//            }
+//        $pdfContent = $pdf->Output('', 'S');
+//        $tempPdfPath = storage_path('app/temp/merged_pdf.pdf');
+//        file_put_contents($tempPdfPath, $pdfContent);
+//        $pdfUrl = asset('storage/temp/merged_pdf.pdf');
+//        return view('pdfmerge', compact('pdfUrl'));
     }
 
         elseif($request->input('submit') === 'Forward'){
@@ -780,38 +825,41 @@ class ApplicationController extends Controller
             return view('forwardedletter',compact('applications','organizations','imageBase64'));}
 
         elseif($request->input('submit') === 'forwardTable'){
-            $applications = Application::where($arr)->where('department_org_id','!=',null)
+            $applications = Application::where($arr)->when(!empty($ar), function ($query) use ($organizationIds) {
+                return $query->whereIn('department_org_id', $organizationIds);
+            })
+                ->where('department_org_id','!=',null)
                 ->whereHas('statuses', function ($query) {
                     $query->whereIn('status_id',[4,5])
                         ->where('application_status.active', 1);
                 })->get();
-            return view('forwardTableReport',compact('applications','organizations','date_from','date_to'));}
+            return view('forwardTableReport',compact('applications','organizations','date_from','date_to','name'));}
 
         elseif($request->input('submit') === 'final_Reply'){
-            $applications = Application::where($arr)->where('reply','!=',null)
+            $applications = Application::where($arr)->when(!empty($ar), function ($query) use ($organizationIds) {
+                return $query->whereIn('department_org_id', $organizationIds);
+            })
+                ->where('reply','!=',null)
                 ->whereHas('statuses', function ($query) {
                     $query->whereIn('status_id', [4,5])
                         ->where('application_status.active', 1);
                 })->get();
-            return view('finalReplyReport',compact('applications','organizations','date_from','date_to'));}
+            return view('finalReplyReport',compact('applications','organizations','date_from','date_to','name'));}
 
     }
 
 
     public function generateAcknowledgementLetter($id)
     {
-        $organizations=Organization::all();
-        $states=State::all();
         $application = Application::findOrFail($id);
-        return view('acknowledgementletter',compact('application','organizations','states'));
+        return view('acknowledgementletter',compact('application',));
     }
 
     public function generateForwardLetter($id)
     {
-        $organizations=Organization::all();
-        $states=State::all();
+
         $application = Application::findOrFail($id);
-        return view('forwardedletter',compact('application','organizations','states'));
+        return view('forwardedletter',compact('application',));
     }
 
 
