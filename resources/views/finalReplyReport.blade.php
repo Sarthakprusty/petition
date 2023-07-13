@@ -94,7 +94,9 @@
                         @else
                             <br>
                         @endif</td>
-                    <td>{{ $app->department_org->org_desc }}</td>
+                    <td>
+                        {{$application->department_org ? $application->department_org->org_desc : ''}}
+                    </td>
                     <td>{{ $application->reply }}</td>
                 </tr>
             @endforeach
@@ -105,8 +107,10 @@
 
 
     </div>
+
     <script>
         function printLetter() {
+            //alert('hii');
             var printContents = document.getElementById('myDiv').innerHTML;
             var originalContents = document.body.innerHTML;
             document.body.innerHTML = printContents;
@@ -114,5 +118,4 @@
             document.body.innerHTML = originalContents;
         }
     </script>
-
 @endsection

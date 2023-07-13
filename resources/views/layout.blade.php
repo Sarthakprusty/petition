@@ -131,7 +131,7 @@
                         <div class="mb-3">
                             <label for="status" class="form-label">Choose Status</label>
                             <select name="status" id="status" class="form-select">
-                                <option value="">-Select Status-</option>
+                                <option value="">All</option>
                                 <option value="0">Draft</option>
                                 <option value="1">Pending at DH</option>
                                 <option value="2">Pending at SO</option>

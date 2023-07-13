@@ -210,7 +210,7 @@
                      $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(4)&& $app->reply==''))
                 <div class="col-md-9">
             @endif
-            @if($app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains<=3)
+            @if($app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->whereIn('status_id', [1, 2, 3]))
                     @php
                         $statuses = $app->statuses()
                             ->whereIn('application_status.active', [0, 1])
