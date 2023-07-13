@@ -406,7 +406,7 @@ class ApplicationController extends Controller
         }
 
 
-        elseif (in_array(3, $role_ids)) {
+        if (in_array(3, $role_ids)) {
             if ($action == 'Approve') {
                 $application->authority_id = Auth::user()->sign_id ;
                 $application->save();
