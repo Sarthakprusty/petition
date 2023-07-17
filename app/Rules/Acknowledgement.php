@@ -22,10 +22,9 @@ class Acknowledgement implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        // Define the allowed gender values
         //yes,NO
         $allowedAcknowledgement = ['Y', 'N'];
         if (!in_array($value, $allowedAcknowledgement))
-            $fail('The :attribute must be one of the following: male, female, other.');
+            $fail('The :attribute must be one of the following: YES,NO');
     }
 }

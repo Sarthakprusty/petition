@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect(\route('applications.index'));
 });
 /*
 Route::get('applications',[App\Http\Controllers\ApplicationController::class,'index']);
@@ -27,6 +27,7 @@ Route::post('applications',[App\Http\Controllers\ApplicationController::class,'s
 Route::group(['middleware' => ['web']], function () {
     Route::get('applications/search', [ApplicationController::class, 'search'])->name('application.search')->middleware('auth');
     Route::get('applications/reportprint', [ApplicationController::class, 'reportprint'])->name('application.reportprint')->middleware('auth');
+    Route::get('applications/dashboard', [ApplicationController::class, 'dashboard'])->name('applications.dashboard')->middleware('auth');
 
     Route::get('applications/{id}/acknowledgement', [ApplicationController::class, 'generateAcknowledgementLetter'])->name('application.acknowledgement')->middleware('auth');
     Route::get('applications/{id}/forwarded', [ApplicationController::class, 'generateForwardLetter'])->name('application.forward')->middleware('auth');

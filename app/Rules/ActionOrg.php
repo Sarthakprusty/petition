@@ -22,13 +22,12 @@ class ActionOrg implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        // Define the allowed gender values
         //N=No Action
         //F=Forward to Central Govt. Ministry/Department
         //M=Miscellaneous
 
         $allowedAcknowledgement = ['N', 'F','M'];
         if (!in_array($value, $allowedAcknowledgement))
-            $fail('The :attribute must be one of the following: male, female, other.');
+            $fail('The :attribute must be one of the following: No Action, Forward to Central Govt. Ministry/Department, Miscellaneous.');
     }
 }

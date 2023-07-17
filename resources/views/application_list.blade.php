@@ -15,10 +15,13 @@
                 Applications
             </h3>
         </div>
+
         <div class="col-md-4" style="text-align: right;">
             <input class="form-control" type="text" placeholder="Search" id="searchInput" data-bs-toggle="modal" data-bs-target="#exampleModal"/>
         </div>
     </div>
+<hr class="row-divider">
+
     <div class="row"></div>
     <div class="row" id="pageContent" >
         @foreach($applications as $application)

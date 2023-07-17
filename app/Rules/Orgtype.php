@@ -22,8 +22,7 @@ class Orgtype implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        // Define the allowed gender values
-        //MALE,FEMALE,OTHERS
+        //internal,ministry/departments,state
         $allowedOrgType = ['M', 'S', 'I'];
         if (!in_array($value, $allowedOrgType))
             $fail('The :attribute must be one of the following: internal,ministry/departments,state	');

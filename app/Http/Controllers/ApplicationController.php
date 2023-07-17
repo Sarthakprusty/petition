@@ -106,6 +106,9 @@ class ApplicationController extends Controller
      */
     public function store(Request $request)
     {
+        $errors = ['error' => 'Sorry, something went wrong.'];
+        return back()->withErrors($errors);
+
         if($request->language_of_letter!='O'){
             if ($request->input('submit') == 'Save') {
                 $request->validate([
@@ -370,7 +373,7 @@ class ApplicationController extends Controller
         else {
             return back()->withErrors([
                 'username' => 'Sorry, could not save the data.',
-            ]);
+            ])->withInput();
         }
 
         return back()->withErrors([
@@ -717,6 +720,53 @@ class ApplicationController extends Controller
         return view('application_list', compact('applications','states','organizations'));
     }
 
+    public function dashboard(Request $request)
+    {
+
+        $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+        $org="All";
+        if ($request->organization && $request->organization != '') {
+            $org_id=  $request->organization ;
+            $org =Organization::find($org_id)->org_desc;
+        }
+
+        $applicationStatusCounts = Application::where('applications.active', 1)
+            ->whereIn('applications.created_by', function ($query) use ($org_id) {
+                $query->select('user_organization.user_id')
+                    ->from('user_organization')
+                    ->where('user_organization.org_id', $org_id);
+            })
+            ->withCount([
+                'statuses as pending_with_dh' => function ($query) {
+                    $query->where('application_status.status_id', 1)->where('application_status.active', 1);
+                },
+                'statuses as pending_with_so' => function ($query) {
+                    $query->where('application_status.status_id', 2)->where('application_status.active', 1);
+                },
+                'statuses as pending_with_us' => function ($query) {
+                    $query->where('application_status.status_id', 3)->where('application_status.active', 1);
+                },
+                'statuses as in_draft' => function ($query) {
+                    $query->where('application_status.status_id', 0)->where('application_status.active', 1);
+                },
+                'statuses as approved' => function ($query) {
+                    $query->where('application_status.status_id', 4)->where('application_status.active', 1);
+                },
+                'statuses as submitted' => function ($query) {
+                    $query->where('application_status.status_id', 5)->where('application_status.active', 1);
+                },
+            ])
+            ->get();
+
+        $pending_with_dh = $applicationStatusCounts->sum('pending_with_dh');
+        $pending_with_so = $applicationStatusCounts->sum('pending_with_so');
+        $pending_with_us = $applicationStatusCounts->sum('pending_with_us');
+        $in_draft = $applicationStatusCounts->sum('in_draft');
+        $approved = $applicationStatusCounts->sum('approved');
+        $submitted = $applicationStatusCounts->sum('submitted');
+
+        return view('dashboard', compact('in_draft', 'pending_with_dh', 'pending_with_so', 'pending_with_us', 'approved', 'submitted','org'));
+    }
     public function reportprint(Request $request)
     {
         $organizationIds="";
@@ -819,10 +869,8 @@ class ApplicationController extends Controller
                     $query->whereIn('status_id', [4,5])
                         ->where('application_status.active', 1);
                 })->get();
-            $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
-            $imageData = file_get_contents($imagePath);
-            $imageBase64 = base64_encode($imageData);
-            return view('forwardedletter',compact('applications','organizations','imageBase64'));}
+
+            return view('forwardprint',compact('applications'));}
 
         elseif($request->input('submit') === 'forwardTable'){
             $applications = Application::where($arr)->when(!empty($ar), function ($query) use ($organizationIds) {

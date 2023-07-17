@@ -37,6 +37,11 @@
                     <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
                         <li class="nav-item">
                         <li>
+                            <a href="{{route('applications.dashboard')}}" >
+                                <i class="fs-4 bi-border-style"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Dashboard</span> </a>
+                        </li>
+                        <br>
+                        <li>
                             <a href="{{route('applications.index')}}" >
                                 <i class="fs-4 bi-postcard"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Applications</span> </a>
                         </li>
@@ -103,7 +108,7 @@
         </div>
     </div>
 </div>
-
+@yield('modal')
 {{--modal section--}}
 
 <div>

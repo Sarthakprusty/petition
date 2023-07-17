@@ -151,7 +151,7 @@
             <div>{{$application->reg_no}}</div><br>
             <div class="row">
                 <div class="col-10" >
-                    <label>द्वारा / From:</label><br>
+                    <label>द्वारा / From:</label>
                     राष्ट्रपति सचिवालय<br>
                     President's Secretariat<br>
                     राष्ट्रपति भवन<br>

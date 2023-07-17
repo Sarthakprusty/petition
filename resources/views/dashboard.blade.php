@@ -1,0 +1,111 @@
+@extends('layout')
+
+@section('content')
+    <div class="row">
+        <div class="col-md-8">
+            <h3 class="display-3">
+                {{$org}}
+            </h3>
+        </div>
+        @if (auth()->check() && auth()->user()->organizations()->where('user_organization.active', 1)->count()>1)
+        <div class="col-md-4" style="text-align: right;">
+            <input class="form-control" type="text" placeholder="Search" id="searchInput" data-bs-toggle="modal" data-bs-target="#org_status"/>
+        </div>
+        @endif
+    </div>
+    <hr class="row-divider">
+
+    <div class="row"></div>
+    <div class="row" id="pageContent" >
+        <div class="col col-md-4" style="padding: 2%; ">
+        <div class="card text-white bg-info  mb-3" style="max-width: 18rem;">
+            <div class="card-header">Draft</div>
+            <div class="card-body">
+                <h5 class="card-title" style="font-size: xx-large">{{$in_draft}}</h5>
+            </div>
+        </div>
+        </div>
+        <div class="col col-md-4" style="padding: 2%; ">
+
+        <div class="card text-white bg-warning mb-3" style="max-width: 18rem;">
+            <div class="card-header">Pending at DH</div>
+            <div class="card-body">
+                <h5 class="card-title"style="font-size: xx-large">{{$pending_with_dh}}</h5>
+            </div>
+        </div></div>
+        <div class="col col-md-4" style="padding: 2%; ">
+
+        <div class="card text-white bg-success mb-3" style="max-width: 18rem;">
+            <div class="card-header">Pending at SO</div>
+            <div class="card-body">
+                <h5 class="card-title"style="font-size: xx-large">{{$pending_with_so}}</h5>
+            </div>
+        </div></div>
+        <div class="col col-md-4" style="padding: 2%; ">
+
+        <div class="card text-white bg-danger mb-3" style="max-width: 18rem;">
+            <div class="card-header">Pending at US</div>
+            <div class="card-body">
+                <h5 class="card-title"style="font-size: xx-large">{{$pending_with_us}}</h5>
+            </div>
+        </div></div>
+        <div class="col col-md-4" style="padding: 2%; ">
+
+        <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+            <div class="card-header">Approved</div>
+            <div class="card-body">
+                <h5 class="card-title"style="font-size: xx-large">{{$approved}}</h5>
+            </div>
+        </div></div>
+        <div class="col col-md-4" style="padding: 2%; ">
+
+        <div class="card bg-light mb-3" style="max-width: 18rem;">
+            <div class="card-header">Submitted</div>
+            <div class="card-body">
+                <h5 class="card-title"style="font-size: xx-large">{{$submitted}}</h5>
+            </div>
+        </div>
+        </div></div>
+
+
+@endsection
+@section('modal')
+    @if (auth()->check() && auth()->user()->organizations()->where('user_organization.active', 1)->count()>1)
+        <div class="modal fade" id="org_status" style="z-index: 1051" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" data-bs-backdrop="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="get" action="{{route('applications.dashboard')}}">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class ='mb-3'>
+                                @php
+                                    $organizations = \App\Models\Organization::all();
+                                    $org_id = auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray();
+                                    @endphp
+
+                                <label for="org" class="form-label">Choose Organization</label>
+                                    <select class="form-control" id="organization" name="organization">
+                                        <option value="">Select an Organization</option>
+                                        @foreach($organizations as $organization)
+                                            @if(in_array($organization->id, $org_id))
+                                                <option value="{{ $organization->id }}">{{ $organization->org_desc }}</option>
+                                            @endif
+                                        @endforeach
+                                    </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-outline-primary" name="submit" value="Search">Search</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div>
+    @endif
+
+
+@endsection
+

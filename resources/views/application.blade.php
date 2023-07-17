@@ -1,21 +1,25 @@
 @extends('layout')
 
 @section('content')
-{{--    @php--}}
-{{--        print_r( session()->all());--}}
-{{--    @endphp--}}
-    @if ($errors->any())
-        <div class="alert alert-danger" xmlns="http://www.w3.org/1999/html">
-            <strong>Whoops!</strong> There were some problems with your input.<br><br>
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     @php
+        print_r( session()->all());
+    @endphp
+{{--@if ($errors->any())--}}
+{{--    <div class="alert alert-danger">--}}
+{{--        <strong>Whoops!</strong> There were some problems with your input.<br><br>--}}
+{{--        <ul>--}}
+{{--            @foreach ($errors->all() as $error)--}}
+{{--                <li>{{ $error }}</li>--}}
+{{--            @endforeach--}}
+{{--        </ul>--}}
+{{--    </div>--}}
+{{--@endif--}}
+@if (session('error'))
+    <script>
+        alert("{{ session('error') }}");
+    </script>
+@endif
+@php
         $statuses = $app->statuses()
             ->whereIn('application_status.active', [0, 1])
             ->whereNotNull('remarks')
@@ -244,7 +248,7 @@
                             </div>
                             <div class="col">
                                 <label class="form-check-label">
-                                    <input type="radio" name="acknowledgement" value="Y" {{ (old('acknowledgement') == 'Y' || $app->acknowledgement == 'Y') ? 'checked' : '' }}>
+                                    <input type="radio" name="acknowledgement" value="F" {{ (old('acknowledgement') == 'Y' || $app->acknowledgement == 'Y') ? 'checked' : '' }}>
                                     Yes
                                 </label>
                                 <label class="form-check-label">

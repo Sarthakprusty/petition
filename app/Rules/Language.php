@@ -22,10 +22,9 @@ class Language implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        // Define the allowed gender values
         //HINDI,ENGLISH,OTHERS
         $allowedLanguage = ['H', 'E', 'O'];
         if (!in_array($value, $allowedLanguage))
-            $fail('The :attribute must be one of the following: male, female, other.');
+            $fail('The :attribute must be one of the following: HINDI,ENGLISH,OTHERS.');
     }
 }
