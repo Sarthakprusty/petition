@@ -1,9 +1,9 @@
 @extends('layout')
 
 @section('content')
-    @php
-        print_r( session()->all());
-    @endphp
+{{--    @php--}}
+{{--        print_r( session()->all());--}}
+{{--    @endphp--}}
 {{--@if ($errors->any())--}}
 {{--    <div class="alert alert-danger">--}}
 {{--        <strong>Whoops!</strong> There were some problems with your input.<br><br>--}}

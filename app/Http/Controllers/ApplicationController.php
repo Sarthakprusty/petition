@@ -106,8 +106,8 @@ class ApplicationController extends Controller
      */
     public function store(Request $request)
     {
-        $errors = ['error' => 'Sorry, something went wrong.'];
-        return back()->withErrors($errors);
+//        $errors = ['error' => 'Sorry, something went wrong.'];
+//        return back()->withErrors($errors);
 
         if($request->language_of_letter!='O'){
             if ($request->input('submit') == 'Save') {
