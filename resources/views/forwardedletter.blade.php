@@ -190,7 +190,6 @@
 
 </div>
 
-
 {{--        <script>--}}
 {{--            function printLetter() {--}}
 {{--                var printContents = document.getElementById('myDiv').innerHTML;--}}
