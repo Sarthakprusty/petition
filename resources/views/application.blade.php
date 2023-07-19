@@ -14,11 +14,11 @@
 {{--        </ul>--}}
 {{--    </div>--}}
 {{--@endif--}}
-@if (session('error'))
-    <script>
-        alert("{{ session('error') }}");
-    </script>
-@endif
+{{--@if (session('error'))--}}
+{{--    <script>--}}
+{{--        alert("{{ session('error') }}");--}}
+{{--    </script>--}}
+{{--@endif--}}
 @php
         $statuses = $app->statuses()
             ->whereIn('application_status.active', [0, 1])
@@ -218,7 +218,8 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group row">
-                                    <input type="date" class="form-control datepicker" name="letter_date" id="letter_date" style="width: 89%; margin-left: 5%;" value="{{ old('letter_date') ?: \Carbon\Carbon::parse($app->letter_date)->format('Y-m-d') }}">
+                                    <input type="date" class="form-control datepicker" name="letter_date" id="letter_date" style="width: 89%; margin-left: 5%;" value="{{ old('letter_date') ?: ($app->letter_date ? \Carbon\Carbon::parse($app->letter_date)->format('Y-m-d') : '') }}
+">
                                 </div>
                             </div>
                         </div>
@@ -234,10 +235,10 @@
 
                         <div class="row">
                             <div class="col-md-3" style="text-align: right">
-                                <label class="form-label" for="letter_body">Letter Body:<span style="color: red;" class="required">*</span></label>
+                                <label class="form-label" for="letter_body">Letter Body:</label>
                             </div>
                             <div class="col">
-                                <textarea class="form-control" name="letter_body" id="letter_body"  required rows="7" placeholder="letter body" >{{ old('letter_body') ?: $app->letter_body}}</textarea>
+                                <textarea class="form-control" name="letter_body" id="letter_body"   rows="7" placeholder="letter body" >{{ old('letter_body') ?: $app->letter_body}}</textarea>
                             </div>
                         </div>
                         <hr class="row-divider">
@@ -248,7 +249,7 @@
                             </div>
                             <div class="col">
                                 <label class="form-check-label">
-                                    <input type="radio" name="acknowledgement" value="F" {{ (old('acknowledgement') == 'Y' || $app->acknowledgement == 'Y') ? 'checked' : '' }}>
+                                    <input type="radio" name="acknowledgement" value="Y" {{ (old('acknowledgement') == 'Y' || $app->acknowledgement == 'Y') ? 'checked' : '' }}>
                                     Yes
                                 </label>
                                 <label class="form-check-label">
@@ -356,7 +357,7 @@
                                 <div class="col-6" >
                                     <div class="input-group">
                                         <div class="custom-file">
-                                            <input type="file" class="custom-file-input" id="file_path" name="file_path" accept=".pdf">
+                                            <input type="file" class="custom-file-input" id="file_path" name="file_path" accept=".pdf">(.pdf)
                                         </div>
                                     </div>
                                 </div>
@@ -366,7 +367,7 @@
                                 <div class="col-md-6 offset-md-4" style="margin-left: 38%">
                                     <div class="input-group">
                                         <div class="custom-file">
-                                            <input type="file" class="custom-file-input" id="file_path" name="file_path" accept=".pdf">
+                                            <input type="file" class="custom-file-input" id="file_path" name="file_path" accept=".pdf"> (.pdf)
                                         </div>
                                     </div>
                                 </div>
@@ -383,11 +384,11 @@
                                 <div class="col-6" style="text-align: right">
                                     <input type="submit" class="btn btn-outline-warning" name="submit" value="Draft"></div>
                                 <div class="col-6" style="text-align: left">
-                                    <input type="submit" class="btn btn-outline-success" name="submit" value="Save">
+                                    <input type="submit" class="btn btn-outline-success" name="submit" value="Forward">
                                 </div>
                             @else
                                 <div style="text-align: center">
-                                    <input type="submit" class="btn btn-outline-success" name="submit" value="Save">
+                                    <input type="submit" class="btn btn-outline-success" name="submit" value="Forward">
                                 </div>
                             @endif
                         </div>
@@ -566,7 +567,6 @@
                     $('#address').removeAttr('required');
                     $('#country').removeAttr('required');
                     $('#letter_subject').removeAttr('required');
-                    $('#letter_body').removeAttr('required');
                     $('.required').hide();
                 } else {
                     $('#applicant_title').attr('required', 'required');
@@ -574,7 +574,6 @@
                     $('#address').attr('required', 'required');
                     $('#country').attr('required', 'required');
                     $('#letter_subject').attr('required', 'required');
-                    $('#letter_body').attr('required', 'required');
                     $('.required').show();
                 }
             }

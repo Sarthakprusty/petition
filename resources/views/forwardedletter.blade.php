@@ -75,7 +75,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="font-weight: bold; white-space: nowrap;">Sl.No:{{$application->reg_no}}</div>
                 <div>
-                    <div style="white-space: nowrap;">दिनांक/Dated:{{now()->format('d/m/Y')}}
+                    <div style="white-space: nowrap;">दिनांक/Dated:{{$application->created_at->format('d/m/Y')}}
 {{--                        @php--}}
 {{--                            $statusId = 4;--}}
 {{--                            $pivot = $application->statuses->first(function ($status) use ($statusId) {--}}

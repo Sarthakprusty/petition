@@ -16,57 +16,71 @@
     <hr class="row-divider">
 
     <div class="row"></div>
+    <form method="get" action="{{route('application.search')}}">
     <div class="row" id="pageContent" >
         <div class="col col-md-4" style="padding: 2%; ">
-        <div class="card text-white bg-info  mb-3" style="max-width: 18rem;">
-            <div class="card-header">Draft</div>
+            <a href="#" onclick="submitForm(0)">
+                <div class="card bg-light mb-3" style="max-width: 18rem;">
+                <div class="card-header">Draft</div>
             <div class="card-body">
                 <h5 class="card-title" style="font-size: xx-large">{{$in_draft}}</h5>
             </div>
         </div>
+            </a>
         </div>
         <div class="col col-md-4" style="padding: 2%; ">
-
-        <div class="card text-white bg-warning mb-3" style="max-width: 18rem;">
+            <a href="#" onclick="submitForm(1)">
+                <div class="card text-white bg-warning mb-3" style="max-width: 18rem;">
             <div class="card-header">Pending at DH</div>
             <div class="card-body">
                 <h5 class="card-title"style="font-size: xx-large">{{$pending_with_dh}}</h5>
             </div>
-        </div></div>
-        <div class="col col-md-4" style="padding: 2%; ">
+        </div></a></div>
 
+        <div class="col col-md-4" style="padding: 2%; ">
+            <a href="#" onclick="submitForm(2)">
         <div class="card text-white bg-success mb-3" style="max-width: 18rem;">
             <div class="card-header">Pending at SO</div>
             <div class="card-body">
                 <h5 class="card-title"style="font-size: xx-large">{{$pending_with_so}}</h5>
             </div>
-        </div></div>
+        </div></a></div>
         <div class="col col-md-4" style="padding: 2%; ">
-
+            <a href="#" onclick="submitForm(3)">
         <div class="card text-white bg-danger mb-3" style="max-width: 18rem;">
             <div class="card-header">Pending at US</div>
             <div class="card-body">
                 <h5 class="card-title"style="font-size: xx-large">{{$pending_with_us}}</h5>
             </div>
-        </div></div>
+        </div></a></div>
         <div class="col col-md-4" style="padding: 2%; ">
-
+            <a href="#" onclick="submitForm(4)">
         <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
             <div class="card-header">Approved</div>
             <div class="card-body">
                 <h5 class="card-title"style="font-size: xx-large">{{$approved}}</h5>
             </div>
-        </div></div>
+        </div></a></div>
         <div class="col col-md-4" style="padding: 2%; ">
-
-        <div class="card bg-light mb-3" style="max-width: 18rem;">
+            <a href="#" onclick="submitForm(5)">
+                <div class="card text-white bg-info  mb-3" style="max-width: 18rem;">
             <div class="card-header">Submitted</div>
             <div class="card-body">
                 <h5 class="card-title"style="font-size: xx-large">{{$submitted}}</h5>
             </div>
+        </div></a>
         </div>
-        </div></div>
-
+        <input type="hidden" name="status" id="statusInput">
+        <button type="submit" id="submitBtn" style="display: none;"></button>
+    </div>
+    </form>
+    <script>
+        // Function to submit the form with the given status value
+        function submitForm(statusValue) {
+            document.getElementById('statusInput').value = statusValue;
+            document.getElementById('submitBtn').click();
+        }
+    </script>
 
 @endsection
 @section('modal')

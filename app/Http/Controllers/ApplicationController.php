@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 use TCPDF;
 use setasign\Fpdi\Tcpdf\Fpdi;
-
+use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 use App\Models\Application;
 use App\Models\Grievance;
 use App\Models\Organization;
@@ -110,7 +110,7 @@ class ApplicationController extends Controller
 //        return back()->withErrors($errors);
 
         if($request->language_of_letter!='O'){
-            if ($request->input('submit') == 'Save') {
+            if ($request->input('submit') == 'Forward') {
                 $request->validate([
                     'reg_no'=>'nullable',
                     'applicant_title'=>'required',
@@ -128,7 +128,7 @@ class ApplicationController extends Controller
                     'email_id'=>'nullable|email',
                     'letter_no'=>'required',
                     'letter_subject'=>'required',
-                    'letter_body'=>'required',
+                    'letter_body'=>'nullable',
                     'acknowledgement'=>['nullable', new Acknowledgement],
                     'grievance_category_id'=>'nullable|numeric',
                     'action_org'=>['nullable', new ActionOrg],
@@ -209,7 +209,7 @@ class ApplicationController extends Controller
 //            }
 //        }
 
-        if ($request->input('submit') == 'Save') {
+        if ($request->input('submit') == 'Forward') {
 
             //reg_no
             if ($app->reg_no && $app->reg_no !== null ) {
@@ -271,7 +271,8 @@ class ApplicationController extends Controller
 
             //file save
             if ($request->hasFile('file_path')) {
-                $filename = time() . '.' . $request->file('file_path')->getClientOriginalExtension();
+                $fname = str_replace('/', '_', $app->reg_no);
+                $filename = $fname . '.' . $request->file('file_path')->getClientOriginalExtension();
                 $path = $request->file('file_path')->storeAs('applications/' . $app->id . '/', $filename, 'upload');
                 $app->file_path = base64_encode($path);
                 $app->update(['file_path' => base64_encode($path)]);
@@ -312,7 +313,8 @@ class ApplicationController extends Controller
             }
             if ($app->save()) {
                 if ($request->hasFile('file_path')) {
-                    $filename = time() . '.' . $request->file('file_path')->getClientOriginalExtension();
+                    $fname = str_replace('/', '_', $app->reg_no);
+                    $filename = $fname . '.' . $request->file('file_path')->getClientOriginalExtension();
                     $path = $request->file('file_path')->storeAs('applications/' . $app->id . '/', $filename, 'upload');
 
                     $app->file_path = base64_encode($path);
@@ -336,7 +338,7 @@ class ApplicationController extends Controller
                         'created_at'=>carbon::now()->toDateTimeLocalString()
                     ]);
                 }
-                return redirect()->route('applications.index')->with('success', 'Draft created successfully.');
+                return redirect(url(route('applications.index')))->with('success', 'Draft created successfully.');
             }
         }
 
@@ -366,7 +368,7 @@ class ApplicationController extends Controller
                     'created_at'=>carbon::now()->toDateTimeLocalString()
                 ]);
             }
-            return redirect()->route('applications.index')->with('success', 'reply saved');
+            return view('application_view', compact('app'));
 
         }
 
@@ -378,7 +380,7 @@ class ApplicationController extends Controller
 
         return back()->withErrors([
             'username' => 'Sorry, something got wrong',
-        ]);
+        ])->withInput();
 
     }
 
@@ -585,11 +587,15 @@ class ApplicationController extends Controller
                         $subject = 'REQUEST FOR ATTENTION ON HIS/HER PETITION';
                         $details = 'Kindly find the attached forwarded file for petition received in Rashtrapati Bhavan';
                         $content = storage::disk('upload')->get(base64_decode($application->forwarded_path));
+                        $file = storage::disk('upload')->get(base64_decode($application->file_path));
                         try {
-                            Mail::raw($details, function ($message) use ($email, $subject, $content, $cc) {
+                            Mail::raw($details, function ($message) use ($email, $subject, $content, $cc,$file) {
                                 $message->to($email)->cc($cc)
                                     ->subject($subject)
                                     ->attachData($content, 'forward letter.pdf', [
+                                        'mime' => 'application/pdf',
+                                    ])
+                                    ->attachData($file, 'file.pdf', [
                                         'mime' => 'application/pdf',
                                     ]);
                             });
@@ -623,7 +629,7 @@ class ApplicationController extends Controller
             ]
         );
 
-        return redirect()->route('applications.index')->with('success', 'Status created successfully.');
+        return redirect(url(route('applications.index')))->with('success', 'Status created successfully.');
     }
 
 
@@ -803,12 +809,60 @@ class ApplicationController extends Controller
         if ($request->input('submit') === 'acknowledgement')
         {
             $applications = Application::where($arr)
-            ->where('acknowledgement_path', '!=', null)
-            ->whereHas('statuses', function ($query) {
-                $query->wherein('status_id', [4, 5])
-                    ->where('application_status.active', 1);
-            })
-            ->get();
+                ->where('acknowledgement_path', '!=', null)
+                ->whereHas('statuses', function ($query) {
+                    $query->wherein('status_id', [4, 5])
+                        ->where('application_status.active', 1);
+                })
+                ->get();
+
+
+
+//            $pdf = PDFMerger::init();
+//            $pdf->addPDF('');
+//            $pdf->addPDF('');
+//
+//            $oMerger->stream();
+
+
+//            $pdfFilePaths = [];
+//            foreach ($applications as $application) {
+//                $pdfPath = base64_decode($application->acknowledgement_path);
+//                $pdfData[] = Storage::disk('upload')->get($pdfPath);
+//                if ($pdfData) {
+//                    $fileName = time() . '_' . uniqid() . '.pdf';
+//                    $pdfFilePath = storage_path('app/' . $fileName);
+//
+//                    file_put_contents($pdfFilePath, $pdfData);
+//
+//                    $pdfFilePaths[] = $pdfFilePath;
+//                }
+//            }
+//
+//            if (!empty($pdfFilePaths)) {
+//                $pdf = PDFMerger::init();
+//                foreach ($pdfFilePaths as $pdfFilePath) {
+//                    $pdf->addPDF($pdfFilePath, 'all');
+//                }
+//
+//                $mergedFileName = time() . '.pdf';
+//                $pdf->merge();
+//                $pdf->save(storage_path('app/' . $mergedFileName));
+//
+//                // Clean up temporary PDF files
+//                foreach ($pdfFilePaths as $pdfFilePath) {
+//                    unlink($pdfFilePath);
+//                }
+//
+//                return response()->download(storage_path('app/' . $mergedFileName))->deleteFileAfterSend(true);
+//            } else {
+//                return back()->withErrors([
+//                    'pdf_error' => 'No PDFs found to merge.',
+//                ]);
+//            }
+
+
+
 
 //            $pdfFiles = [
 //                'C:\Users\prust\OneDrive\Desktop\petition\applications\80\1689256090.pdf',
@@ -861,7 +915,7 @@ class ApplicationController extends Controller
 //        file_put_contents($tempPdfPath, $pdfContent);
 //        $pdfUrl = asset('storage/temp/merged_pdf.pdf');
 //        return view('pdfmerge', compact('pdfUrl'));
-    }
+        }
 
         elseif($request->input('submit') === 'Forward'){
             $applications = Application::where($arr)->where('forwarded_path','!=',null)
@@ -870,7 +924,8 @@ class ApplicationController extends Controller
                         ->where('application_status.active', 1);
                 })->get();
 
-            return view('forwardprint',compact('applications'));}
+            return view('forwardprint',compact('applications'));
+        }
 
         elseif($request->input('submit') === 'forwardTable'){
             $applications = Application::where($arr)->when(!empty($ar), function ($query) use ($organizationIds) {
@@ -881,7 +936,8 @@ class ApplicationController extends Controller
                     $query->whereIn('status_id',[4,5])
                         ->where('application_status.active', 1);
                 })->get();
-            return view('forwardTableReport',compact('applications','organizations','date_from','date_to','name'));}
+            return view('forwardTableReport',compact('applications','organizations','date_from','date_to','name'));
+        }
 
         elseif($request->input('submit') === 'final_Reply'){
             $applications = Application::where($arr)->when(!empty($ar), function ($query) use ($organizationIds) {
@@ -892,7 +948,8 @@ class ApplicationController extends Controller
                     $query->whereIn('status_id', [4,5])
                         ->where('application_status.active', 1);
                 })->get();
-            return view('finalReplyReport',compact('applications','organizations','date_from','date_to','name'));}
+            return view('finalReplyReport',compact('applications','organizations','date_from','date_to','name'));
+        }
 
     }
 
