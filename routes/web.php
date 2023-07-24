@@ -40,5 +40,6 @@ Route::group(['middleware' => ['web']], function () {
     Route::view('api/login', 'login')->name('login');
 
     Route::resource('authority', SignAuthorityController::class)->middleware('auth');
+    Route::get('/error', function () {return view('error');});
 
 });

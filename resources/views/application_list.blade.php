@@ -42,8 +42,8 @@
                         @endif
 
                         <div class="card-title">
-                            Letter dt.
-                            <span class="float-end">{{ $application->letter_date ? $application->letter_date->format("d/m/Y") : 'N/A' }}</span>
+                            Created dt.
+                            <span class="float-end">{{ $application->created_at->format("d/m/Y") }}</span>
                         </div>
 
 {{--                        @if($application->letter_subject)--}}
@@ -72,9 +72,17 @@
                                 @endphp
                                 Fwd: {{ $trimmedremark }}
                             </div>
+                        @elseif($application->reason)
+                            <div class="card-subject">
+                                @php
+                                    $remark = $application->reason->reason_desc;
+                                    $trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
+                                @endphp
+                                Reason: {{ $trimmedremark }}
+                            </div>
                         @else
                             <div class="card-subject">
-                                Forwarded To:<span class="float-end"> N/A</span>
+                               N/A: <span class="float-end"> N/A</span>
                             </div>
                         @endif
 
@@ -110,7 +118,7 @@
                             </form>
                         </div>
                         {{--                            @endif--}}
-                        @if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) &&
+                        @if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && ($application->created_by == auth()->user()->id)&&
                         ($application->statuses->isEmpty() || $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(1) || $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0)))
                             <div class="float-end">
                                 <form action="{{ route('applications.edit', ['application' => $application]) }}" method="GET">

@@ -1,25 +1,36 @@
 @extends('layout')
 
 @section('content')
-{{--    @php--}}
-{{--        print_r( session()->all());--}}
-{{--    @endphp--}}
-{{--@if ($errors->any())--}}
-{{--    <div class="alert alert-danger">--}}
-{{--        <strong>Whoops!</strong> There were some problems with your input.<br><br>--}}
-{{--        <ul>--}}
-{{--            @foreach ($errors->all() as $error)--}}
-{{--                <li>{{ $error }}</li>--}}
-{{--            @endforeach--}}
-{{--        </ul>--}}
-{{--    </div>--}}
-{{--@endif--}}
-{{--@if (session('error'))--}}
-{{--    <script>--}}
-{{--        alert("{{ session('error') }}");--}}
-{{--    </script>--}}
-{{--@endif--}}
-@php
+    @php session_start(); @endphp
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    {{--    @php--}}
+    {{--        print_r( session()->all());--}}
+    {{--    @endphp--}}
+    {{--@if ($errors->any())--}}
+    {{--    <div class="alert alert-danger">--}}
+    {{--        <strong>Whoops!</strong> There were some problems with your input.<br><br>--}}
+    {{--        <ul>--}}
+    {{--            @foreach ($errors->all() as $error)--}}
+    {{--                <li>{{ $error }}</li>--}}
+    {{--            @endforeach--}}
+    {{--        </ul>--}}
+    {{--    </div>--}}
+    {{--@endif--}}
+    {{--@if (session('error'))--}}
+    {{--    <script>--}}
+    {{--        alert("{{ session('error') }}");--}}
+    {{--    </script>--}}
+    {{--@endif--}}
+    @php
         $statuses = $app->statuses()
             ->whereIn('application_status.active', [0, 1])
             ->whereNotNull('remarks')
@@ -128,7 +139,7 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <select class="form-control" name="country" id="country"  required>
-                                        <option value="">Select Country*</option>
+                                        <option value="">-Select a Country-*</option>
                                         <option value="I" {{ old('country') === 'I' || $app->country === 'I' ? 'selected' : '' }}>India</option>
                                         <option value="U" {{ old('country') === 'U' || $app->country === 'U' ? 'selected' : '' }}>USA</option>
                                         <option value="O" {{ old('country') === 'O' || $app->country === 'O' ? 'selected' : '' }}>Others</option>
@@ -139,7 +150,7 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <select class="form-control" name="state_id" id="state_id"{{ old('country') !== 'I' && $app->country !== 'I' ? ' disabled' : '' }} >
-                                        <option value="">Select State</option>
+                                        <option value="">-Select a State-</option>
                                         @foreach($states as $state)
                                             <option value="{{ $state->id }}" {{ old('state_id') == $state->id || $app->state_id == $state->id ? 'selected' : '' }}>{{ $state->state_name }}</option>
                                         @endforeach
@@ -265,78 +276,109 @@
                             <div class="col-md-3" style="text-align: right" >
                                 <label class="form-label" for="grievance_category_id">Grievance Subject:</label>
                             </div>
-                            <div class="col-md-9" style="margin-top:1%;">
+                            <div class="col-md-9" >
                                 <select class="form-control " name="grievance_category_id" id="grievance_category_id">
-                                    <option value="">Select a Grievance Subject</option>
+                                    <option value="">-Select a Grievance Subject-</option>
                                     @foreach($grievances as $grievance)
                                         <option value="{{ $grievance->id }}" {{ old('grievance_category_id') == $grievance->id || $app->grievance_category_id == $grievance->id ? 'selected' : '' }}>{{ $grievance->grievances_desc }}</option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
+
+{{--                        <div class="row">--}}
+{{--                            <div class="col-md-3" style="text-align: right">--}}
+{{--                                <label class="form-label" for="min_dept_gov_code">Min/Dept/Gov Code:</label>--}}
+{{--                            </div>--}}
+{{--                            <div class="col">--}}
+{{--                                <input type="text" class="form-control" name="min_dept_gov_code" id="min_dept_gov_code" placeholder="Code"  value="{{ old('min_dept_gov_code') ?: $app->min_dept_gov_code}}">--}}
+{{--                            </div>--}}
+{{--                        </div>--}}
                         <div class="row">
                             <div class="col-md-3" style="text-align: right">
-                                <label class="form-label" for="action_org">Action:</label>
+                                <label class="form-label" for="action_org">Action:<span style="color: red;">*</span></label>
                             </div>
                             <div class="col-md-9">
-                                <select class="form-control" name="action_org" id="action_org">
-                                    <option value="">Select an Action</option>
-                                    <option value="N" {{ (old('action_org') == 'N' || $app->action_org == 'N') ? 'selected' : '' }}>No Action </option>
-                                    <option value="F" {{ (old('action_org') == 'F' || $app->action_org == 'F') ? 'selected' : '' }}>Forward to Central Govt. Ministry/Department</option>
-                                    <option value="M" {{ (old('action_org') == 'M' || $app->action_org == 'M') ? 'selected' : '' }}>Miscellaneous</option>
+                                <select class="form-control" name="action_org" id="action_org" required>
+                                    <option value="">-Select an Action-</option>
+                                    <option  id="option_no_action" value="N" {{ (old('action_org') == 'N' || $app->action_org == 'N') ? 'selected' : '' }}>No Action </option>
+                                    <option id="option_forward_central" value="F" {{ (old('action_org') == 'F' || $app->action_org == 'F') ? 'selected' : '' }}>Forward to Central Govt. Ministry/Department</option>
+                                    <option id="option_forward_state" value="S" {{ (old('action_org') == 'S' || $app->action_org == 'S') ? 'selected' : '' }}>Forward to State Govt. </option>
+                                    <option id="option_miscellaneous" value="M" {{ (old('action_org') == 'M' || $app->action_org == 'M') ? 'selected' : '' }}>Miscellaneous</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-3" style="text-align: right">
-                                <label class="form-label" for="min_dept_gov_code">Min/Dept/Gov Code:</label>
-                            </div>
-                            <div class="col">
-                                <input type="text" class="form-control" name="min_dept_gov_code" id="min_dept_gov_code" placeholder="Code"  value="{{ old('min_dept_gov_code') ?: $app->min_dept_gov_code}}">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-3" style="text-align: right">
-                                <label class="form-label">Forward To:</label>
-                            </div>
-                            <div class="col">
-                                <label class="form-check-label">
-                                    <input type="radio" name="forward_to" value="I" id="forward_to_internal">
-                                    Internal
-                                </label>
-                                <label class="form-check-label">
-                                    <input type="radio" name="forward_to" value="M" id="forward_to_ministry_department">
-                                    Ministry/Department
-                                </label>
-                                <label class="form-check-label">
-                                    <input type="radio" name="forward_to" value="S" id="forward_to_state">
-                                    State
-                                </label>
-                                <label class="form-check-label">
-                                    <input type="radio" name="forward_to" value="A" id="forward_to_all" checked>
-                                    All
-                                </label>
-                            </div>
-                        </div>
 
-                        <div class="row">
-                            <div class="col-md-3" style="text-align: right">
-                                <label class="form-label" for="department_org_id">Ministry/Department:<span style="color: red;" >*</span></label>
+                            <div class="row" id="orgS_dropdown_row" style="display: none">
+                                <div class="col-md-3" style="text-align: right">
+                                    <label class="form-label" for="department_org_idS">
+                                        <span id="org_label">State Government</span><span style="color: red;">*</span>
+                                    </label>
+                                </div>
+                                <div class="col-md-9">
+                                    <select class="form-control" name="department_org_id" id="department_org_idS" required>
+                                        <option value="">-Select a State-</option>
+                                        @foreach($organizationStates as $organizationS)
+                                            <option value="{{ $organizationS->id }}" {{ old('department_org_id') == $organizationS->id || $app->department_org_id == $organizationS->id ? 'selected' : '' }}>
+                                                {{ $organizationS->org_desc }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
-                            <div class="col-md-9">
-                                <select class="form-control" name="department_org_id" id="department_org_id" required>
-                                    <option value="">Select a Ministry/Department</option>
-                                    @foreach($organizations as $organization)
-                                        <option value="{{ $organization->id }}" data-org-type="{{ $organization->org_type }}" {{ old('department_org_id') == $organization->id || $app->department_org_id == $organization->id ? 'selected' : '' }}>
-                                            {{ $organization->org_desc }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
 
-                        <div class="row">
+                            <div class="row" id="orgM_dropdown_row"style="display: none">
+                                <div class="col-md-3" style="text-align: right">
+                                    <label class="form-label" for="department_org_idM">
+                                        <span id="org_label">Ministry/Department:</span><span style="color: red;">*</span>
+                                    </label>
+                                </div>
+                                <div class="col-md-9">
+                                    <select class="form-control" name="department_org_id" id="department_org_idM" required>
+                                        <option value="">-Select a Ministry/Department-</option>
+                                        @foreach($organizationM as $organization)
+                                            <option value="{{ $organization->id }}" {{ old('department_org_id') == $organization->id || $app->department_org_id == $organization->id ? 'selected' : '' }}>
+                                                {{ $organization->org_desc }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row" id="reasonM_dropdown_row" style="display: none">
+                                <div class="col-md-3" style="text-align: right">
+                                    <label class="form-label" for="reasonM">Reason:<span style="color: red;">*</span></label>
+                                </div>
+                                <div class="col-md-9">
+                                    <select class="form-control" name="reason_id" id="reasonM" required>
+                                        <option value="">-Select a Reason-</option>
+                                        @foreach($reasonM as $reason)
+                                            <option value="{{ $reason->id }}" {{ old('reason_id') == $reason->id || $app->reason_id == $reason->id ? 'selected' : '' }}>
+                                                {{ $reason->reason_desc }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row" id="reasonN_dropdown_row" style="display: none">
+                                <div class="col-md-3" style="text-align: right">
+                                    <label class="form-label" for="reasonN">Reason:<span style="color: red;">*</span></label>
+                                </div>
+                                <div class="col-md-9">
+                                    <select class="form-control" name="reason_id" id="reasonN" required>
+                                        <option value="">-Select a Reason-</option>
+                                        @foreach($reasonN as $reasons)
+                                            <option value="{{ $reasons->id }}" {{ old('reason_id') == $reasons->id || $app->reason_id == $reasons->id ? 'selected' : '' }}>
+                                                {{ $reasons->reason_desc }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row">
                             <div class="col-md-3" style="text-align: right">
                                 <label class="form-label" for="remarks">Remarks:</label>
                             </div>
@@ -502,49 +544,24 @@
                 }
             });
 
-            //org will show according to forwarded to radio button
+            //action toggle
             $(document).ready(function() {
-                $('input[name="forward_to"]').change(function() {
-                    var selectedValue = $(this).val();
-                    var departmentSelect = $('#department_org_id');
-
-                    if (selectedValue === 'M') {
-                        departmentSelect.find('option').each(function() {
-                            var orgType = $(this).data('org-type');
-                            if (orgType !== 'M') {
-                                $(this).hide();
-                            } else {
-                                $(this).show();
-                            }
-                        });
-                    } else if (selectedValue === 'S') {
-                        departmentSelect.find('option').each(function() {
-                            var orgType = $(this).data('org-type');
-                            if (orgType !== 'S') {
-                                $(this).hide();
-                            } else {
-                                $(this).show();
-                            }
-                        });
-                    } else if (selectedValue === 'I') {
-                        departmentSelect.find('option').each(function() {
-                            var orgType = $(this).data('org-type');
-                            if (orgType !== 'I') {
-                                $(this).hide();
-                            } else {
-                                $(this).show();
-                            }
-                        });
-                    }
-                    else
-                    {
-                        // Show all options when nothing is selected
-                        departmentSelect.find('option').show();
-                    }
-                    // Reset the selected option
-                    departmentSelect.val('').change();
-                });
+                function showHideDropdownRows() {
+                    const selectedAction = $("#action_org").val();
+                    $("#orgS_dropdown_row").toggle(selectedAction === "S");
+                    $("#orgM_dropdown_row").toggle(selectedAction === "F");
+                    $("#reasonM_dropdown_row").toggle(selectedAction === "M");
+                    $("#reasonN_dropdown_row").toggle(selectedAction === "N");
+                    $("#department_org_idS").prop("disabled", selectedAction !== "S");
+                    $("#department_org_idM").prop("disabled", selectedAction !== "F");
+                    $("#reasonM").prop("disabled", selectedAction !== "M");
+                    $("#reasonN").prop("disabled", selectedAction !== "N");
+                }
+                $("#action_org").on("change", showHideDropdownRows);
+                showHideDropdownRows();
             });
+
+
 
             //if language selected to other all required field will be removed
             // Attach change event listener to the radio buttons

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\Reason;
 use TCPDF;
 use setasign\Fpdi\Tcpdf\Fpdi;
 use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
@@ -19,6 +20,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Dompdf\Dompdf;
@@ -83,13 +85,23 @@ class ApplicationController extends Controller
      */
     public function create()
     {
-        $organizations = Organization::all();
+        $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+        if (in_array(174, $org_id)) {
+            $grievances=Grievance::where('section',11)->get();
+        }
+        elseif (in_array(175, $org_id)) {
+            $grievances=Grievance::where('section',12)->get();
+        }
+        $organizationStates = Organization::where('org_type','S')->get();
+        $organizationM = Organization::where('org_type','M')->get();
+        $reasonM = Reason::where('action_code',99)->get();
+        $reasonN = Reason::where('action_code',10)->get();
         $states=State::all();
-        $grievances=Grievance::all();
+
 
         $app = new Application();
         //  $appStatusRemark = $app->statuses()->wherePivot('active', 0)->pluck('pivot.remarks')->with('created by');
-        return view('application', compact('app','organizations','states','grievances'));
+        return view('application', compact('app','organizationStates','states','grievances','reasonM','reasonN','organizationM'));
 
 //        $userOrganizationId = Auth::user()->org_id;
 //        $userRoleId = Auth::user()->roles()->where('user_id', Auth::user()->id)->pluck('role_id')->first();
@@ -112,6 +124,7 @@ class ApplicationController extends Controller
         if($request->language_of_letter!='O'){
             if ($request->input('submit') == 'Forward') {
                 $request->validate([
+
                     'reg_no'=>'nullable',
                     'applicant_title'=>'required',
                     'applicant_name'=>'required|regex:/^[a-zA-Z .]+$/',
@@ -131,9 +144,11 @@ class ApplicationController extends Controller
                     'letter_body'=>'nullable',
                     'acknowledgement'=>['nullable', new Acknowledgement],
                     'grievance_category_id'=>'nullable|numeric',
-                    'action_org'=>['nullable', new ActionOrg],
                     'min_dept_gov_code'=>'nullable',
-                    'department_org_id'=>'nullable|numeric',
+//                    'action_org' => ['required', 'string', 'size:1', 'in:N,F,M,S'],'department_org_id',reason_id
+                    'action_org' => ['required', new ActionOrg],
+                    'reason_id' => 'required_if:action_org,==,M,N|nullable|numeric',
+                    'department_org_id' => 'required_if:action_org,==,F,S|nullable|numeric',
                     'remarks'=>'nullable',
                     'reply'=>'nullable',
                     'file_path' => 'file|mimes:pdf|max:2048',
@@ -167,8 +182,14 @@ class ApplicationController extends Controller
         $app->action_org = $request->action_org;
         $app->min_dept_gov_code = $request->min_dept_gov_code;
         $app->remarks=$request->remarks;
-        $app->department_org_id=$request->department_org_id;
-
+        if($request->department_org_id && $request->reason_id==null) {
+            $app->department_org_id = $request->department_org_id;
+            $app->reason_id = null;
+        }
+        if($request->reason_id && $request->department_org_id==null) {
+            $app->department_org_id = null;
+            $app->reason_id = $request->reason_id;
+        }
 
 
 
@@ -241,7 +262,7 @@ class ApplicationController extends Controller
                 $startDate = Carbon::createFromFormat('y-m-d', $startYear . '-04-01')->startOfDay();
                 $endDate = Carbon::createFromFormat('y-m-d', $endYear . '-03-31')->endOfDay();
 
-                $matchingRowCount = Application::whereBetween('letter_date', [$startDate, $endDate])
+                $matchingRowCount = Application::whereBetween('created_at', [$startDate, $endDate])
                     ->whereNotNull('reg_no')
                     ->where('reg_no', 'LIKE', $modifiedString . '%')
                     ->count();
@@ -404,9 +425,33 @@ class ApplicationController extends Controller
         if (in_array(2, $role_ids)) {
             if ($action == 'Approve') {
                 $status_id = 3;
+                $status = Status::findOrFail($status_id);
+                $application->statuses()->attach(
+                    $status,
+                    [
+                        'remarks' => $remarks,
+                        'created_from' => $request->ip(),
+                        'created_by' => Auth::user()->id,
+                        'created_at'=>carbon::now()->toDateTimeLocalString()
+                    ]
+                );
+
+                return redirect(url(route('applications.index')))->with('success', 'Status created successfully.');
             }
             elseif ($action == 'Return') {
                 $status_id = 1;
+                $status = Status::findOrFail($status_id);
+                $application->statuses()->attach(
+                    $status,
+                    [
+                        'remarks' => $remarks,
+                        'created_from' => $request->ip(),
+                        'created_by' => Auth::user()->id,
+                        'created_at'=>carbon::now()->toDateTimeLocalString()
+                    ]
+                );
+
+                return redirect(url(route('applications.index')))->with('success', 'Status created successfully.');
             }
         }
 
@@ -420,51 +465,51 @@ class ApplicationController extends Controller
                 if ($application->acknowledgement === 'Y') {
 
 //                    CURL
-//                    $html = view('acknowledgementletter', compact('application'))->render();
-//                    $postParameter = array(
-//                        'content' => $html
-//                    );
-//                   Log::info('post param:'.json_encode($postParameter));
-//                    $curlHandle = curl_init('http://localhost:8080/pdf');
-//                    curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
-//                    curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
-//                    $curlResponse = curl_exec($curlHandle);
-//                    Log::info('curlresponse'.$curlResponse);
-//                    if(!$curlResponse){
-//                        Log::error('curl error'.curl_error($curlHandle));
-//                    }
-//                    curl_close($curlHandle);
-//                    if ($curlResponse && substr($curlResponse, 0, 4) == '%PDF') {
-//                        $fileName = 'acknowledgement.pdf';
-//                        $path = 'applications/' . $application->id . '/' . $fileName;
-//                    if (Storage::disk('upload')->put($path, $curlResponse)) {
-//                        $application->forwarded_path = base64_encode($path);
-//                        $application->save();
-//                    }
-//                }
-
-                    $dompdf = new Dompdf();
-                    $options = new Options();
-                    $options->setFontDir('/path/to/fonts');
-                    $options->setDefaultFont('DejaVu Sans');
-                    $options->set('isRemoteEnabled', true);
-                    $dompdf->setOptions($options);
-                    $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
-                    $imageData = file_get_contents($imagePath);
-                    $imageBase64 = base64_encode($imageData);
-                    $html = View::make('acknowledgementletter', compact('application','imageBase64'))->render();
-                    $dompdf->loadHtml($html);
-                    $dompdf->setPaper('A4', 'portrait');
-                    $dompdf->getOptions()->set('isFontSubsettingEnabled', false);
-                    $dompdf->render();
-//                    $dompdf->stream('acknowledgement.pdf');
-                    $pdffile = $dompdf->output();
-                    $fileName = 'acknowledgement.pdf';
-                    $path = 'applications/' . $application->id . '/' . $fileName;
-                    if (Storage::disk('upload')->put($path, $pdffile)) {
+                    $html = view('acknowledgementletter', compact('application'))->render();
+                    $postParameter = array(
+                        'htmlSource' => $html
+                    );
+                   Log::info('post param:'.json_encode($postParameter));
+                    $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
+                    curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
+                    curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
+                    $curlResponse = curl_exec($curlHandle);
+                    Log::info('curlresponse'.$curlResponse);
+                    if(!$curlResponse){
+                        Log::error('curl error'.curl_error($curlHandle));
+                    }
+                    curl_close($curlHandle);
+                    if ($curlResponse && substr($curlResponse, 0, 4) == '%PDF') {
+                        $fileName = 'acknowledgement.pdf';
+                        $path = 'applications/' . $application->id . '/' . $fileName;
+                    if (Storage::disk('upload')->put($path, $curlResponse)) {
                         $application->acknowledgement_path = base64_encode($path);
                         $application->save();
                     }
+                }
+
+//                    $dompdf = new Dompdf();
+//                    $options = new Options();
+//                    $options->setFontDir('/public/fonts');
+//                    $options->setDefaultFont('hindi');
+//                    $options->set('isRemoteEnabled', true);
+//                    $dompdf->setOptions($options);
+//                    $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
+//                    $imageData = file_get_contents($imagePath);
+//                    $imageBase64 = base64_encode($imageData);
+//                    $html = View::make('forwardedletter', compact('application','imageBase64'))->render();
+//                    $dompdf->loadHtml($html);
+//                    $dompdf->setPaper('A4', 'portrait');
+////                    $dompdf->getOptions()->set('isFontSubsettingEnabled', false);
+//                    $dompdf->render();
+//                    $dompdf->stream('acknowledgement.pdf');
+//                    $pdffile = $dompdf->output();
+//                    $fileName = 'acknowledgement.pdf';
+//                    $path = 'applications/' . $application->id . '/' . $fileName;
+//                    if (Storage::disk('upload')->put($path, $pdffile)) {
+//                        $application->acknowledgement_path = base64_encode($path);
+//                        $application->save();
+//                    }
 
 //                      SNAPPYPDF
 //                    $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
@@ -478,8 +523,6 @@ class ApplicationController extends Controller
 //                    Storage::disk('upload')->put($path, $binaryPdf);
 //                    $application->acknowledgement_path = base64_encode($path);
 //                    $application->save();
-
-
 
                     if ($application->email_id != null) {
 //                    if($application->mail_sent == 0 || $application->mail_sent == '' ) {
@@ -504,7 +547,7 @@ class ApplicationController extends Controller
                         } catch (\Exception $e) {
 //                            $application->mail_sent = 0;
 //                            $application->save();
-//                            return "Failed to send Mail: " . $e->getMessage();
+                           Log::error('Failed to send email: ' . $e->getMessage());
                         }
 //                    }
                     }
@@ -538,47 +581,25 @@ class ApplicationController extends Controller
 
 
                 if ($application->department_org && $application->department_org->id !== null) {
-                    $dompdf = new Dompdf();
-                    $options = new Options();
-                    $options->setFontDir('/path/to/fonts');
-                    $options->setDefaultFont('DejaVu Sans');
-                    $options->set('isRemoteEnabled', true);
-                    $dompdf->setOptions($options);
-                    $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
-                    $imageData = file_get_contents($imagePath);
-                    $imageBase64 = base64_encode($imageData);
-                    $html = View::make('forwardedletter', compact('application','imageBase64'))->render();
 
-                    $dompdf->loadHtml($html);
-                    $dompdf->setPaper('A4', 'portrait');
-                    $dompdf->getOptions()->set('isFontSubsettingEnabled', false);
-                    $dompdf->render();
-                    $pdffile = $dompdf->output();
+
+                $html = view('forwardedletter', compact('application'));
+                $postParameter = array(
+                    'content' => $html
+                );
+                $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
+                curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
+                curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
+                $curlResponse = curl_exec($curlHandle);
+                curl_close($curlHandle);
+                if ($curlResponse && substr($curlResponse, 0, 4) == '%PDF') {
                     $fileName = 'forward.pdf';
                     $path = 'applications/' . $application->id . '/' . $fileName;
-                    if (Storage::disk('upload')->put($path, $pdffile)) {
+                    if (Storage::disk('upload')->put($path, $curlResponse)) {
                         $application->forwarded_path = base64_encode($path);
                         $application->save();
                     }
-
-
-//                $html = view('forwardedletter', compact('application'));
-//                $postParameter = array(
-//                    'content' => $html
-//                );
-//                $curlHandle = curl_init('http://localhost:8080/pdf-service/pdf');
-//                curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
-//                curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
-//                $curlResponse = curl_exec($curlHandle);
-//                curl_close($curlHandle);
-//                if ($curlResponse && substr($curlResponse, 0, 4) == '%PDF') {
-//                    $fileName = 'forward.pdf';
-//                    $path = 'applications/' . $application->id . '/' . $fileName;
-//                    if (Storage::disk('upload')->put($path, $curlResponse)) {
-//                        $application->forwarded_path = base64_encode($path);
-//                        $application->save();
-//                    }
-//                }
+                }
 
                     if ($application->department_org->mail !== null) {
 //                    $email = $application->department_org->mail;
@@ -595,22 +616,50 @@ class ApplicationController extends Controller
                                     ->attachData($content, 'forward letter.pdf', [
                                         'mime' => 'application/pdf',
                                     ])
-                                    ->attachData($file, 'file.pdf', [
-                                        'mime' => 'application/pdf',
-                                    ]);
+                                    ->when(!empty($file), function ($query) use ($file) {
+                                        return $query->attachData($file, 'file.pdf', [
+                                            'mime' => 'application/pdf',
+                                       ]);
+                                    });
                             });
 //                            $application->mail_sent = 1;
 //                            $application->save();
                         } catch (\Exception $e) {
 //                            $application->mail_sent = 0;
 //                            $application->save();
-//                        return "Failed to send Mail: " . $e->getMessage();
+                            Log::error('Failed to send email: ' . $e->getMessage());
                         }
                     }
                 }
+
+
+                $status = Status::findOrFail($status_id);
+                $application->statuses()->attach(
+                    $status,
+                    [
+                        'remarks' => $remarks,
+                        'created_from' => $request->ip(),
+                        'created_by' => Auth::user()->id,
+                        'created_at'=>carbon::now()->toDateTimeLocalString()
+                    ]
+                );
+
+                return redirect(url(route('applications.index')))->with('success', 'Status created successfully.');
             }
             elseif ($action == 'Return') {
                 $status_id = 2;
+                $status = Status::findOrFail($status_id);
+                $application->statuses()->attach(
+                    $status,
+                    [
+                        'remarks' => $remarks,
+                        'created_from' => $request->ip(),
+                        'created_by' => Auth::user()->id,
+                        'created_at'=>carbon::now()->toDateTimeLocalString()
+                    ]
+                );
+
+                return redirect(url(route('applications.index')))->with('success', 'Status created successfully.');
             }
         }
 
@@ -618,18 +667,6 @@ class ApplicationController extends Controller
             return redirect()->back()->with('error', 'role not found');
         }
 
-        $status = Status::findOrFail($status_id);
-        $application->statuses()->attach(
-            $status,
-            [
-                'remarks' => $remarks,
-                'created_from' => $request->ip(),
-                'created_by' => Auth::user()->id,
-                'created_at'=>carbon::now()->toDateTimeLocalString()
-            ]
-        );
-
-        return redirect(url(route('applications.index')))->with('success', 'Status created successfully.');
     }
 
 
@@ -650,11 +687,21 @@ class ApplicationController extends Controller
      */
     public function edit(string $id)
     {
+        $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+        if (in_array(174, $org_id)) {
+            $grievances=Grievance::where('section',11)->get();
+        }
+        elseif (in_array(175, $org_id)) {
+            $grievances=Grievance::where('section',12)->get();
+        }
         $app = Application::find($id);
-        $organizations = Organization::all();
         $states=State::all();
-        $grievances=Grievance::all();
-        return view('application', compact('app','organizations','states','grievances'));
+        $organizationStates = Organization::where('org_type','S')->get();
+        $organizationM = Organization::where('org_type','M')->get();
+        $reasonM = Reason::where('action_code',99)->get();
+        $reasonN = Reason::where('action_code',10)->get();
+        return view('application', compact('app','organizationStates','states','grievances','reasonM','reasonN','organizationM'));
+
 //        $userOrganizationId = Auth::user()->org_id;
 //        $userRoleId = Auth::user()->roles()->where('user_id', Auth::user()->id)->pluck('role_id')->first();
 //        $allowNew = false;
@@ -696,10 +743,10 @@ class ApplicationController extends Controller
             $arr[]=   ['applicant_name', 'like', '%' . $request->applicant_name . '%'];
         }
         if ($request->app_date_from && $request->app_date_from != '') {
-            $arr[]=   ['letter_date','>=', $request->app_date_from ];
+            $arr[]=   ['created_at','>=', $request->app_date_from ];
         }
         if ($request->app_date_to && $request->app_date_to != '') {
-            $arr[]=   ['letter_date','<=',  $request->app_date_to ];
+            $arr[]=   ['created_at','<=',  $request->app_date_to ];
         }
         if ($request->organization && $request->organization != '') {
             $org_id=  $request->organization ;
@@ -785,11 +832,11 @@ class ApplicationController extends Controller
             $arr[] = ['reg_no', 'like', '%' . $request->reg_no . '%'];
         }
         if ($request->app_date_from && $request->app_date_from != '') {
-            $arr[] = ['letter_date', '>=', $request->app_date_from];
+            $arr[] = ['created_at', '>=', $request->app_date_from];
             $date_from = $request->app_date_from;
         }
         if ($request->app_date_to && $request->app_date_to != '') {
-            $arr[] = ['letter_date', '<=', $request->app_date_to];
+            $arr[] = ['created_at', '<=', $request->app_date_to];
             $date_to = $request->app_date_to;
 
         }
@@ -816,6 +863,7 @@ class ApplicationController extends Controller
                 })
                 ->get();
 
+            return view('acknowledgementprint',compact('applications'));
 
 
 //            $pdf = PDFMerger::init();

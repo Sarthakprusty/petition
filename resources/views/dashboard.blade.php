@@ -88,7 +88,7 @@
         <div class="modal fade" id="org_status" style="z-index: 1051" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" data-bs-backdrop="false">
         <div class="modal-dialog modal-dialog-centered">
             <form method="get" action="{{route('applications.dashboard')}}">
-                <div class="modal-content">
+                <div class="modal-content"style="margin-left: 60%" >
                     <div class="modal-body">
                         <div class="row">
                             <div class ='mb-3'>

@@ -99,7 +99,7 @@
                 <div class="row">
                     <div class="col-9"></div>
                     <div class="col-3 d-flex justify-content-center align-items-center">
-                        <img src='{{ asset('storage/logo.png') }}' alt='National Symbol' style=' width: 100px' />
+{{--                        <img src='{{ asset('storage/logo.png') }}' alt='National Symbol' style=' width: 100px' />--}}
                     </div>
                 </div>
 
@@ -133,6 +133,54 @@
                     <div class="col-6">
                         <p>आपसे अनुरोध है की मामले में आगे जानकारी के लिए, उपर्युक्त्त प्रेषिती से सीधे संपर्क करेंं /</p>
                         <p>You are further requested to liaise with the aforementioned addressee directly for further information in the matter.</p>
+                    </div>
+                </div>
+                <strong>
+                    <p style="text-align: right">(चिराब्राता सरकार {{Auth::user()->username}})</p>
+                    <p style="text-align: right">अवर सचिव Under Secretary</p>
+                </strong>
+
+                <br>
+                <div class="centered">
+                    <div class="header">
+                        बुक पोस्ट<br>
+                        <div style="text-decoration: underline;">भारत सरकार सेवार्थ / ON INDIA GOVERNMENT SERVICE</div>
+
+                    </div></div><br>
+                <div >Sl.No:</div>
+                <div>{{$application->reg_no}}</div>
+                <div class="row">
+                    <div class="col">
+                        <label>द्वारा / From:</label> राष्ट्रपति सचिवालय<br>
+                        President's Secretariat<br>
+                        राष्ट्रपति भवन<br>
+                        Rashtrapati Bhavan<br>
+                        नई दिल्ली 110004<br>NEW DELHI-110004
+                    </div>
+                    <div class="col">
+                        <label>To:</label>
+                        <div>{{$application->applicant_title}} {{$application->applicant_name}}</div>
+                        <p>{{$application->address}}</p>
+                        @if ($application->state)
+                            <p>{{$application->state->state_name}} {{$application->state && $application->pincode ? '-' : ''}}{{$application->pincode}}</p>
+                        @endif
+                        <p>
+                            @if ($application->country === 'I')
+                                INDIA
+                            @elseif ($application->country === 'O')
+                                Others
+                            @elseif ($application->country === 'U')
+                                USA
+                            @endif
+                        </p>
+                    </div>
+                </div> <br>
+                <div class="centered">
+                    <div class="note">
+                        Note:- You may use <a href="https://helpline.rb.nic.in" style="text-decoration: underline;">https://helpline.rb.nic.in</a> for submitting your petition/grievance online.
+                    </div>
+                    <div class="note">
+                        नोट: आप अपनी याचिका दर्ज करने के लिए <a href="https://helpline.rb.nic.in" style="text-decoration: underline;">https://helpline.rb.nic.in</a> का उपयोग कर सकते हैं.
                     </div>
                 </div>
             </div>

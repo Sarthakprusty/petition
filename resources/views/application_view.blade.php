@@ -248,13 +248,19 @@
                     <div class="row">
                         <div class="col-lg-12">
                             <div class="m-b-md">
-                                <div>
-                                    <h1 style="font-size: 250%; color: #005fff;">Applicant info</h1>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h1 style="font-size: 250%;margin-left: 1%; color: #005fff;">Applicant info</h1>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="spacing" style="margin-top: 2%;"></div>
+                        </div>
+                    </div>
+                    <div class="spacing" style="margin-top: 2%;"></div>
+                    <div class="row">
+                        <div class="col-lg-5">
                             <dl class="dl-horizontal">
-                                <dt>Registration number</dt> <dd>
+                                <dt style="text-decoration: underline; color: black;">Registration number</dt> <dd>
                                     @if($app->reg_no)
                                         <span class="label label-primary">{{$app->reg_no}}</span></dd>
                                 @else
@@ -262,7 +268,18 @@
                                 @endif
                             </dl>
                         </div>
+                            <div class="col-lg-5">
+                            <dl class="dl-horizontal">
+                                <dt style="text-decoration: underline; color: black;">Status</dt><dd>
+                                    @if($app->reg_no)
+                                        <span class="label label-primary">{{ $app->statuses()->where('application_status.active', 1)->first()?->status_desc ?? '' }}</span></dd>
+                                @else
+                                    <br>
+                                @endif
+                            </dl>
+                        </div>
                     </div>
+
                     <div class="row">
                         <div class="col-lg-5">
                             <dl class="dl-horizontal">
@@ -350,7 +367,7 @@
                             <h1 style="font-size: 250%;margin-left: 1%; color: #005fff;">Application Details</h1>
                         </div>
                         <div class="col-md-4" style="display: flex; flex-direction: row; justify-content: flex-end; align-items: center;">
-                            <dd style="font-size: 190%;">{{ $app->letter_date ? $app->letter_date->format("d/m/Y") : 'N/A' }}</dd>
+                            <dd style="font-size: 190%;">{{ $app->created_at->format("d/m/Y")}}</dd>
                         </div>
                     </div>
                     <div class="col-lg-12">
@@ -359,6 +376,10 @@
                             <div class="list-group-item">
                                 <span class="float-start" style="font-weight: bold">eOffice Diary No</span>
                                 <span class="float-end" style="text-align: right">{{$app->letter_no}}</span>
+                            </div>
+                            <div class="list-group-item">
+                                <span class="float-start" style="font-weight: bold">Letter Date</span>
+                                <span class="float-end" style="text-align: right">{{ $app->letter_date ? $app->letter_date->format("d/m/Y") : 'N/A' }}</span>
                             </div>
                             <div class="list-group-item">
                                 <span class="float-start" style="font-weight: bold">Letter Subject</span>
@@ -397,15 +418,23 @@
                                     @endif
                                 </span>
                             </div>
+                            @if($app->reason)
                             <div class="list-group-item">
-                                <span class="float-start" style="font-weight: bold">Min/Dept/Gov Code</span>
-                                <span class="float-end" style="text-align: right">{{$app->min_dept_gov_code}}</span>
+                                <span class="float-start" style="font-weight: bold">Reason</span>
+                                <span class="float-end" style="text-align: right">
+                                    {{$app->reason ? $app->reason->reason_desc : ''}}</span>
                             </div>
+{{--                            <div class="list-group-item">--}}
+{{--                                <span class="float-start" style="font-weight: bold">Min/Dept/Gov Code</span>--}}
+{{--                                <span class="float-end" style="text-align: right">{{$app->min_dept_gov_code}}</span>--}}
+{{--                            </div>--}}
+                            @elseif($app->department_org)
                             <div class="list-group-item">
                                 <span class="float-start" style="font-weight: bold">Ministry/Department</span>
                                 <span class="float-end" style="text-align: right">
                                     {{$app->department_org ? $app->department_org->org_desc : ''}}</span>
                             </div>
+                            @endif
                             <div class="list-group-item">
                                 <span class="float-start" style="font-weight: bold">Remark</span>
                                 <span class="float-end" style="text-align: right">{{$app->remarks}}</span>

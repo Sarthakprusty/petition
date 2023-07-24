@@ -44,6 +44,11 @@ class Application extends Model
         return $this->belongsTo(Organization::class,'department_org_id','id');
     }
 
+    public function reason(): BelongsTo
+    {
+        return $this->belongsTo(Reason::class,'reason_id','id');
+    }
+
     public function authority(): HasOne
     {
         return $this->hasOne(SignAuthority::class,'Authority_id','id');

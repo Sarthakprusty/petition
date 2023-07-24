@@ -53,7 +53,7 @@ class User extends Authenticatable
     }
     public function organizations(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, 'user_organization', 'user_id', 'org_id');
+        return $this->belongsToMany(Organization::class, 'user_organization', 'user_id', 'org_id');
     }
 
     public function applications(): HasMany

@@ -103,7 +103,7 @@
         <br>
             <div class="row">
 
-                <img src="data:image/png;base64,{{ $imageBase64 }}" style="width: 100px; padding-left: 81%">
+{{--                <img src="data:image/png;base64,{{ $imageBase64 }}" style="width: 100px; padding-left: 81%">--}}
             </div>
 
         <strong>

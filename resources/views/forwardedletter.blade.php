@@ -3,10 +3,22 @@
 {{--    <div class="row"></div>--}}
 <div id="myDiv">
     <style>
+        /* Define the custom font using @font-face */
         @font-face {
-            font-family: 'DejaVu Sans';
-            src: url('/public/fonts/DejaVuSans.ttf') format('truetype');
+            font-family: 'hindi';
+            src: url('/public/fonts/hindi.ttf') format('truetype');
         }
+
+        /* Use the custom font in the body */
+        body {
+            font-family: 'hindi', Arial, sans-serif;
+        }
+
+        /* Apply the custom font to elements with class 'hi' */
+        .hi {
+            font: normal 12px/20px 'hindi', Arial, sans-serif;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -47,7 +59,7 @@
                 </div>
                 <div>राष्ट्रपति सचिवालय</div>
                 <div>President's Secretariat</div>
-                <div>(जनता-I अनुभाग)</div>
+                <div class="hi">(जनता-I अनुभाग)</div>
                 <div>(PUBLIC-I SECTION)</div>
                 <div>Rashtrapati Bhavan</div>
                 <div>New Delhi - 110004</div>
@@ -91,8 +103,8 @@
             <br>
 
             <div>विषय/Subject: REQUEST FOR ATTENTION ON HIS/HER PETITION</div>
-            <p>कृपया, उपर्युक्त विषय पर, भारत के राष्ट्रपति जी को सम्बोधित दिनांक: {{$application->letter_date->format("d/m/Y")}} की स्वतः स्पष्ट याचिका उपयुक्त ध्यानाकर्षण के लिए संलग्न है /</p>
-            <p>Enclosed please find for appropriate attention a petition dated: {{$application->letter_date->format("d/m/Y")}} addressed to the President of India on the above subject matter, which is self explanatory.</p>
+{{--            <p>कृपया, उपर्युक्त विषय पर, भारत के राष्ट्रपति जी को सम्बोधित दिनांक: {{$application->letter_date->format("d/m/Y")}} की स्वतः स्पष्ट याचिका उपयुक्त ध्यानाकर्षण के लिए संलग्न है /</p>--}}
+{{--            <p>Enclosed please find for appropriate attention a petition dated: {{$application->letter_date->format("d/m/Y")}} addressed to the President of India on the above subject matter, which is self explanatory.</p>--}}
 
             <br>
 
@@ -131,7 +143,7 @@
             <br>
             <div class="row">
 
-                                <img src="data:image/png;base64,{{ $imageBase64 }}" style='width: 100px;padding-left: 84%' />
+{{--                                <img src="data:image/png;base64,{{ $imageBase64 }}" style='width: 100px;padding-left: 84%' />--}}
             </div>
 
             <strong>

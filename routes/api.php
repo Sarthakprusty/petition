@@ -35,8 +35,9 @@ Route::get('forbidden',function (Request $request){
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-Route::resource('applications', App\Http\Controllers\ApplicationController::class);
-
+Route::group(['middleware' => ['web']], function () {
+    Route::resource('applications', App\Http\Controllers\ApplicationController::class)->middleware('auth');
+});
 Route::resource('authority', App\Http\Controllers\SignAuthorityController::class);
 
 Route::get('getFile/{filepath}',[App\Http\Controllers\ApplicationController::class,'getFile']);
