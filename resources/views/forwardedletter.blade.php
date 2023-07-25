@@ -120,13 +120,10 @@
 
 
             <br><br><br>
-            @php
-            @endphp
             <div class="row">
-                <img src='/api/signFile/{{Auth::user()->authority->Sign_path}}' style='width: 100px;padding-left: 83%' />
+                <img src="data:image/png;base64,{{ $imageBase64 }}" style='width: 100px;padding-left: 84%' />
             </div>
 
-        <
 
             <strong>
                 <p style="text-align: right">(चिराब्राता सरकार {{Auth::user()->authority->name}})</p>

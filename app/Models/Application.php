@@ -51,7 +51,7 @@ class Application extends Model
 
     public function authority(): HasOne
     {
-        return $this->hasOne(SignAuthority::class,'Authority_id','id');
+        return $this->hasOne(SignAuthority::class,'id','Authority_id');
     }
 
     public function createdBy()

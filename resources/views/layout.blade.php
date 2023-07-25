@@ -156,7 +156,6 @@
                             @php
                             $states=\App\Models\State::all();
                             $organizations=\App\Models\Organization::all()
-
                             @endphp
                         <div class="mb-3">
                             <label for="state_id" class="form-label">State</label>
@@ -175,8 +174,8 @@
                             <div class="mb-3">
                                 <label class="form-label" for="organizationType">Organization:</label>
                                 <select class="form-control" name="orgTy">
-                                    <option value="">Select an Option</option>
-                                    <option id="typeOrganizationType" value="type" selected>State GOV.</option>
+                                    <option value="no">Select an Option</option>
+                                    <option id="typeOrganizationType" value="type" >State GOV.</option>
                                     <option id="typeOrganizationName" value="name">Center GOV.</option>
                                 </select>
                             </div>
@@ -185,7 +184,7 @@
                             $organizationStates = \App\Models\Organization::where('org_type','S')->get();
                             $organizationM = \App\Models\Organization::where('org_type','M')->get();
                         @endphp
-                        <div class="mb-3" id="organizationSt" style="display: block;">
+                        <div class="mb-3" id="organizationSt" style="display: none;">
                             <select class="form-control" id="orgS" name="orgDesc">
                                 <option value="">Select an State</option>
                                 @foreach($organizationStates as $state)
@@ -212,6 +211,10 @@
                                     } else if (selectedType === "name") {
                                         $('#organizationSt').hide();
                                         $('#organizationMi').show();
+                                    }
+                                    else  {
+                                        $('#organizationSt').hide();
+                                        $('#organizationMi').hide();
                                     }
                                 });
                             });
@@ -277,9 +280,19 @@
                         </div>
                         <div class="row">
                             <div class="mb-3">
+                                <label class="form-label" for="mail">Mail:</label>
+                                <select class="form-control" name="mail">
+                                    <option id="mail" value="all" selected>All</option>
+                                    <option id="mail" value="filtered">Not Mailed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="mb-3">
                                 <label class="form-label" for="organizationType">Organization:</label>
                                 <select class="form-control" name="orgType">
-                                    <option id="typeOrganizationType" value="type" selected>State GOV.</option>
+                                    <option value="">Select an option</option>
+                                    <option id="typeOrganizationType" value="type" >State GOV.</option>
                                     <option id="typeOrganizationName" value="name">Center GOV.</option>
                                 </select>
                             </div>
@@ -288,7 +301,7 @@
                             $organizationStates = \App\Models\Organization::where('org_type','S')->get();
                             $organizationM = \App\Models\Organization::where('org_type','M')->get();
                         @endphp
-                        <div class="mb-3" id="organizationTypeDropdown" style="display: block;">
+                        <div class="mb-3" id="organizationTypeDropdown" style="display: none;">
                             <select class="form-control" id="orgDesc" name="orgDesc">
                                 <option value="">Select an State</option>
                                 @foreach($organizationStates as $state)
@@ -315,6 +328,9 @@
                                     } else if (selectedType === "name") {
                                         $('#organizationTypeDropdown').hide();
                                         $('#organizationNameDropdown').show();
+                                    }else{
+                                        $('#organizationTypeDropdown').hide();
+                                        $('#organizationNameDropdown').hide();
                                     }
                                 });
                             });
@@ -356,7 +372,8 @@
                             <div class="mb-3">
                                 <label class="form-label" for="organizationType">Organization:</label>
                                 <select class="form-control" name="orgT">
-                                    <option id="typeOrganizationType" value="type" selected>State GOV.</option>
+                                    <option value="">Select an option</option>
+                                    <option id="typeOrganizationType" value="type" >State GOV.</option>
                                     <option id="typeOrganizationName" value="name">Center GOV.</option>
                                 </select>
                             </div>
@@ -365,7 +382,7 @@
                             $organizationStates = \App\Models\Organization::where('org_type','S')->get();
                             $organizationM = \App\Models\Organization::where('org_type','M')->get();
                         @endphp
-                        <div class="mb-3" id="organizationS" style="display: block;">
+                        <div class="mb-3" id="organizationS" style="display: none;">
                             <select class="form-control" id="orgS" name="orgDesc">
                                 <option value="">Select an State</option>
                                 @foreach($organizationStates as $state)
@@ -392,6 +409,9 @@
                                     } else if (selectedType === "name") {
                                         $('#organizationS').hide();
                                         $('#organizationM').show();
+                                    }else{
+                                        $('#organizationS').hide();
+                                        $('#organizationM').hide();
                                     }
                                 });
                             });

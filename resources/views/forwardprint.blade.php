@@ -1,7 +1,7 @@
 @extends('layout')
 
 @section('content')
-    <button class="btn btn-outline-primary" onclick="printLetter()">Print</button>
+    <button class="btn btn-outline-primary" style="margin-left: 47.5%" onclick="printLetter()">Print</button>
     <div id="myDiv">
         <style>
             .letter {
@@ -100,14 +100,13 @@
 
                 <br><br><br>
 
-                <div class="row">
-
-{{--                    <img src="data:image/png;base64,{{ $imageBase64 }}" style='width: 100px;padding-left: 84%' />--}}
+                <div class="row" style="padding-left: 84%">
+                    <img src='/api/signFile/{{$application->authority->Sign_path}}' style='width: 100px;' />
                 </div>
 
 
                 <strong>
-{{--                    <p style="text-align: right">(चिराब्राता सरकार {{Auth::user()->authority->name}})</p>--}}
+                    <p style="text-align: right">(चिराब्राता सरकार {{$application->authority->name}})</p>
                     <p style="text-align: right">अवर सचिव Under Secretary</p>
                 </strong>
                 <br><br>
@@ -143,7 +142,7 @@
 
             </div>
         @endforeach
-
+    </div>
         <script>
             function printLetter() {
                 var printContents = document.getElementById('myDiv').innerHTML;

@@ -155,13 +155,12 @@
 
                 <br>
                 <br>
-                <div class="row">
-
-{{--                    <img src="data:image/png;base64,{{ $imageBase64 }}" style="width: 100px; padding-left: 81%">--}}
+                <div class="row" style="padding-left: 84%">
+                    <img src='/api/signFile/{{$application->authority->Sign_path}}' style='width: 100px;' />
                 </div>
 
                 <strong>
-{{--                    <p style="text-align: right">(चिराब्राता सरकार {{Auth::user()->authority->name}})</p>--}}
+                    <p style="text-align: right">(चिराब्राता सरकार {{$application->authority->name}})</p>
                     <p style="text-align: right">अवर सचिव Under Secretary</p>
                 </strong>
                 <br>

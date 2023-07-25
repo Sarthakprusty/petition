@@ -299,20 +299,22 @@ class ApplicationController extends Controller
                 $app->update(['file_path' => base64_encode($path)]);
             }
             else {
-                $currentFilePath = base64_decode($app->file_path);
-                if (Storage::disk('upload')->exists($currentFilePath)) {
-                    $fname = str_replace('/', '_', $app->reg_no);
-                    $extension = pathinfo($currentFilePath, PATHINFO_EXTENSION);
-                    $newFileName = $fname . '.' . $extension;
-                    if ($currentFilePath !== $newFileName) {
-                        $newFilePath = 'applications/' . $app->id . '/' . $newFileName;
+                if($app->file_path){
+                    $currentFilePath = base64_decode($app->file_path);
+                    if (Storage::disk('upload')->exists($currentFilePath)) {
+                        $fname = str_replace('/', '_', $app->reg_no);
+                        $extension = pathinfo($currentFilePath, PATHINFO_EXTENSION);
+                        $newFileName = $fname . '.' . $extension;
+                        if ($currentFilePath !== $newFileName) {
+                            $newFilePath = 'applications/' . $app->id . '/' . $newFileName;
 
-                        // Move the existing file to the new file name
-                        Storage::disk('upload')->move($currentFilePath, $newFilePath);
+                            // Move the existing file to the new file name
+                            Storage::disk('upload')->move($currentFilePath, $newFilePath);
 
-                        // Update the file_path attribute with the new file name
-                        $app->file_path = base64_encode($newFilePath);
-                        $app->save();
+                            // Update the file_path attribute with the new file name
+                            $app->file_path = base64_encode($newFilePath);
+                            $app->save();
+                        }
                     }
                 }
             }
@@ -493,7 +495,7 @@ class ApplicationController extends Controller
                     $postParameter = array(
                         'htmlSource' => $html
                     );
-                   Log::info('post param:'.json_encode($postParameter));
+                    Log::info('post param:'.json_encode($postParameter));
                     $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
                     curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
                     curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
@@ -507,11 +509,11 @@ class ApplicationController extends Controller
                         $fname = str_replace('/', '_', $application->reg_no);
                         $fileName =$fname. '_acknowledgement.pdf';
                         $path = 'applications/' . $application->id . '/' . $fileName;
-                    if (Storage::disk('upload')->put($path, $curlResponse)) {
-                        $application->acknowledgement_path = base64_encode($path);
-                        $application->save();
+                        if (Storage::disk('upload')->put($path, $curlResponse)) {
+                            $application->acknowledgement_path = base64_encode($path);
+                            $application->save();
+                        }
                     }
-                }
 
 //                    $dompdf = new Dompdf();
 //                    $options = new Options();
@@ -550,32 +552,36 @@ class ApplicationController extends Controller
 //                    $application->save();
 
                     if ($application->email_id != null) {
-//                    if($application->mail_sent == 0 || $application->mail_sent == '' ) {
+                        if($application->ack_mail_sent == 0 || $application->ack_mail_sent == '' ) {
 //                        $email = $application->email_id;
-                        $fname = str_replace('/', '_', $application->reg_no);
-                        $email = 'prustysarthak123@gmail.com';
-                        $cc = 'sayantan.saha@gov.in';
-                        $subject = 'Reply From Rashtrapati Bhavan';
-                        $details = 'Hello, Mr/Mrs. ' . $application->applicant_name . ',<br><br>'
-                            . 'Your Petition has been received in Rashtrapati Bhavan with ref no ' . $application->reg_no . ' and forwarded to ' . $application->department_org->org_desc . ' for further necessary action.';
-                        $content = storage::disk('upload')->get(base64_decode($application->acknowledgement_path));
-                        try {
-                            Mail::send([], [], function ($message) use ($email, $subject, $details, $content, $cc,$fname) {
-                                $message->to($email)->cc($cc)
-                                    ->subject($subject)
-                                    ->html($details)
-                                    ->attachData($content,$fname.'_acknowledgement.pdf', [
-                                        'mime' => 'application/pdf',
-                                    ]);
-                            });
-//                            $application->mail_sent = 1;
-//                            $application->save();
-                        } catch (\Exception $e) {
-//                            $application->mail_sent = 0;
-//                            $application->save();
-                           Log::error('Failed to send email: ' . $e->getMessage());
+                            $fname = str_replace('/', '_', $application->reg_no);
+                            $email = 'prustysarthak123@gmail.com';
+                            $cc = 'sayantan.saha@gov.in';
+                            $subject = 'Reply From Rashtrapati Bhavan';
+                            $details = 'Hello, Mr/Mrs. ' . $application->applicant_name . ',<br><br>'
+                                . 'Your Petition has been received in Rashtrapati Bhavan with ref no ' . $application->reg_no . ' and forwarded to ' . $application->department_org->org_desc . ' for further necessary action.';
+                            $content = storage::disk('upload')->get(base64_decode($application->acknowledgement_path));
+                            try {
+                                Mail::send([], [], function ($message) use ($email, $subject, $details, $content, $cc,$fname) {
+                                    $message->to($email)->cc($cc)
+                                        ->subject($subject)
+                                        ->html($details)
+                                        ->attachData($content,$fname.'_acknowledgement.pdf', [
+                                            'mime' => 'application/pdf',
+                                        ]);
+                                });
+                                $application->ack_mail_sent = 1;
+                                $application->save();
+                            } catch (\Exception $e) {
+                                $application->ack_mail_sent = 0;
+                                $application->save();
+                                Log::error('Failed to send ack email: ' . $e->getMessage());
+                            }
                         }
-//                    }
+                    }
+                    if ($application->email_id == null){
+                        $application->ack_mail_sent = 0;
+                        $application->save();
                     }
 
 
@@ -617,29 +623,29 @@ class ApplicationController extends Controller
                     $logoData = file_get_contents($logoPath);
                     $logoBase64 = base64_encode($logoData);
                     $html = view('forwardedletter', compact('application','imageBase64','logoBase64'))->render();;
-                $postParameter = array(
-                    'htmlSource' => $html
-                );
+                    $postParameter = array(
+                        'htmlSource' => $html
+                    );
                     Log::info('post param:'.json_encode($postParameter));
-                $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
-                curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
-                curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
-                $curlResponse = curl_exec($curlHandle);
+                    $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
+                    curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
+                    curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
+                    $curlResponse = curl_exec($curlHandle);
                     if(!$curlResponse){
                         Log::error('curl error'.curl_error($curlHandle));
                     }
-                curl_close($curlHandle);
-                if ($curlResponse && substr($curlResponse, 0, 4) == '%PDF') {
-                    $fname = str_replace('/', '_', $application->reg_no);
-                    $fileName = $fname.'_forward.pdf';
-                    $path = 'applications/' . $application->id . '/' . $fileName;
-                    if (Storage::disk('upload')->put($path, $curlResponse)) {
-                        $application->forwarded_path = base64_encode($path);
-                        $application->save();
+                    curl_close($curlHandle);
+                    if ($curlResponse && substr($curlResponse, 0, 4) == '%PDF') {
+                        $fname = str_replace('/', '_', $application->reg_no);
+                        $fileName = $fname.'_forward.pdf';
+                        $path = 'applications/' . $application->id . '/' . $fileName;
+                        if (Storage::disk('upload')->put($path, $curlResponse)) {
+                            $application->forwarded_path = base64_encode($path);
+                            $application->save();
+                        }
                     }
-                }
 
-//                    if ($application->department_org->mail !== null) {
+                    if ($application->department_org->mail !== null) {
 //                    $email = $application->department_org->mail;
                         $fname = str_replace('/', '_', $application->reg_no);
                         $email = 'prustysarthak123@gmail.com';
@@ -651,7 +657,7 @@ class ApplicationController extends Controller
                                     Attached please find for appropriate attention a petition addressed to the President of India which is self-explanatory. Action taken on the petition may please be communicated to the petitioner directly.।<br>
                                     सादर।<br>
                                     regards।<br><br>"
-                                    . Auth::user()->authority->name . "<br>
+                            . Auth::user()->authority->name . "<br>
                                     अवर सचिव।<br>
                                     Under Secretary।<br>
                                     राष्ट्रपति सचिवालय।<br>
@@ -681,9 +687,13 @@ class ApplicationController extends Controller
                         } catch (\Exception $e) {
                             $application->mail_sent = 0;
                             $application->save();
-                            Log::error('Failed to send email: ' . $e->getMessage());
+                            Log::error('Failed to send fwd email: ' . $e->getMessage());
                         }
-//                    }
+                    }
+                    if ($application->department_org->mail == null){
+                        $application->mail_sent = 0;
+                        $application->save();
+                    }
                 }
 
 
@@ -904,7 +914,6 @@ class ApplicationController extends Controller
         if ($request->app_date_to && $request->app_date_to != '') {
             $arr[] = ['created_at', '<=', $request->app_date_to];
             $date_to = $request->app_date_to;
-
         }
         if ($request->orgDesc && $request->orgDesc != '') {
             $arr[] = ['department_org_id', $request->orgDesc];
@@ -921,28 +930,51 @@ class ApplicationController extends Controller
 
         if ($request->input('submit') === 'acknowledgement')
         {
-            $applications = Application::where($arr) ->whereIn('created_by', function ($query) use ($org_id) {
-                $query->select('users.id')
-                    ->from('users')
-                    ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
-                    ->whereIn('user_organization.org_id', $org_id);
-            })
-                ->where('acknowledgement_path', '!=', null)
-                ->whereHas('statuses', function ($query) {
-                    $query->wherein('status_id', [4, 5])
-                        ->where('application_status.active', 1);
-                })
-                ->get();
+            if ($request->mail && $request->mail != '' && $request->mail=='filtered') {
+                $applications = Application::where($arr)
+                    ->where('acknowledgement', 'Y')
+                    ->where('acknowledgement_path', '!=', null)
+                    ->wherein('ack_mail_sent', [null,0])
+                    ->whereIn('created_by', function ($query) use ($org_id) {
+                        $query->select('users.id')
+                            ->from('users')
+                            ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
+                            ->whereIn('user_organization.org_id', $org_id);
+                    })
 
-            return view('acknowledgementprint',compact('applications'));
+                    ->whereHas('statuses', function ($query) {
+                        $query->wherein('status_id', [4, 5])
+                            ->where('application_status.active', 1);
+                    })
+                    ->get();
 
+                return view('acknowledgementprint',compact('applications'));
+
+            }
+            else {
+                $applications = Application::where($arr)
+                    ->where('acknowledgement', 'Y')
+                    ->where('acknowledgement_path', '!=', null)
+                    ->whereIn('created_by', function ($query) use ($org_id) {
+                        $query->select('users.id')
+                            ->from('users')
+                            ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
+                            ->whereIn('user_organization.org_id', $org_id);
+                    })
+                    ->whereHas('statuses', function ($query) {
+                        $query->wherein('status_id', [4, 5])
+                            ->where('application_status.active', 1);
+                    })
+                    ->get();
+
+                return view('acknowledgementprint', compact('applications'));
+            }
 
 //            $pdf = PDFMerger::init();
 //            $pdf->addPDF('');
 //            $pdf->addPDF('');
 //
 //            $oMerger->stream();
-
 
 //            $pdfFilePaths = [];
 //            foreach ($applications as $application) {
@@ -979,9 +1011,6 @@ class ApplicationController extends Controller
 //                    'pdf_error' => 'No PDFs found to merge.',
 //                ]);
 //            }
-
-
-
 
 //            $pdfFiles = [
 //                'C:\Users\prust\OneDrive\Desktop\petition\applications\80\1689256090.pdf',
@@ -1036,22 +1065,47 @@ class ApplicationController extends Controller
 //        return view('pdfmerge', compact('pdfUrl'));
         }
 
-        elseif($request->input('submit') === 'Forward'){
-            $applications = Application::where($arr)
-                ->whereIn('created_by', function ($query) use ($org_id) {
-                    $query->select('users.id')
-                        ->from('users')
-                        ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
-                        ->whereIn('user_organization.org_id', $org_id);
-                })
-                ->where('forwarded_path','!=',null)
-                ->whereHas('statuses', function ($query) {
-                    $query->whereIn('status_id', [4,5])
-                        ->where('application_status.active', 1);
-                })->get();
+        elseif($request->input('submit') === 'Forward')
+        {
+            if ($request->mail && $request->mail != ''&&$request->mail=='filtered') {
+                    $applications = Application::where($arr)
+                        ->wherein('action_org', ['S','F'])
+                        ->where('forwarded_path','!=',null)
+                        ->wherein('mail_sent', [null,0])
+                        ->whereIn('created_by', function ($query) use ($org_id) {
+                            $query->select('users.id')
+                                ->from('users')
+                                ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
+                                ->whereIn('user_organization.org_id', $org_id);
+                        })
+                        ->whereHas('statuses', function ($query) {
+                            $query->whereIn('status_id', [4,5])
+                                ->where('application_status.active', 1);
+                        })->get();
 
-            return view('forwardprint',compact('applications'));
-        }
+                    return view('forwardprint',compact('applications'));}
+
+                else
+                {
+                    $applications = Application::where($arr)
+                        ->wherein('action_org', ['S','F'])
+                        ->where('forwarded_path','!=',null)
+                        ->whereIn('created_by', function ($query) use ($org_id) {
+                            $query->select('users.id')
+                                ->from('users')
+                                ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
+                                ->whereIn('user_organization.org_id', $org_id);
+                        })
+                        ->whereHas('statuses', function ($query) {
+                            $query->whereIn('status_id', [4,5])
+                                ->where('application_status.active', 1);
+                        })->get();
+
+                    return view('forwardprint',compact('applications'));
+                }
+            }
+
+
 
         elseif($request->input('submit') === 'forwardTable'){
             $applications = Application::where($arr)
@@ -1062,8 +1116,8 @@ class ApplicationController extends Controller
                         ->whereIn('user_organization.org_id', $org_id);
                 })
                 ->when(!empty($ar), function ($query) use ($organizationIds) {
-                return $query->whereIn('department_org_id', $organizationIds);
-            })
+                    return $query->whereIn('department_org_id', $organizationIds);
+                })
                 ->where('department_org_id','!=',null)
                 ->whereHas('statuses', function ($query) {
                     $query->whereIn('status_id',[4,5])
@@ -1081,8 +1135,8 @@ class ApplicationController extends Controller
                         ->whereIn('user_organization.org_id', $org_id);
                 })
                 ->when(!empty($ar), function ($query) use ($organizationIds) {
-                return $query->whereIn('department_org_id', $organizationIds);
-            })
+                    return $query->whereIn('department_org_id', $organizationIds);
+                })
                 ->where('reply','!=',null)
                 ->whereHas('statuses', function ($query) {
                     $query->whereIn('status_id', [4,5])
