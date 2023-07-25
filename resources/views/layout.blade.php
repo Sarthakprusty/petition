@@ -156,6 +156,7 @@
                             @php
                             $states=\App\Models\State::all();
                             $organizations=\App\Models\Organization::all()
+
                             @endphp
                         <div class="mb-3">
                             <label for="state_id" class="form-label">State</label>
@@ -170,6 +171,51 @@
                             <label for="letterno" class="form-label">Letter No.</label>
                             <input type="text" class="form-control" id="letterno" name="letter_no" placeholder="Search By Letter No.">
                         </div>
+                        <div class="row">
+                            <div class="mb-3">
+                                <label class="form-label" for="organizationType">Organization:</label>
+                                <select class="form-control" name="orgTy">
+                                    <option value="">Select an Option</option>
+                                    <option id="typeOrganizationType" value="type" selected>State GOV.</option>
+                                    <option id="typeOrganizationName" value="name">Center GOV.</option>
+                                </select>
+                            </div>
+                        </div>
+                        @php
+                            $organizationStates = \App\Models\Organization::where('org_type','S')->get();
+                            $organizationM = \App\Models\Organization::where('org_type','M')->get();
+                        @endphp
+                        <div class="mb-3" id="organizationSt" style="display: block;">
+                            <select class="form-control" id="orgS" name="orgDesc">
+                                <option value="">Select an State</option>
+                                @foreach($organizationStates as $state)
+                                    <option value="{{ $state->id }}">{{ $state->org_desc }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="organizationMi" style="display: none;">
+                            <select class="form-control" id="orgM" name="orgDesc">
+                                <option value="">Select an Organization</option>
+                                @foreach($organizationM as $organization)
+                                    <option value="{{ $organization->id }}">{{ $organization->org_desc }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <script>
+                            $(document).ready(function() {
+                                $('select[name="orgTy"]').change(function() {
+                                    var selectedType = $(this).val();
+                                    if (selectedType === "type") {
+                                        $('#organizationSt').show();
+                                        $('#organizationMi').hide();
+                                    } else if (selectedType === "name") {
+                                        $('#organizationSt').hide();
+                                        $('#organizationMi').show();
+                                    }
+                                });
+                            });
+                        </script>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -194,7 +240,17 @@
         </div>
     </div>
 </div>
-
+<li>
+    <a href="#"data-bs-toggle="modal" data-bs-target="#Report">
+        <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Report</span>
+    </a>
+</li>
+<br>
+<li>
+    <a href="#" data-bs-toggle="modal" data-bs-target="#letter">
+        <i class="fs-4 bi-printer"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Print Letter</span>
+    </a>
+</li>
 <div>
     <div class="modal fade" id="letter" style="z-index: 1051" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" data-bs-backdrop="false">
         <div class="modal-dialog modal-dialog-centered">
@@ -215,22 +271,54 @@
                                 </div>
                             </div>
                         </div>
-                        @if(isset($organizations))
-                        <div class="mb-3">
-                            <label for="organization">Select an Organization</label>
-                            <select class="form-control" id="organization" name="orgDesc">
-                                <option value="">Select an Organization</option>
-                                @foreach($organizations as $organization)
-                                    <option value="{{ $organization->id }}">{{ $organization->org_desc }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        @endif
-
                         <div class="mb-3">
                             <label for="regnotxt" class="form-label">Reg. No.</label>
                             <input type="text" class="form-control" id="regnotxt" name="reg_no" placeholder="Search By Registration No.">
                         </div>
+                        <div class="row">
+                            <div class="mb-3">
+                                <label class="form-label" for="organizationType">Organization:</label>
+                                <select class="form-control" name="orgType">
+                                    <option id="typeOrganizationType" value="type" selected>State GOV.</option>
+                                    <option id="typeOrganizationName" value="name">Center GOV.</option>
+                                </select>
+                            </div>
+                        </div>
+                        @php
+                            $organizationStates = \App\Models\Organization::where('org_type','S')->get();
+                            $organizationM = \App\Models\Organization::where('org_type','M')->get();
+                        @endphp
+                        <div class="mb-3" id="organizationTypeDropdown" style="display: block;">
+                            <select class="form-control" id="orgDesc" name="orgDesc">
+                                <option value="">Select an State</option>
+                                @foreach($organizationStates as $state)
+                                    <option value="{{ $state->id }}">{{ $state->org_desc }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="organizationNameDropdown" style="display: none;">
+                            <select class="form-control" id="orgDesc" name="orgDesc">
+                                <option value="">Select an Organization</option>
+                                @foreach($organizationM as $organization)
+                                    <option value="{{ $organization->id }}">{{ $organization->org_desc }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <script>
+                            $(document).ready(function() {
+                                $('select[name="orgType"]').change(function() {
+                                    var selectedType = $(this).val();
+                                    if (selectedType === "type") {
+                                        $('#organizationTypeDropdown').show();
+                                        $('#organizationNameDropdown').hide();
+                                    } else if (selectedType === "name") {
+                                        $('#organizationTypeDropdown').hide();
+                                        $('#organizationNameDropdown').show();
+                                    }
+                                });
+                            });
+                        </script>
 
                     </div>
                     <div class="modal-footer">
@@ -250,34 +338,6 @@
             <form method="get" action="{{route('application.reportprint')}}">
                 <div class="modal-content">
                     <div class="modal-body">
-
-                        <div class="row">
-                            <div class="mb-3">
-                                <label class="form-label" for="organizationType">Organization:</label>
-                                <select class="form-control" name="orgType">
-                                    <option id="typeOrganizationType" value="type" selected>Organization State-wise</option>
-                                    <option id="typeOrganizationName" value="name">Organization Name-wise</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="mb-3" id="organizationTypeDropdown" style="display: block;">
-                            <select class="form-control" id="orgType" name="state">
-                                <option value="">Select an State</option>
-                                @foreach($states as $state)
-                                    <option value="{{ $state->id }}">{{ $state->state_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-3" id="organizationNameDropdown" style="display: none;">
-                            <select class="form-control" id="orgDesc" name="orgDesc">
-                                <option value="">Select an Organization</option>
-                                @foreach($organizations as $organization)
-                                    <option value="{{ $organization->id }}">{{ $organization->org_desc }}</option>
-                                @endforeach
-                            </select>
-                        </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -292,20 +352,51 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="mb-3">
+                                <label class="form-label" for="organizationType">Organization:</label>
+                                <select class="form-control" name="orgT">
+                                    <option id="typeOrganizationType" value="type" selected>State GOV.</option>
+                                    <option id="typeOrganizationName" value="name">Center GOV.</option>
+                                </select>
+                            </div>
+                        </div>
+                        @php
+                            $organizationStates = \App\Models\Organization::where('org_type','S')->get();
+                            $organizationM = \App\Models\Organization::where('org_type','M')->get();
+                        @endphp
+                        <div class="mb-3" id="organizationS" style="display: block;">
+                            <select class="form-control" id="orgS" name="orgDesc">
+                                <option value="">Select an State</option>
+                                @foreach($organizationStates as $state)
+                                    <option value="{{ $state->id }}">{{ $state->org_desc }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="organizationM" style="display: none;">
+                            <select class="form-control" id="orgM" name="orgDesc">
+                                <option value="">Select an Organization</option>
+                                @foreach($organizationM as $organization)
+                                    <option value="{{ $organization->id }}">{{ $organization->org_desc }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                         <script>
                             $(document).ready(function() {
-                                $('select[name="orgType"]').change(function() {
+                                $('select[name="orgT"]').change(function() {
                                     var selectedType = $(this).val();
                                     if (selectedType === "type") {
-                                        $('#organizationTypeDropdown').show();
-                                        $('#organizationNameDropdown').hide();
+                                        $('#organizationS').show();
+                                        $('#organizationM').hide();
                                     } else if (selectedType === "name") {
-                                        $('#organizationTypeDropdown').hide();
-                                        $('#organizationNameDropdown').show();
+                                        $('#organizationS').hide();
+                                        $('#organizationM').show();
                                     }
                                 });
                             });
                         </script>
+
                     </div>
 
                     <div class="modal-footer">
@@ -321,6 +412,13 @@
 </div>
 
 <script>
+    //orgType
+
+
+
+
+
+
     tinymce.init({
         selector: 'textarea.editor',
         plugins: 'preview importcss searchreplace autolink directionality visualblocks visualchars link table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount quickbars',

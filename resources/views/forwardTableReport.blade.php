@@ -40,7 +40,7 @@
             <div>Rashtrapati Bhavan</div>
             <div>New Delhi - 110004</div>
             <br>
-            <div>Following Requests/Grievances addressed to the President of India are being forwarded to {{$name}} during the peroid from <strong>{{$date_from}}</strong> To <strong> {{$date_to}}</strong> for appropriate attention. Kindly expedite disposal/status report to the petitioner:
+            <div>Following Requests/Grievances addressed to the President of India are being forwarded to <strong>{{$name}}</strong> during the peroid from <strong>{{$date_from}}</strong> To <strong> {{$date_to}}</strong> for appropriate attention. Kindly expedite disposal/status report to the petitioner:
             </div>
         </div>
 <br>
@@ -55,6 +55,7 @@
                 <th>Petitioner Name</th>
                 <th>Petitioner Address</th>
                 <th>Subject</th>
+                <th>Forwarded To</th>
             </tr>
             </thead>
             <tbody>
@@ -65,7 +66,11 @@
                 <tr>
                     <td>{{ $count++ }}</td>
                     <td>{{ $application->reg_no }}</td>
-                    <td>{{ $application->letter_date->format('d/m/Y') }}</td>
+                    <td>
+                        @if($application->letter_date)
+                        {{ $application->letter_date->format('d/m/Y') }}
+                        @endif
+                    </td>
                     <td>@php
                             $statusId = 4;
                             $pivot = $application->statuses->first(function ($status) use ($statusId) {
@@ -92,6 +97,7 @@
                             <br>
                         @endif</td>
                     <td>{{ $application->letter_subject }}</td>
+                    <td>{{$application->department_org ? $application->department_org->org_desc : ''}}</td>
                 </tr>
             @endforeach
             </tbody>

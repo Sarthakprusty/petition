@@ -42,7 +42,7 @@
             <div>Rashtrapati Bhavan</div>
             <div>New Delhi - 110004</div>
             <br>
-            <div>Following Requests/Grievances addressed to the President of India are being forwarded to {{$name}} during the peroid from {{$date_from}} To {{$date_to}} for appropriate attention. Kindly expedite disposal/status report to the petitioner:
+            <div>Following Requests/Grievances addressed to the President of India are being forwarded to <strong>{{$name}}</strong> during the peroid from <strong>{{$date_from}}</strong> To <strong>{{$date_to}}</strong> for appropriate attention. Kindly expedite disposal/status report to the petitioner:
             </div>
         </div>
 <br>
@@ -68,7 +68,9 @@
                 <tr>
                     <td>{{ $count++ }}</td>
                     <td>{{ $application->reg_no }}</td>
-                    <td>{{ $application->letter_date->format('d/m/Y') }}</td>
+                    <td>@if($application->letter_date)
+                            {{ $application->letter_date->format('d/m/Y') }}
+                        @endif</td>
 
                     <td>@php
                             $statusId = 4;

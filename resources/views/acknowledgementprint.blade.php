@@ -34,7 +34,7 @@
 
             <div class="letter">
                 <meta charset="UTF-8">
-                <div class="centered"> <!-- Wrap the centered part in a div with the "centered" class -->
+                <div class="centered">
                     <table align='center'>
                         <tr><td nowrap=nowrap align='center' >
                                 <img src="{{ asset('storage/logo.png') }}" alt='National Symbol' style=' width: 30%' />

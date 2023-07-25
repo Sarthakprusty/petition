@@ -25,8 +25,8 @@ class ActionOrg implements ValidationRule
         //N=No Action
         //F=Forward to Central Govt. Ministry/Department
         //M=Miscellaneous
-        //F=Forward to State Govt.
-        $allowedAcknowledgement = ['z','q'];
+        //S=Forward to State Govt.
+        $allowedAcknowledgement = ['N','F','M','S'];
         if (!in_array($value, $allowedAcknowledgement))
             $fail('The :attribute must be one of the following: No Action, Forward to Central Govt. Ministry/Department, Forward to State Govt, Miscellaneous.');
     }

@@ -82,7 +82,6 @@ class Handler extends ExceptionHandler
                     'validationErrors' => $errors,
                 ]
             ], 422);
-
         } elseif ($exception instanceof AuthorizationException) {
             return response()->view('error', [
                 'error' => [
