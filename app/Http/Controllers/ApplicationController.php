@@ -483,7 +483,13 @@ class ApplicationController extends Controller
                 if ($application->acknowledgement === 'Y') {
 
 //                    CURL
-                    $html = view('acknowledgementletter', compact('application'))->render();
+                    $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
+                    $imageData = file_get_contents($imagePath);
+                    $imageBase64 = base64_encode($imageData);
+                    $logoPath = public_path('storage/logo.png');
+                    $logoData = file_get_contents($logoPath);
+                    $logoBase64 = base64_encode($logoData);
+                    $html = view('acknowledgementletter', compact('application','imageBase64','logoBase64'))->render();
                     $postParameter = array(
                         'htmlSource' => $html
                     );
@@ -604,7 +610,13 @@ class ApplicationController extends Controller
 
 
                 if ($application->department_org && $application->department_org->id !== null) {
-                $html = view('forwardedletter', compact('application'))->render();;
+                    $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
+                    $imageData = file_get_contents($imagePath);
+                    $imageBase64 = base64_encode($imageData);
+                    $logoPath = public_path('storage/logo.png');
+                    $logoData = file_get_contents($logoPath);
+                    $logoBase64 = base64_encode($logoData);
+                    $html = view('forwardedletter', compact('application','imageBase64','logoBase64'))->render();;
                 $postParameter = array(
                     'htmlSource' => $html
                 );
@@ -627,7 +639,7 @@ class ApplicationController extends Controller
                     }
                 }
 
-                    if ($application->department_org->mail !== null) {
+//                    if ($application->department_org->mail !== null) {
 //                    $email = $application->department_org->mail;
                         $fname = str_replace('/', '_', $application->reg_no);
                         $email = 'prustysarthak123@gmail.com';
@@ -671,7 +683,7 @@ class ApplicationController extends Controller
                             $application->save();
                             Log::error('Failed to send email: ' . $e->getMessage());
                         }
-                    }
+//                    }
                 }
 
 

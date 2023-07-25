@@ -55,7 +55,7 @@
             <meta charset="UTF-8">
             <div class="centered"> <!-- Wrap the centered part in a div with the "centered" class -->
                 <div class="row">
-                    <img src="{{ asset('storage/logo.png') }}" alt='National Symbol' style=' width: 35px;padding-left: 1%' />
+                    <img src="data:image/png;base64,{{ $logoBase64 }}" alt='National Symbol' style=' width: 35px;padding-left: 1%' />
                 </div>
                 <div>राष्ट्रपति सचिवालय</div>
                 <div>President's Secretariat</div>
@@ -109,22 +109,19 @@
             <br>
 
             <div>विषय/Subject: REQUEST FOR ATTENTION ON HIS/HER PETITION</div>
-            <p>कृपया, उपर्युक्त विषय पर, भारत के राष्ट्रपति जी को सम्बोधित दिनांक: {{$application->letter_date?$application->letter_date->format("d/m/Y"): 'रहित'}} की स्वतः स्पष्ट याचिका उपयुक्त ध्यानाकर्षण के लिए संलग्न है / Enclosed please find for appropriate attention a petition dated: {{$application->letter_date?$application->letter_date->format("d/m/Y"): null}} addressed to the President of India on the above subject matter, which is self explanatory.</p>
+            <p>कृपया, उपर्युक्त विषय पर, भारत के राष्ट्रपति जी को सम्बोधित दिनांक: {{$application->letter_date?$application->letter_date->format("d/m/Y"): 'रहित'}} की स्वतः स्पष्ट याचिका उपयुक्त ध्यानाकर्षण के लिए संलग्न है |</p>
+            <p> Enclosed please find for appropriate attention a petition dated: {{$application->letter_date?$application->letter_date->format("d/m/Y"): null}} addressed to the President of India on the above subject matter, which is self explanatory.</p>
 
             <br>
 
-            <p>याचिका पर की गई कार्रवाई की सूचना सीधे याचिकाकर्ता को दे दी जाये /Action taken on the petition may please be communicated to the petitioner directly.</p>
+            <p>याचिका पर की गई कार्रवाई की सूचना सीधे याचिकाकर्ता को दे दी जाये |</p>
+            <p>Action taken on the petition may please be communicated to the petitioner directly.</p>
 
 
 
-            <br><br>
-
-
-
-            <br>
+            <br><br><br>
             <div class="row">
-
-{{--                                <img src="data:image/png;base64,{{ $imageBase64 }}" style='width: 100px;padding-left: 84%' />--}}
+                <img src="data:image/png;base64,{{ $imageBase64 }}" style='width: 100px;padding-left: 84%' />
             </div>
 
 
@@ -155,7 +152,7 @@
                     </td>
                     <td style="padding-left: 25mm;">
                         <p>
-                            आपसे अनुरोध है की मामले में आगे जानकारी के लिए, उपर्युक्त्त प्रेषिती से सीधे संपर्क करेंं /
+                            आपसे अनुरोध है की मामले में आगे जानकारी के लिए, उपर्युक्त्त प्रेषिती से सीधे संपर्क करेंं |
                             <br>
                             You are further requested to liaise with the aforementioned addressee directly for further information in the matter.
                         </p>

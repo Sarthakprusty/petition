@@ -13,7 +13,13 @@
                 height: 277mm;
                 padding: 15mm;
                 background-color: #FBD485;
-                font-size: 4mm;
+                /*font-size: 4mm;*/
+
+
+                margin-left: 10%;
+
+                border: 1px solid #ccc;
+                font-size: 60%;
             }
             .centered {
                 text-align: center;
@@ -42,9 +48,19 @@
                     </table>
                     <div>राष्ट्रपति सचिवालय</div>
                     <div>President's Secretariat</div>
-                    <div>(जनता-I अनुभाग)</div>
-                    <div>(PUBLIC-I SECTION)</div>
+                    <div>
+                        @if (substr($application->reg_no, 0, 2) === 'p1')
+                            (जनता-I अनुभाग)
+                        @elseif (substr($application->reg_no, 0, 2) === 'p2')
+                            (जनता-II अनुभाग)
+                        @endif</div>
+                    <div>@if (substr($application->reg_no, 0, 2) === 'P1')
+                            (PUBLIC-I SECTION)
+                        @elseif (substr($application->reg_no, 0, 2) === 'P2')
+                            (PUBLIC-II SECTION)
+                        @endif</div>
                     <div>Rashtrapati Bhavan</div>
+                    <div>नई दिल्ली - 110004</div>
                     <div>New Delhi - 110004</div>
                 </div>
 
@@ -57,70 +73,68 @@
                 @if($application->department_org && $application->department_org->org_head)
                     <div>{{$application->department_org->org_head}}</div>
                 @endif
+                @if($application->department_org && $application->department_org->org_desc_hin)
+                    <div>{{$application->department_org->org_desc_hin}} </div>
+                @endif
                 @if($application->department_org && $application->department_org->org_desc)
                     <div>{{$application->department_org->org_desc}} </div>
+                @endif
+                @if($application->department_org && $application->department_org->org_address_hin)
+                    <div>{{$application->department_org->org_address_hin}} </div>
                 @endif
                 @if($application->department_org && $application->department_org->org_address)
                     <div>{{$application->department_org->org_address}}</div>
                 @endif
-                <div>New Delhi - 110001</div>
-
+                @if($application->department_org && $application->department_org->pincode)
+                    <div>{{$application->department_org->pincode}}</div>
+                @endif
                 <br>
-
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="font-weight: bold; white-space: nowrap;">Sl.No:{{$application->reg_no}}</div>
-                    <div>
-                        <div style="white-space: nowrap;">दिनांक/Dated:
-                            @php
-                                $statusId = 4;
-                                $pivot = $application->statuses->first(function ($status) use ($statusId) {
-                                    return $status->pivot->status_id === $statusId;
-                                });
-                                $createdAt = $pivot ? $pivot->pivot->created_at : null;
-                            @endphp
-                            {{ $createdAt ? \Carbon\Carbon::parse($createdAt)->format('d/m/Y') : '' }}
-                        </div>
-                    </div>
+                <div>
+                    <span style="font-weight: bold;">Sl.No: {{$application->reg_no}}</span>
+                    <span style="float: right">दिनांक/Dated: {{$application->created_at->format('d/m/Y')}}</span>
                 </div>
 
+
+                {{--            <div style="display: flex; justify-content: space-between; align-items: center;">--}}
+                {{--            <div style="font-weight: bold; white-space: nowrap;">Sl.No:{{$application->reg_no}}</div>--}}
+                {{--            <div>--}}
+                {{--                <div style="white-space: nowrap;">दिनांक/Dated:{{$application->created_at->format('d/m/Y')}}--}}
+                {{--                    @php--}}
+                {{--                        $statusId = 4;--}}
+                {{--                        $pivot = $application->statuses->first(function ($status) use ($statusId) {--}}
+                {{--                            return $status->pivot->status_id === $statusId;--}}
+                {{--                        });--}}
+                {{--                        $createdAt = $pivot ? $pivot->pivot->created_at : null;--}}
+                {{--                    @endphp--}}
+                {{--                    {{ $createdAt ? \Carbon\Carbon::parse($createdAt)->format('d/m/Y') : '' }}--}}
+                {{--                </div>--}}
+                {{--            </div>--}}
+                {{--        </div>--}}
+
                 <br>
 
-                <label>विषय/Subject:</label>{{$application->letter_subject}}
-                <p>कृपया, उपर्युक्त विषय पर, भारत के राष्ट्रपति जी को सम्बोधित दिनांक: {{$application->letter_date->format("d/m/Y")}} की स्वतः स्पष्ट याचिका उपयुक्त ध्यानाकर्षण के लिए संलग्न है /</p>
-                <p>Enclosed please find for appropriate attention a petition dated: {{$application->letter_date->format("d/m/Y")}} addressed to the President of India on the above subject matter, which is self explanatory.</p>
+                <p> <label>विषय/Subject: REQUEST FOR ATTENTION ON HIS/HER PETITION</label></p>
+                <p>कृपया, उपर्युक्त विषय पर, भारत के राष्ट्रपति जी को सम्बोधित दिनांक: {{$application->letter_date?$application->letter_date->format("d/m/Y"): 'रहित'}} की स्वतः स्पष्ट याचिका उपयुक्त ध्यानाकर्षण के लिए संलग्न है |</p>
+                <p> Enclosed please find for appropriate attention a petition dated: {{$application->letter_date?$application->letter_date->format("d/m/Y"): null}} addressed to the President of India on the above subject matter, which is self explanatory.</p>
 
                 <br>
 
-                <p>याचिका पर की गई कार्रवाई की सूचना सीधे याचिकाकर्ता को दे दी जाये /</p>
+                <p>याचिका पर की गई कार्रवाई की सूचना सीधे याचिकाकर्ता को दे दी जाये |</p>
                 <p>Action taken on the petition may please be communicated to the petitioner directly.</p>
+                <br><br><br>
 
-
-                <br>
-                <div class="row">
-                    <div class="col-9"></div>
-                    <div class="col-3 d-flex justify-content-center align-items-center">
-{{--                        <img src='{{ asset('storage/logo.png') }}' alt='National Symbol' style=' width: 100px' />--}}
-                    </div>
-                </div>
-
-                <strong>
-                    <p style="text-align: right">(चिराब्राता सरकार {{Auth::user()->username}})</p>
-                    <p style="text-align: right">अवर सचिव Under Secretary</p>
-                </strong>
-
-                <br><br>
-
-                <div class="row">
-                    <div class="col-6">
-                        <strong>
-                            <div>प्रतिलिपि/ Copy to:</div>
-                        </strong>
-                        <div>{{$application->applicant_title}} {{$application->applicant_name}}</div>
-                        <p>{{$application->address}}</p>
-                        @if ($application->state)
-                            <p>{{$application->state->state_name}} {{$application->state && $application->pincode ? '-' : ''}}{{$application->pincode}}</p>
-                        @endif
-                        <p>
+                <table>
+                    <tr>
+                        <td>
+                            <strong>प्रतिलिपि/ Copy to:</strong><br>
+                            {{$application->applicant_title}} {{$application->applicant_name}}
+                            <br>
+                            {{$application->address}}
+                            <br>
+                            @if ($application->state)
+                                {{$application->state->state_name}} {{$application->state && $application->pincode ? '-' : ''}}{{$application->pincode}}
+                                <br>
+                            @endif
                             @if ($application->country === 'I')
                                 INDIA
                             @elseif ($application->country === 'O')
@@ -128,53 +142,70 @@
                             @elseif ($application->country === 'U')
                                 USA
                             @endif
-                        </p>
-                    </div>
-                    <div class="col-6">
-                        <p>आपसे अनुरोध है की मामले में आगे जानकारी के लिए, उपर्युक्त्त प्रेषिती से सीधे संपर्क करेंं /</p>
-                        <p>You are further requested to liaise with the aforementioned addressee directly for further information in the matter.</p>
-                    </div>
+                        </td>
+                        <td style="padding-left: 25mm;">
+                            <p>
+                                आपसे अनुरोध है की मामले में आगे जानकारी के लिए, उपर्युक्त्त प्रेषिती से सीधे संपर्क करेंं |
+                                <br>
+                                You are further requested to liaise with the aforementioned addressee directly for further information in the matter.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+
+                <br>
+                <br>
+                <div class="row">
+
+{{--                    <img src="data:image/png;base64,{{ $imageBase64 }}" style="width: 100px; padding-left: 81%">--}}
                 </div>
+
                 <strong>
-                    <p style="text-align: right">(चिराब्राता सरकार {{Auth::user()->username}})</p>
+{{--                    <p style="text-align: right">(चिराब्राता सरकार {{Auth::user()->authority->name}})</p>--}}
                     <p style="text-align: right">अवर सचिव Under Secretary</p>
                 </strong>
-
+                <br>
                 <br>
                 <div class="centered">
                     <div class="header">
                         बुक पोस्ट<br>
                         <div style="text-decoration: underline;">भारत सरकार सेवार्थ / ON INDIA GOVERNMENT SERVICE</div>
-
-                    </div></div><br>
+                    </div>
+                </div>
+                <br>
                 <div >Sl.No:</div>
-                <div>{{$application->reg_no}}</div>
-                <div class="row">
-                    <div class="col">
-                        <label>द्वारा / From:</label> राष्ट्रपति सचिवालय<br>
-                        President's Secretariat<br>
-                        राष्ट्रपति भवन<br>
-                        Rashtrapati Bhavan<br>
-                        नई दिल्ली 110004<br>NEW DELHI-110004
-                    </div>
-                    <div class="col">
-                        <label>To:</label>
-                        <div>{{$application->applicant_title}} {{$application->applicant_name}}</div>
-                        <p>{{$application->address}}</p>
-                        @if ($application->state)
-                            <p>{{$application->state->state_name}} {{$application->state && $application->pincode ? '-' : ''}}{{$application->pincode}}</p>
-                        @endif
-                        <p>
-                            @if ($application->country === 'I')
-                                INDIA
-                            @elseif ($application->country === 'O')
-                                Others
-                            @elseif ($application->country === 'U')
-                                USA
+                <div>{{$application->reg_no}}</div><br>
+                <table>
+                    <tr>
+                        <td>
+                            <label>द्वारा / From:</label>
+                            राष्ट्रपति सचिवालय<br>
+                            President's Secretariat<br>
+                            राष्ट्रपति भवन<br>
+                            Rashtrapati Bhavan<br>
+                            नई दिल्ली 110004<br>NEW DELHI-110004
+                        </td>
+                        <td style="padding-left: 25mm">
+                            <label>To:</label>
+                            <div>{{$application->applicant_title}} {{$application->applicant_name}}</div>
+                            <p>{{$application->address}}</p>
+                            @if ($application->state)
+                                <p>{{$application->state->state_name}} {{$application->state && $application->pincode ? '-' : ''}}{{$application->pincode}}</p>
                             @endif
-                        </p>
-                    </div>
-                </div> <br>
+                            <p>
+                                @if ($application->country === 'I')
+                                    INDIA
+                                @elseif ($application->country === 'O')
+                                    Others
+                                @elseif ($application->country === 'U')
+                                    USA
+                                @endif
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+
+                <br>
                 <div class="centered">
                     <div class="note">
                         Note:- You may use <a href="https://helpline.rb.nic.in" style="text-decoration: underline;">https://helpline.rb.nic.in</a> for submitting your petition/grievance online.
@@ -183,6 +214,7 @@
                         नोट: आप अपनी याचिका दर्ज करने के लिए <a href="https://helpline.rb.nic.in" style="text-decoration: underline;">https://helpline.rb.nic.in</a> का उपयोग कर सकते हैं.
                     </div>
                 </div>
+
             </div>
         @endforeach
 
