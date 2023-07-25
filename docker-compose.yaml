@@ -1,0 +1,26 @@
+version: '3'
+services:
+  petition:    
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: petition
+    ports:
+    - "8001:8000"
+    restart: unless-stopped
+    tty: true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.petition.rule=PathPrefix(`/petition`)"
+      - "traefik.http.routers.petition.middlewares=petition-stripprefix"
+      - "traefik.http.middlewares.petition-stripprefix.stripprefix.prefixes=/petition"
+      - "traefik.http.middlewares.petition-stripprefix.stripprefix.forceSlash=true"
+      - "traefik.http.services.petition.loadbalancer.server.port=8000"
+    networks:
+      - live
+    volumes:
+      - /home/developer/storage:/storage
+networks:
+    live:
+      name: live
+      external: true
