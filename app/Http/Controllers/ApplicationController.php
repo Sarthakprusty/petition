@@ -912,7 +912,8 @@ class ApplicationController extends Controller
             $date_from = $request->app_date_from;
         }
         if ($request->app_date_to && $request->app_date_to != '') {
-            $arr[] = ['created_at', '<=', $request->app_date_to];
+            $endDate = (new \DateTime($request->app_date_to))->setTime(23, 59, 59);
+            $arr[] = ['created_at', '<=', $endDate->format('Y-m-d H:i:s')];
             $date_to = $request->app_date_to;
         }
         if ($request->orgDesc && $request->orgDesc != '') {
