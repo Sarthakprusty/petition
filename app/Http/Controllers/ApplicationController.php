@@ -561,8 +561,12 @@ class ApplicationController extends Controller
                         if($application->ack_mail_sent == 0 || $application->ack_mail_sent == '' ) {
 //                        $email = $application->email_id;
                             $fname = str_replace('/', '_', $application->reg_no);
-                            $email = 'prustysarthak123@gmail.com';
-                            $cc = 'sayantan.saha@gov.in';
+                            $email = 'us.petition@rb.nic.in';
+                            $cc=[];
+                            $cc[] = 'sayantan.saha@gov.in';
+                            $cc[] = 'so-public1@rb.nic.in';
+                            $cc[] = 'so-public2@rb.nic.in';
+                            $cc[] = 'prustysarthak123@gmail.com';
                             $subject = 'Reply From Rashtrapati Bhavan';
                             $details =  $application->applicant_title." ". $application->applicant_name . ",<br><br>
                                  Your Petition has been received in Rashtrapati Bhavan with ref no " . $application->reg_no . " and forwarded to " . $application->department_org->org_desc . " for further necessary action.<br><br>
@@ -571,7 +575,10 @@ class ApplicationController extends Controller
                             $content = storage::disk('upload')->get(base64_decode($application->acknowledgement_path));
                             try {
                                 Mail::send([], [], function ($message) use ($email, $subject, $details, $content, $cc,$fname) {
-                                    $message->to($email)->cc($cc)
+                                    $message->to($email)->cc($cc[0])
+                                        ->cc($cc[1])
+                                        ->cc($cc[2])
+                                        ->cc($cc[3])
                                         ->subject($subject)
                                         ->html($details)
                                         ->attachData($content,$fname.'_acknowledgement.pdf', [
@@ -658,8 +665,12 @@ class ApplicationController extends Controller
                     if (($application->department_org->mail !== null)&&($application->mail_sent == 0 || $application->mail_sent == '' )) {
 //                    $email = $application->department_org->mail;
                         $fname = str_replace('/', '_', $application->reg_no);
-                        $email = 'prustysarthak123@gmail.com';
-                        $cc = 'sayantan.saha@gov.in';
+                        $email = 'us.petition@rb.nic.in';
+                        $cc=[];
+                        $cc[] = 'sayantan.saha@gov.in';
+                        $cc[] = 'so-public1@rb.nic.in';
+                        $cc[] = 'so-public2@rb.nic.in';
+                        $cc[] = 'prustysarthak123@gmail.com';
                         $subject = $application->reg_no;
                         $details = "महोदय / महोदया,<br>
                                     Sir / Madam,<br><br>
@@ -679,7 +690,10 @@ class ApplicationController extends Controller
                         $file = storage::disk('upload')->get(base64_decode($application->file_path));
                         try {
                             $callback = function ($message) use ($email, $subject, $content, $cc, $file, $fname, $details) {
-                                $message->to($email)->cc($cc)
+                                $message->to($email)->cc($cc[0])
+                                    ->cc($cc[1])
+                                    ->cc($cc[2])
+                                    ->cc($cc[3])
                                     ->subject($subject)
                                     ->html($details)
                                     ->attachData($content, $fname . '_forward letter.pdf', [

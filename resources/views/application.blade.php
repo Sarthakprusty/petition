@@ -179,7 +179,7 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group row">
-                                    <input type="text" class="form-control" title="If acknowledgement is received, this mobile number will be used for sending SMS to the applicant." name="mobile_no" id="mobile_no" pattern="[0-9]{10}" minlength="10" maxlength="10" placeholder="mobile no" style="width: 89%; margin-left: 5%;" value="{{ old('mobile_no') ?: substr($app->mobile_no, 3)}}">
+                                    <input type="text" class="form-control" name="mobile_no" id="mobile_no" pattern="[0-9]{10}" minlength="10" maxlength="10" placeholder="mobile no" style="width: 89%; margin-left: 5%;" value="{{ old('mobile_no') ?: substr($app->mobile_no, 3)}}">
                                 </div>
                             </div>
                             <div class="col-md-3" style="text-align: right">
@@ -196,7 +196,7 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group ">
-                                    <input type="email" class="form-control" name="email_id" id="email_id" title="If acknowledgement is received, this email will be used for sending mailte to the applicant." placeholder="email" value="{{ old('email_id') ?: $app->email_id }}">
+                                    <input type="email" class="form-control" name="email_id" id="email_id" title="If acknowledgement is requested, this email will be used for sending mail to the applicant." placeholder="email" value="{{ old('email_id') ?: $app->email_id }}">
                                 </div>
                             </div>
                         </div>
