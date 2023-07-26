@@ -496,8 +496,12 @@ class ApplicationController extends Controller
                         'htmlSource' => $html
                     );
                     Log::info('post param:'.json_encode($postParameter));
-//                    $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
-                    $curlHandle = curl_init('http://10.21.160.179:8081/getMLPdf');
+                    //server
+                    $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
+                    //local
+//                    $curlHandle = curl_init('http://localhost:8081/getMLPdf');
+                    //sir
+//                    $curlHandle = curl_init('http://10.21.160.179:8081/getMLPdf');
 
                     curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
                     curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
@@ -554,7 +558,7 @@ class ApplicationController extends Controller
 //                    $application->save();
 
                     if ($application->email_id != null) {
-//                        if($application->ack_mail_sent == 0 || $application->ack_mail_sent == '' ) {
+                        if($application->ack_mail_sent == 0 || $application->ack_mail_sent == '' ) {
 //                        $email = $application->email_id;
                             $fname = str_replace('/', '_', $application->reg_no);
                             $email = 'prustysarthak123@gmail.com';
@@ -581,7 +585,7 @@ class ApplicationController extends Controller
                                 $application->save();
                                 Log::error('Failed to send ack email: ' . $e->getMessage());
                             }
-//                        }
+                        }
                     }
                     if ($application->email_id == null){
                         $application->ack_mail_sent = 0;
@@ -632,6 +636,8 @@ class ApplicationController extends Controller
                     );
                     Log::info('post param:'.json_encode($postParameter));
                     $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
+//                    $curlHandle = curl_init('http://localhost:8081/getMLPdf');
+
                     curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
                     curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
                     $curlResponse = curl_exec($curlHandle);
