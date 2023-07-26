@@ -32,7 +32,7 @@
             /*margin-left: 10%;*/
             padding: 15mm;
             /*border: 1px solid #ccc;*/
-            background-color: #FBD485;
+            /*background-color: #FBD485;*/
             /*font-size: 70%;*/
         }
         .centered {

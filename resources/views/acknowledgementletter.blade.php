@@ -12,12 +12,12 @@
             }
             .letter {
                 font-family: Arial, sans-serif;
-                size: A4;
+                /*size: A4;*/
                     /*width: 210mm;*/
-                height: 265mm;
+                height: 100%;
                 padding: 15mm;
-                background-color: #FBD485;
-                font-size: 4mm;
+                /*background-color: #FBD485;*/
+                /*font-size: 65%;*/
             }
             .centered {
                 text-align: center;
@@ -46,7 +46,7 @@
             <img src="data:image/png;base64,{{ $logoBase64 }}" alt='National Symbol' style=' width: 35px;padding-left: 1%' />
             </div>
             <div>राष्ट्रपति सचिवालय</div>
-            <div>President's Secretariat</div>
+            <div>President's Secretariat1</div>
             <div>
                 @if (substr($application->reg_no, 0, 2) === 'p1')
                     (जनता-I अनुभाग)
@@ -207,10 +207,10 @@
             <br>
             <div class="centered">
                 <div class="note">
-                    Note:- You may use <a href="https://helpline.rb.nic.in" style="text-decoration: underline;">https://helpline.rb.nic.in</a> for submitting your petition/grievance online.
+                    Note:- You may use <a href="https://helpline.rashtrapatibhavan.gov.in" style="text-decoration: underline;">https://helpline.rashtrapatibhavan.gov.in</a> for submitting your petition/grievance online.
                 </div>
                 <div class="note">
-                    नोट: आप अपनी याचिका दर्ज करने के लिए <a href="https://helpline.rb.nic.in" style="text-decoration: underline;">https://helpline.rb.nic.in</a> का उपयोग कर सकते हैं.
+                    नोट: आप अपनी याचिका दर्ज करने के लिए <a href="https://helpline.rashtrapatibhavan.gov.in" style="text-decoration: underline;">https://helpline.rashtrapatibhavan.gov.in</a> का उपयोग कर सकते हैं.
                 </div>
             </div>
 

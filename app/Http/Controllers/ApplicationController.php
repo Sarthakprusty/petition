@@ -496,7 +496,9 @@ class ApplicationController extends Controller
                         'htmlSource' => $html
                     );
                     Log::info('post param:'.json_encode($postParameter));
-                    $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
+//                    $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
+                    $curlHandle = curl_init('http://10.21.160.179:8081/getMLPdf');
+
                     curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
                     curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
                     $curlResponse = curl_exec($curlHandle);
@@ -552,14 +554,16 @@ class ApplicationController extends Controller
 //                    $application->save();
 
                     if ($application->email_id != null) {
-                        if($application->ack_mail_sent == 0 || $application->ack_mail_sent == '' ) {
+//                        if($application->ack_mail_sent == 0 || $application->ack_mail_sent == '' ) {
 //                        $email = $application->email_id;
                             $fname = str_replace('/', '_', $application->reg_no);
                             $email = 'prustysarthak123@gmail.com';
                             $cc = 'sayantan.saha@gov.in';
                             $subject = 'Reply From Rashtrapati Bhavan';
-                            $details = 'Hello, Mr/Mrs. ' . $application->applicant_name . ',<br><br>'
-                                . 'Your Petition has been received in Rashtrapati Bhavan with ref no ' . $application->reg_no . ' and forwarded to ' . $application->department_org->org_desc . ' for further necessary action.';
+                            $details =  $application->applicant_title." ". $application->applicant_name . ",<br><br>
+                                 Your Petition has been received in Rashtrapati Bhavan with ref no " . $application->reg_no . " and forwarded to " . $application->department_org->org_desc . " for further necessary action.<br><br>
+                                    Regards <br>
+                             President's Secretariat<br>";
                             $content = storage::disk('upload')->get(base64_decode($application->acknowledgement_path));
                             try {
                                 Mail::send([], [], function ($message) use ($email, $subject, $details, $content, $cc,$fname) {
@@ -577,7 +581,7 @@ class ApplicationController extends Controller
                                 $application->save();
                                 Log::error('Failed to send ack email: ' . $e->getMessage());
                             }
-                        }
+//                        }
                     }
                     if ($application->email_id == null){
                         $application->ack_mail_sent = 0;
@@ -645,25 +649,25 @@ class ApplicationController extends Controller
                         }
                     }
 
-                    if ($application->department_org->mail !== null) {
+                    if (($application->department_org->mail !== null)&&($application->mail_sent == 0 || $application->mail_sent == '' )) {
 //                    $email = $application->department_org->mail;
                         $fname = str_replace('/', '_', $application->reg_no);
                         $email = 'prustysarthak123@gmail.com';
                         $cc = 'sayantan.saha@gov.in';
                         $subject = $application->reg_no;
-                        $details = "महोदय / महोदया।<br>
-                                    Sir / Madam,।<br><br>
-                                    कृपया उपरोक्त विषय पर भारत के राष्ट्रपति जी को संबोधित स्वतः स्पष्ट याचिका उपयुक्त ध्यानाकर्षण के लिए संलग्न है। याचिका पर की गई कार्रवाई की सूचना सीधे याचिकाकर्ता को दे दी जाये।।<br>
-                                    Attached please find for appropriate attention a petition addressed to the President of India which is self-explanatory. Action taken on the petition may please be communicated to the petitioner directly.।<br>
-                                    सादर।<br>
-                                    regards।<br><br>"
+                        $details = "महोदय / महोदया,<br>
+                                    Sir / Madam,<br><br>
+                                    कृपया उपरोक्त विषय पर भारत के राष्ट्रपति जी को संबोधित स्वतः स्पष्ट याचिका उपयुक्त ध्यानाकर्षण के लिए संलग्न है। याचिका पर की गई कार्रवाई की सूचना सीधे याचिकाकर्ता को दे दी जाये।<br>
+                                    Attached please find for appropriate attention a petition addressed to the President of India which is self-explanatory. Action taken on the petition may please be communicated to the petitioner directly.<br>
+                                    सादर,<br>
+                                    regards,<br><br>"
                             . Auth::user()->authority->name . "<br>
-                                    अवर सचिव।<br>
-                                    Under Secretary।<br>
-                                    राष्ट्रपति सचिवालय।<br>
-                                    President's Secretariat।<br>
-                                    राष्ट्रपति भवन, नई दिल्ली।<br>
-                                    Rashtrapati Bhavan, New Delhi।";
+                                    अवर सचिव<br>
+                                    Under Secretary<br>
+                                    राष्ट्रपति सचिवालय<br>
+                                    President's Secretariat<br>
+                                    राष्ट्रपति भवन, नई दिल्ली<br>
+                                    Rashtrapati Bhavan, New Delhi";
 
                         $content = storage::disk('upload')->get(base64_decode($application->forwarded_path));
                         $file = storage::disk('upload')->get(base64_decode($application->file_path));
