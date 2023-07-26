@@ -150,7 +150,7 @@
                             USA
                         @endif
                     </td>
-                    <td style="padding-left: 25mm;">
+                    <td style="padding-left: 30mm;">
                         <p>
                             आपसे अनुरोध है की मामले में आगे जानकारी के लिए, उपर्युक्त्त प्रेषिती से सीधे संपर्क करेंं |
                             <br>

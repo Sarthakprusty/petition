@@ -46,7 +46,7 @@
             <img src="data:image/png;base64,{{ $logoBase64 }}" alt='National Symbol' style=' width: 35px;padding-left: 1%' />
             </div>
             <div>राष्ट्रपति सचिवालय</div>
-            <div>President's Secretariat1</div>
+            <div>President's Secretariat</div>
             <div>
                 @if (substr($application->reg_no, 0, 2) === 'p1')
                     (जनता-I अनुभाग)
