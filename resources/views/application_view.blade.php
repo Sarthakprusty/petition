@@ -412,6 +412,8 @@
                                         No Action
                                     @elseif ($app->action_org === 'F')
                                         Forward to Central Govt. Ministry/Department
+                                    @elseif ($app->action_org === 'S')
+                                        Forward to State Govt.
                                     @elseif ($app->action_org === 'M')
                                         Miscellaneous
                                     @else
