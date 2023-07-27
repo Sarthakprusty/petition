@@ -8,11 +8,13 @@
                 font-family: Arial, sans-serif;
                 size: A4;
                 width: 210mm;
-                height: 277mm;
+                height: 297mm;
                 margin-left: 10%;
                 padding: 15mm;
                 border: 1px solid #ccc;
-                background-color: #FBD485;
+                /*background-color: #FBD485;*/
+                background-color: white;
+
                 font-size: 70%;
             }
             .centered {

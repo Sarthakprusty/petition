@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('QUEUE_CONNECTION', 'sync'),
+    'default' => env('QUEUE_CONNECTION', 'database'),
 
     /*
     |--------------------------------------------------------------------------
@@ -70,6 +70,18 @@ return [
             'block_for' => null,
             'after_commit' => false,
         ],
+//        'approval' => [
+//            'driver' => 'redis',
+//            'connection' => 'default',
+//            'queue' => 'approval',
+//            'retry_after' => 90,
+//        ],
+//        'emails' => [
+//            'driver' => 'redis',
+//            'connection' => 'default',
+//            'queue' => 'emails',
+//            'retry_after' => 90,
+//        ],
 
     ],
 

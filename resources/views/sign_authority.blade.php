@@ -27,6 +27,17 @@
                     </div>
                 </div>
 
+                <div class="row">
+                    <div class="col-md-3" style="text-align: right">
+                        <label class="form-label">Name hindi:<span style="color: red;" class="required">*</span></label>
+                    </div>
+                    <div class="col">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="name_hin" aria-label="name_hin" placeholder="Name" name="name_hin"  required value="{{ old('name_hin') ?: $signAuthority->name}}">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row"></div>
 
                 <div class="row" >

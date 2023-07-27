@@ -18,6 +18,18 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+        \App\Events\GeneratePdfEventAck::class => [
+            \App\Listeners\GeneratePdfListenerAck::class,
+        ],
+        \App\Events\SendEmailEventAck::class => [
+            \App\Listeners\SendEmailListenerAck::class,
+        ],
+        \App\Events\GeneratePdfEventFwd::class => [
+            \App\Listeners\GeneratePdfListenerFwd::class,
+        ],
+        \App\Events\SendEmailEventFwd::class => [
+            \App\Listeners\SendEmailListenerFwd::class,
+        ],
     ];
 
     /**

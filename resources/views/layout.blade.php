@@ -121,6 +121,7 @@
                             @if (auth()->check() && auth()->user()->organizations()->where('user_organization.active', 1)->count()>1)
                                 @php
                                     $org_id = auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+                                    $organizations=\App\Models\Organization::all()
                                 @endphp
                                 <label for="org" class="form-label">Choose Organization</label>
                                 <select class="form-control" id="organization" name="organization">
@@ -155,7 +156,6 @@
                         </div>
                             @php
                             $states=\App\Models\State::all();
-                            $organizations=\App\Models\Organization::all()
                             @endphp
                         <div class="mb-3">
                             <label for="state_id" class="form-label">State</label>

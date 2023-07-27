@@ -51,8 +51,16 @@
 
                                 N/A
 
+                            @endif <br>
+                            @if($authority->name_hin)
+                                {{ $authority->name_hin }}
+                            @else
+
+                                N/A
+
                             @endif
                         </h4>
+
                         @if($authority->from_date)
                             {{ \Carbon\Carbon::parse($authority->from_date)->format("d/m/Y") }}
                         @else

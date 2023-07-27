@@ -9,6 +9,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
 class SignAuthorityController extends Controller
@@ -42,14 +43,17 @@ class SignAuthorityController extends Controller
         $request->validate([
             'Sign_path'=>'nullable|file|mimes:png|max:1000',
             'name'=>'required',
+            'name_hin'=>'required',
 //            'dept_id'=>'nullable',
             'from_date'=>'required|date_format:Y-m-d|after_or_equal:today',
             'to_date'=>'nullable|date_format:Y-m-d|after:from_date',
 
         ]);
+
         $signAuthority = new SignAuthority;
 
         $signAuthority->name = $request->name;
+        $signAuthority->name_hin = $request->name_hin;
         $signAuthority->from_date = $request->from_date;
 //        $signAuthority->dept_id = $request->dept_id;
 

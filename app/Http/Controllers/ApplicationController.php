@@ -1,6 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Events\CurlRequestEvent;
+use App\Events\GeneratePdfEventAck;
+use App\Events\GeneratePdfEventFwd;
+use App\Jobs\ProcessApplicationJob;
 use App\Models\Reason;
 use TCPDF;
 use setasign\Fpdi\Tcpdf\Fpdi;
@@ -126,7 +130,7 @@ class ApplicationController extends Controller
             if ($request->input('submit') == 'Forward') {
                 $request->validate([
                     'reg_no'=>'nullable',
-                    'applicant_title'=>'required',
+                    'applicant_title'=>'nullable',
                     'applicant_name'=>'required|regex:/^[a-zA-Z .]+$/',
                     'address'=>'required',
                     'pincode'=>['nullable', 'digits:6'],
@@ -144,7 +148,7 @@ class ApplicationController extends Controller
                     'letter_body'=>'nullable',
                     'acknowledgement'=>['nullable', new Acknowledgement],
                     'grievance_category_id'=>'nullable|numeric',
-                    'min_dept_gov_code'=>'nullable',
+//                    'min_dept_gov_code'=>'nullable',
 //                    'action_org' => ['required', 'string', 'size:1', 'in:N,F,M,S'],'department_org_id',reason_id
                     'action_org' => ['required', new ActionOrg],
                     'reason_id' => 'required_if:action_org,==,M,N|nullable|numeric',
@@ -180,7 +184,7 @@ class ApplicationController extends Controller
         $app->acknowledgement=$request->acknowledgement;
         $app->grievance_category_id = $request->grievance_category_id;
         $app->action_org = $request->action_org;
-        $app->min_dept_gov_code = $request->min_dept_gov_code;
+//        $app->min_dept_gov_code = $request->min_dept_gov_code;
         $app->remarks=$request->remarks;
         if($request->department_org_id && $request->reason_id==null) {
             $app->department_org_id = $request->department_org_id;
@@ -496,30 +500,9 @@ class ApplicationController extends Controller
                         'htmlSource' => $html
                     );
                     Log::info('post param:'.json_encode($postParameter));
-                    //server
-                    $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
-                    //local
-//                    $curlHandle = curl_init('http://localhost:8081/getMLPdf');
-                    //sir
-//                    $curlHandle = curl_init('http://10.21.160.179:8081/getMLPdf');
+                    event(new GeneratePdfEventAck($postParameter, $application));
 
-                    curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
-                    curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
-                    $curlResponse = curl_exec($curlHandle);
-                    Log::info('curlresponse'.$curlResponse);
-                    if(!$curlResponse){
-                        Log::error('curl error'.curl_error($curlHandle));
-                    }
-                    curl_close($curlHandle);
-                    if ($curlResponse && substr($curlResponse, 0, 4) == '%PDF') {
-                        $fname = str_replace('/', '_', $application->reg_no);
-                        $fileName =$fname. '_acknowledgement.pdf';
-                        $path = 'applications/' . $application->id . '/' . $fileName;
-                        if (Storage::disk('upload')->put($path, $curlResponse)) {
-                            $application->acknowledgement_path = base64_encode($path);
-                            $application->save();
-                        }
-                    }
+//                    ProcessApplicationJob::dispatch($application, $action, $remarks); // <-- Pass $remarks here
 
 //                    $dompdf = new Dompdf();
 //                    $options = new Options();
@@ -556,49 +539,6 @@ class ApplicationController extends Controller
 //                    Storage::disk('upload')->put($path, $binaryPdf);
 //                    $application->acknowledgement_path = base64_encode($path);
 //                    $application->save();
-
-                    if ($application->email_id != null) {
-                        if($application->ack_mail_sent == 0 || $application->ack_mail_sent == '' ) {
-//                        $email = $application->email_id;
-                            $fname = str_replace('/', '_', $application->reg_no);
-                            $email = 'us.petition@rb.nic.in';
-                            $cc=[];
-                            $cc[] = 'sayantan.saha@gov.in';
-                            $cc[] = 'so-public1@rb.nic.in';
-                            $cc[] = 'so-public2@rb.nic.in';
-                            $cc[] = 'prustysarthak123@gmail.com';
-                            $subject = 'Reply From Rashtrapati Bhavan';
-                            $details =  $application->applicant_title." ". $application->applicant_name . ",<br><br>
-                                 Your Petition has been received in Rashtrapati Bhavan with ref no " . $application->reg_no . " and forwarded to " . $application->department_org->org_desc . " for further necessary action.<br><br>
-                                    Regards <br>
-                             President's Secretariat<br>";
-                            $content = storage::disk('upload')->get(base64_decode($application->acknowledgement_path));
-                            try {
-                                Mail::send([], [], function ($message) use ($email, $subject, $details, $content, $cc,$fname) {
-                                    $message->to($email)->cc($cc[0])
-                                        ->cc($cc[1])
-                                        ->cc($cc[2])
-                                        ->cc($cc[3])
-                                        ->subject($subject)
-                                        ->html($details)
-                                        ->attachData($content,$fname.'_acknowledgement.pdf', [
-                                            'mime' => 'application/pdf',
-                                        ]);
-                                });
-                                $application->ack_mail_sent = 1;
-                                $application->save();
-                            } catch (\Exception $e) {
-                                $application->ack_mail_sent = 0;
-                                $application->save();
-                                Log::error('Failed to send ack email: ' . $e->getMessage());
-                            }
-                        }
-                    }
-                    if ($application->email_id == null){
-                        $application->ack_mail_sent = 0;
-                        $application->save();
-                    }
-
 
 //                    if ($application->mobile_no && !is_null($application->mobile_no) && preg_match('/^\+91\d{10}$/', $application->mobile_no)) {
 //                        try {
@@ -642,84 +582,10 @@ class ApplicationController extends Controller
                         'htmlSource' => $html
                     );
                     Log::info('post param:'.json_encode($postParameter));
-                    $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
-//                    $curlHandle = curl_init('http://localhost:8081/getMLPdf');
-
-                    curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
-                    curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
-                    $curlResponse = curl_exec($curlHandle);
-                    if(!$curlResponse){
-                        Log::error('curl error'.curl_error($curlHandle));
-                    }
-                    curl_close($curlHandle);
-                    if ($curlResponse && substr($curlResponse, 0, 4) == '%PDF') {
-                        $fname = str_replace('/', '_', $application->reg_no);
-                        $fileName = $fname.'_forward.pdf';
-                        $path = 'applications/' . $application->id . '/' . $fileName;
-                        if (Storage::disk('upload')->put($path, $curlResponse)) {
-                            $application->forwarded_path = base64_encode($path);
-                            $application->save();
-                        }
-                    }
-
-                    if (($application->department_org->mail !== null)&&($application->mail_sent == 0 || $application->mail_sent == '' )) {
-//                    $email = $application->department_org->mail;
-                        $fname = str_replace('/', '_', $application->reg_no);
-                        $email = 'us.petition@rb.nic.in';
-                        $cc=[];
-                        $cc[] = 'sayantan.saha@gov.in';
-                        $cc[] = 'so-public1@rb.nic.in';
-                        $cc[] = 'so-public2@rb.nic.in';
-                        $cc[] = 'prustysarthak123@gmail.com';
-                        $subject = $application->reg_no;
-                        $details = "महोदय / महोदया,<br>
-                                    Sir / Madam,<br><br>
-                                    कृपया उपरोक्त विषय पर भारत के राष्ट्रपति जी को संबोधित स्वतः स्पष्ट याचिका उपयुक्त ध्यानाकर्षण के लिए संलग्न है। याचिका पर की गई कार्रवाई की सूचना सीधे याचिकाकर्ता को दे दी जाये।<br>
-                                    Attached please find for appropriate attention a petition addressed to the President of India which is self-explanatory. Action taken on the petition may please be communicated to the petitioner directly.<br>
-                                    सादर,<br>
-                                    regards,<br><br>"
-                            . Auth::user()->authority->name . "<br>
-                                    अवर सचिव<br>
-                                    Under Secretary<br>
-                                    राष्ट्रपति सचिवालय<br>
-                                    President's Secretariat<br>
-                                    राष्ट्रपति भवन, नई दिल्ली<br>
-                                    Rashtrapati Bhavan, New Delhi";
-
-                        $content = storage::disk('upload')->get(base64_decode($application->forwarded_path));
-                        $file = storage::disk('upload')->get(base64_decode($application->file_path));
-                        try {
-                            $callback = function ($message) use ($email, $subject, $content, $cc, $file, $fname, $details) {
-                                $message->to($email)->cc($cc[0])
-                                    ->cc($cc[1])
-                                    ->cc($cc[2])
-                                    ->cc($cc[3])
-                                    ->subject($subject)
-                                    ->html($details)
-                                    ->attachData($content, $fname . '_forward letter.pdf', [
-                                        'mime' => 'application/pdf',
-                                    ]);
-                                if (!empty($file)) {
-                                    $message->attachData($file, $fname . '_file.pdf', [
-                                        'mime' => 'application/pdf',
-                                    ]);
-                                }
-                            };
-                            Mail::raw('', $callback);
-                            $application->mail_sent = 1;
-                            $application->save();
-                        } catch (\Exception $e) {
-                            $application->mail_sent = 0;
-                            $application->save();
-                            Log::error('Failed to send fwd email: ' . $e->getMessage());
-                        }
-                    }
-                    if ($application->department_org->mail == null){
-                        $application->mail_sent = 0;
-                        $application->save();
-                    }
+                    $name=Auth::user()->authority->name;
+                    $name_hin=Auth::user()->authority->name_hin;
+                    event(new GeneratePdfEventFwd($postParameter, $application,$name,$name_hin));
                 }
-
 
                 $status = Status::findOrFail($status_id);
                 $application->statuses()->attach(

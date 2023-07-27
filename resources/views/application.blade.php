@@ -98,11 +98,18 @@
                             <div class="col-md-3" style="text-align: right"><label class="form-label">Name:<span style="color: red;" class="required">*</span></label></div>
                             <div class="col">
                                 <div class="input-group">
-                                    <select class="form-control col-md-1" name="applicant_title" id="applicant_title"  required>
-                                        <option value="">Title</option>
+                                    <select class="form-control col-md-1" name="applicant_title" id="applicant_title">
+                                        <option value="">-Title-</option>
                                         <option value="Shri" {{ (old('applicant_title') ?: $app->applicant_title) === "Shri" ? 'selected' : '' }}>Shri</option>
-                                        <option value="Shrimati" {{ (old('applicant_title') ?: $app->applicant_title) === "Shrimati" ? 'selected' : '' }}>Shrimati</option>
+                                        <option value="Smt" {{ (old('applicant_title') ?: $app->applicant_title) === "Smt" ? 'selected' : '' }}>Shrimati</option>
                                         <option value="Sushree" {{ (old('applicant_title') ?: $app->applicant_title) === "Sushree" ? 'selected' : '' }}>Sushree</option>
+                                        <option value="Mr" {{ (old('applicant_title') ?: $app->applicant_title) === "Mr" ? 'selected' : '' }}>Mr</option>
+                                        <option value="Mrs" {{ (old('applicant_title') ?: $app->applicant_title) === "Mrs" ? 'selected' : '' }}>Mrs</option>
+                                        <option value="Ms" {{ (old('applicant_title') ?: $app->applicant_title) === "Ms" ? 'selected' : '' }}>Ms</option>
+                                        <option value="Km" {{ (old('applicant_title') ?: $app->applicant_title) === "Km" ? 'selected' : '' }}>Km</option>
+                                        <option value="Prof" {{ (old('applicant_title') ?: $app->applicant_title) === "Prof" ? 'selected' : '' }}>Prof</option>
+                                        <option value="Dr" {{ (old('applicant_title') ?: $app->applicant_title) === "Dr" ? 'selected' : '' }}>Dr</option>
+                                        <option value="The" {{ (old('applicant_title') ?: $app->applicant_title) === "The" ? 'selected' : '' }}>The</option>
                                     </select>
                                     <input type="text" class="form-control col-md-3" id="applicant_name" aria-label="Applicant Name" placeholder="Applicant Name" name="applicant_name"  required value="{{ old('applicant_name') ?: $app->applicant_name}}">
                                 </div>
@@ -218,8 +225,7 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group row">
-                                    <input type="date" class="form-control datepicker" name="letter_date" id="letter_date" style="width: 89%; margin-left: 5%;" value="{{ old('letter_date') ?: ($app->letter_date ? \Carbon\Carbon::parse($app->letter_date)->format('Y-m-d') : '') }}
-">
+                                    <input type="date" class="form-control datepicker" name="letter_date" id="letter_date" style="width: 89%; margin-left: 5%;" value="{{ old('letter_date') ?: ($app->letter_date ? \Carbon\Carbon::parse($app->letter_date)->format('Y-m-d') : '') }}">
                                 </div>
                             </div>
                         </div>
@@ -274,15 +280,21 @@
                                 </select>
                             </div>
                         </div>
+                            <hr class="row-divider">
 
-{{--                        <div class="row">--}}
-{{--                            <div class="col-md-3" style="text-align: right">--}}
-{{--                                <label class="form-label" for="min_dept_gov_code">Min/Dept/Gov Code:</label>--}}
-{{--                            </div>--}}
-{{--                            <div class="col">--}}
-{{--                                <input type="text" class="form-control" name="min_dept_gov_code" id="min_dept_gov_code" placeholder="Code"  value="{{ old('min_dept_gov_code') ?: $app->min_dept_gov_code}}">--}}
-{{--                            </div>--}}
-{{--                        </div>--}}
+                        <div class="row">
+
+                            <div class="col-md-3" style="text-align: right">
+                                <label class="form-label" for="min_dept_gov_code">Gov Code Search:</label>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="min_dept_gov_code" id="min_dept_gov_code" placeholder="Search" value="{{ old('min_dept_gov_code') ?: $app->min_dept_gov_code }}">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-md-3" style="text-align: right">
                                 <label class="form-label" for="action_org">Action:<span style="color: red;">*</span></label>
@@ -309,7 +321,7 @@
                                     <select class="form-control" name="department_org_id" id="department_org_idS" required>
                                         <option value="">-Select a State-</option>
                                         @foreach($organizationStates as $organizationS)
-                                            <option value="{{ $organizationS->id }}" {{ old('department_org_id') == $organizationS->id || $app->department_org_id == $organizationS->id ? 'selected' : '' }}>
+                                            <option value="{{ $organizationS->id }}" data-v-code="{{ $organizationS->v_code }}" {{ old('department_org_id') == $organizationS->id || $app->department_org_id == $organizationS->id ? 'selected' : '' }}>
                                                 {{ $organizationS->org_desc }}
                                             </option>
                                         @endforeach
@@ -327,7 +339,7 @@
                                     <select class="form-control" name="department_org_id" id="department_org_idM" required>
                                         <option value="">-Select a Ministry/Department-</option>
                                         @foreach($organizationM as $organization)
-                                            <option value="{{ $organization->id }}" {{ old('department_org_id') == $organization->id || $app->department_org_id == $organization->id ? 'selected' : '' }}>
+                                            <option value="{{ $organization->id }}" data-v-code="{{ $organization->v_code }}" {{ old('department_org_id') == $organization->id || $app->department_org_id == $organization->id ? 'selected' : '' }}>
                                                 {{ $organization->org_desc }}
                                             </option>
                                         @endforeach
@@ -533,7 +545,7 @@
                 }
             });
 
-            //action toggle
+            //action toggle, gov code, gov name variations
             $(document).ready(function() {
                 function showHideDropdownRows() {
                     const selectedAction = $("#action_org").val();
@@ -546,13 +558,124 @@
                     $("#reasonM").prop("disabled", selectedAction !== "M");
                     $("#reasonN").prop("disabled", selectedAction !== "N");
                 }
+
+                function populateOrganizationDropdown(vCode) {
+                    const organizationS = {!! json_encode($organizationStates) !!};
+                    const organizationM = {!! json_encode($organizationM) !!};
+
+                    let foundInS = false;
+                    let foundInM = false;
+
+                    organizationS.forEach((org) => {
+                        if (org.v_code === vCode) {
+                            foundInS = true;
+                            return false; // Exit the loop early if found in S
+                        }
+                    });
+
+                    organizationM.forEach((org) => {
+                        if (org.v_code === vCode) {
+                            foundInM = true;
+                            return false; // Exit the loop early if found in M
+                        }
+                    });
+
+                    // Show/hide the corresponding dropdown rows and set action_org value
+                    if (foundInS) {
+                        $("#orgS_dropdown_row").show();
+                        $("#orgM_dropdown_row").hide();
+                        $("#action_org").val("S").trigger("change");
+                        // Populate the organization dropdown
+                        $("#department_org_idS").empty();
+                        organizationS.forEach((org) => {
+                            const option = $("<option>", {
+                                value: org.id,
+                                text: org.org_desc,
+                                selected: org.v_code === vCode,
+                            });
+                            $("#department_org_idS").append(option);
+                        });
+                    } else if (foundInM) {
+                        $("#orgS_dropdown_row").hide();
+                        $("#orgM_dropdown_row").show();
+                        $("#action_org").val("F").trigger("change");
+                        // Populate the organization dropdown
+                        $("#department_org_idM").empty();
+                        organizationM.forEach((org) => {
+                            const option = $("<option>", {
+                                value: org.id,
+                                text: org.org_desc,
+                                selected: org.v_code === vCode,
+                            });
+                            $("#department_org_idM").append(option);
+                        });
+                    }
+                }
+
+                function checkGovCodeAndOrganization() {
+                    const govCode = $("#min_dept_gov_code").val();
+                    if (!govCode) {
+                        const selectedOrgS = $("#department_org_idS").val();
+                        const selectedOrgM = $("#department_org_idM").val();
+
+                        if (selectedOrgS) {
+                            const selectedOrgSData = $("#department_org_idS option:selected").data("v-code");
+                            if (selectedOrgSData) {
+                                $("#min_dept_gov_code").val(selectedOrgSData);
+                            }
+                        } else if (selectedOrgM) {
+                            const selectedOrgMData = $("#department_org_idM option:selected").data("v-code");
+                            if (selectedOrgMData) {
+                                $("#min_dept_gov_code").val(selectedOrgMData);
+                            }
+                        }
+                    }
+                }
+
+                // Attach the event handlers
                 $("#action_org").on("change", showHideDropdownRows);
+                $("#min_dept_gov_code").on("input", function() {
+                    const vCode = $(this).val();
+                    if (vCode) {
+                        populateOrganizationDropdown(vCode);
+                    } else {
+                        $("#orgS_dropdown_row").hide();
+                        $("#orgM_dropdown_row").hide();
+                        $("#action_org").val("").trigger("change");
+                    }
+                });
+
+                $("#department_org_idS").on("change", function() {
+                    const vCode = $(this).find("option:selected").data("v-code");
+                    if (vCode) {
+                        $("#min_dept_gov_code").val(vCode);
+                    } else {
+                        $("#min_dept_gov_code").val(null);
+                    }
+                });
+
+                $("#department_org_idM").on("change", function() {
+                    const vCode = $(this).find("option:selected").data("v-code");
+                    if (vCode) {
+                        $("#min_dept_gov_code").val(vCode);
+                    } else {
+                        $("#min_dept_gov_code").val(null);
+                    }
+                });
+
+                $("#action_org").on("blur", function() {
+                    $("#min_dept_gov_code").val(null);
+                });
+
+                // Call the functions on page load
                 showHideDropdownRows();
+                checkGovCodeAndOrganization();
             });
 
 
 
-            //if language selected to other all required field will be removed
+
+        //if language selected to other all required field will be removed
             // Attach change event listener to the radio buttons
             $('input[name="language_of_letter"]').on('change', toggleFields);
 
