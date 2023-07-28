@@ -94,7 +94,7 @@
                     @else
                         <div class="row">
                             <div class="col-md-3"style="text-align: right"  >
-                                <label class="form-label" for="Sign_path">Signature:<span style="color: red;" class="required">*</span></label>
+                                <label class="form-label" for="Sign_path">Signature(50kb):<span style="color: red;" class="required">*</span></label>
                             </div>
                             <div class="col-md-3" style=padding-left:2%>
                                 <div class="input-group">

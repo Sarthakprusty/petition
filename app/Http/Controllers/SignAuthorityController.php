@@ -47,7 +47,7 @@ class SignAuthorityController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'Sign_path'=>'nullable|file|mimes:png|max:1000',
+            'Sign_path'=>'nullable|file|mimes:png|max:50',
             'name'=>'required',
             'name_hin'=>'required',
 //            'dept_id'=>'nullable',
