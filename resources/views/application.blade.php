@@ -243,16 +243,16 @@
                         <hr class="row-divider">
 
                         <div class="row">
-                            <div class="col-md-3" style="text-align: right">
-                                <label class="form-label">Acknowledgement:</label>
+                            <div class="col-md-3" style="text-align: right" >
+                                <label class="form-label">Acknowledgement:<span style="color: red;">*</span></label>
                             </div>
                             <div class="col">
                                 <label class="form-check-label">
-                                    <input type="radio" name="acknowledgement" value="Y" {{ (old('acknowledgement') == 'Y' || $app->acknowledgement == 'Y') ? 'checked' : '' }}>
+                                    <input type="radio" name="acknowledgement" value="Y" {{ (old('acknowledgement') === 'Y' || $app->acknowledgement === 'Y') ? 'checked' : '' }}>
                                     Yes
                                 </label>
                                 <label class="form-check-label">
-                                    <input type="radio" name="acknowledgement" value="N" {{ (old('acknowledgement') == 'N' || $app->acknowledgement == 'N') ? 'checked' : '' }} checked>
+                                    <input type="radio" name="acknowledgement" value="N" {{ (old('acknowledgement') === 'N' || $app->acknowledgement === 'N') ? 'checked' : '' }} required>
                                     No
                                 </label>
                             </div>
