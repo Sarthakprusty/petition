@@ -112,7 +112,7 @@
                 <label class="form-label" for="letter_no">Date-{{now()->format('d/m/Y')}}</label>
             </div>
             <div class="col-9" style="text-align: right">
-                <label class="form-label" for="letter_date">{{$us->name}}<br>(US)</label>
+                <label class="form-label" for="letter_date">{{$us->name?:''}}<br>(US)</label>
             </div>
         </div>
 
