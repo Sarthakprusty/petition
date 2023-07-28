@@ -6,6 +6,7 @@ use App\Events\GeneratePdfEventAck;
 use App\Events\GeneratePdfEventFwd;
 use App\Jobs\ProcessApplicationJob;
 use App\Models\Reason;
+use App\Models\User;
 use TCPDF;
 use setasign\Fpdi\Tcpdf\Fpdi;
 use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
@@ -44,7 +45,6 @@ class ApplicationController extends Controller
     /**
      * Display a listing of the resource.
      */
-
     public function index(Request $request)
     {
         $states=State::all();
@@ -82,7 +82,80 @@ class ApplicationController extends Controller
             })
             ->paginate(18);
 
+        $this->applicationlistRequirements($applications);
+        return view('application_list', compact('applications', 'states', 'organizations'));
+
+    }
+
+    /**
+     * Searching within resources.
+     */
+    public function search(Request $request)
+    {
+        $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+        $qr=  [0,1,2,3,4,5] ;
+        $arr=[];
+        $arr[]= ['active', 1];
+        if ($request->reg_no && $request->reg_no != '') {
+            $arr[]=   ['reg_no', 'like', '%' . $request->reg_no . '%'];
+        }
+        if ($request->state_id && $request->state_id != '') {
+            $arr[]=   ['state_id', '=', $request->state_id ];
+        }
+        if ($request->letter_no && $request->letter_no != '') {
+            $arr[]=  ['letter_no', 'like', '%' . $request->letter_no . '%'];
+        }
+        if ($request->applicant_name && $request->applicant_name != '') {
+            $arr[]=   ['applicant_name', 'like', '%' . $request->applicant_name . '%'];
+        }
+        if ($request->app_date_from && $request->app_date_from != '') {
+            $arr[]=   ['created_at','>=', $request->app_date_from ];
+        }
+        if ($request->app_date_to && $request->app_date_to != '') {
+            $arr[]=   ['created_at','<=',  $request->app_date_to ];
+        }
+
+        if ($request->orgTy && $request->orgTy != '') {
+            if($request->orgTy=='name'){
+                $arr[] = ['action_org', 'F'];
+                if ($request->orgDescMi && $request->orgDescMi != '') {
+                    $arr[] = ['department_org_id', $request->orgDescMi];
+                }
+            }
+            elseif ($request->orgTy=='type'){
+                $arr[] = ['action_org', 'S'];
+                if ($request->orgDescSt && $request->orgDescSt != '') {
+                    $arr[] = ['department_org_id', $request->orgDescSt];
+                }
+            }
+        }
+        if ($request->organization && $request->organization != '') {
+            $org_id=  $request->organization ;
+        }
+        if ($request->status !== null && $request->status != '') {
+            $qr=  [$request->status] ;
+        }
+
+        $organizations=Organization::all();
+        $states=State::all();
+
+        $applications = Application::with(relations: 'state')->where($arr)
+            ->whereIn('created_by', function ($query) use ($org_id) {
+                $query->select('users.id')
+                    ->from('users')
+                    ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
+                    ->where('user_organization.org_id', $org_id);
+            })
+            ->whereHas('statuses', function ($query)use ($qr) {
+                $query->wherein('status_id', $qr)
+                    ->where('application_status.active', 1);
+            })
+            ->paginate(18);
+
+
+        $this->applicationlistRequirements($applications);
         return view('application_list', compact('applications','states','organizations'));
+
     }
 
     /**
@@ -105,18 +178,52 @@ class ApplicationController extends Controller
 
 
         $app = new Application();
+        $allowOnlyForward = $this->Forwardbuttoncommon($app);
+        if (($app->id == null || ($app->created_by == auth()->user()->id && auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0) ))) {
+            $allowDraft = true;
+        }
+        else {
+            $allowDraft = false;
+        }
         //  $appStatusRemark = $app->statuses()->wherePivot('active', 0)->pluck('pivot.remarks')->with('created by');
-        return view('application', compact('app','organizationStates','states','grievances','reasonM','reasonN','organizationM'));
-
-//        $userOrganizationId = Auth::user()->org_id;
-//        $userRoleId = Auth::user()->roles()->where('user_id', Auth::user()->id)->pluck('role_id')->first();
-//        $allowNew = false;
-//        if($userOrganizationId == 3 && $userRoleId == 1)
-//            $allowNew = true;
-//        return view('application', compact('app','organizations','states','grievances','allowNew'));
-
+        return view('application', compact('app','organizationStates','states','grievances','reasonM','reasonN','organizationM','allowDraft','allowOnlyForward'));
     }
 
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+        if (in_array(174, $org_id)) {
+            $grievances=Grievance::where('section',11)->get();
+        }
+        elseif (in_array(175, $org_id)) {
+            $grievances=Grievance::where('section',12)->get();
+        }
+        $app = Application::find($id);
+        $states=State::all();
+        $organizationStates = Organization::where('org_type','S')->get();
+        $organizationM = Organization::where('org_type','M')->get();
+        $reasonM = Reason::where('action_code',99)->get();
+        $reasonN = Reason::where('action_code',10)->get();
+        $statuses = $app->statuses()
+            ->whereIn('application_status.active', [0, 1])
+            ->whereNotNull('remarks')
+            ->get();
+        foreach ($statuses as $status)
+            $status->user = User::findorfail($status->pivot->created_by);
+
+        $allowOnlyForward = $this->Forwardbuttoncommon($app);
+
+        if ($app->created_by == auth()->user()->id && auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0) ) {
+            $allowDraft = true;
+        }
+        else {
+            $allowDraft = false;
+        }
+        return view('application', compact('app','organizationStates','states','grievances','reasonM','reasonN','organizationM','statuses','allowDraft','allowOnlyForward'));
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -148,7 +255,6 @@ class ApplicationController extends Controller
                     'letter_body'=>'nullable',
                     'acknowledgement'=>['nullable', new Acknowledgement],
                     'grievance_category_id'=>'nullable|numeric',
-//                    'min_dept_gov_code'=>'nullable',
 //                    'action_org' => ['required', 'string', 'size:1', 'in:N,F,M,S'],'department_org_id',reason_id
                     'action_org' => ['required', new ActionOrg],
                     'reason_id' => 'required_if:action_org,==,M,N|nullable|numeric',
@@ -184,7 +290,6 @@ class ApplicationController extends Controller
         $app->acknowledgement=$request->acknowledgement;
         $app->grievance_category_id = $request->grievance_category_id;
         $app->action_org = $request->action_org;
-//        $app->min_dept_gov_code = $request->min_dept_gov_code;
         $app->remarks=$request->remarks;
         if($request->department_org_id && $request->reason_id==null) {
             $app->department_org_id = $request->department_org_id;
@@ -194,10 +299,6 @@ class ApplicationController extends Controller
             $app->department_org_id = null;
             $app->reason_id = $request->reason_id;
         }
-
-
-
-
 
 
 //        if ($request->hasFile('file_path')) {
@@ -233,161 +334,152 @@ class ApplicationController extends Controller
 //                exit;
 //            }
 //        }
-
         if ($request->input('submit') == 'Forward') {
+            if ($app->id == null || ($app->created_by == auth()->user()->id && auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses->first() && ($app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0) || $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(1)))) {
 
-            //reg_no
-            if ($app->reg_no && $app->reg_no !== null ) {
-                //if reg no exist it means it is getting updated that's why update details are here.
-                $app->updated_at = Carbon::now()->toDateTimeLocalString();
-                $app->last_updated_by = Auth::user()->id;
-                $app->last_updated_from = $request->ip();
-                $app->save();
+                //reg_no
+                if ($app->reg_no && $app->reg_no !== null) {
+                    //if reg no exist it means it is getting updated that's why update details are here.
+                    $app->updated_at = Carbon::now()->toDateTimeLocalString();
+                    $app->last_updated_by = Auth::user()->id;
+                    $app->last_updated_from = $request->ip();
+                    $app->save();
 
-            }
-            else {
-                $currentYear = Carbon::now()->format('y');
-                $currentMonth = Carbon::now()->format('m');
-                $currentDay = Carbon::now()->format('d');
-
-                $givenString = Auth::user()->username;
-                $modifiedString = substr($givenString, 0, 2) . '/' . substr($givenString, 2);
-
-                if ($currentMonth >= 4) {
-                    // Financial year starts from April of the current year
-                    $startYear = $currentYear;
-                    $endYear = Carbon::now()->addYear()->format('y');
                 } else {
-                    // Financial year starts from April of the previous year
-                    $startYear = Carbon::now()->subYear()->format('y');
-                    $endYear = $currentYear;
+                    $currentYear = Carbon::now()->format('y');
+                    $currentMonth = Carbon::now()->format('m');
+                    $currentDay = Carbon::now()->format('d');
+
+                    $givenString = Auth::user()->username;
+                    $modifiedString = substr($givenString, 0, 2) . '/' . substr($givenString, 2);
+
+                    if ($currentMonth >= 4) {
+                        // Financial year starts from April of the current year
+                        $startYear = $currentYear;
+                        $endYear = Carbon::now()->addYear()->format('y');
+                    } else {
+                        // Financial year starts from April of the previous year
+                        $startYear = Carbon::now()->subYear()->format('y');
+                        $endYear = $currentYear;
+                    }
+
+                    $startDate = Carbon::createFromFormat('y-m-d', $startYear . '-04-01')->startOfDay();
+                    $endDate = Carbon::createFromFormat('y-m-d', $endYear . '-03-31')->endOfDay();
+
+                    $matchingRowCount = Application::whereBetween('created_at', [$startDate, $endDate])
+                        ->whereNotNull('reg_no')
+                        ->where('reg_no', 'LIKE', $modifiedString . '%')
+                        ->count();
+
+                    if ($matchingRowCount > 0)
+                        $count = $matchingRowCount + 1;
+                    elseif ($matchingRowCount == 0)
+                        $count = 1;
+
+                    if ($count <= 9999) {
+                        $petitionNumber = sprintf('%04d', $count);
+                    } else {
+                        $petitionNumber = $count;
+                    }
+
+                    $month = sprintf('%02d', $currentMonth);
+                    $day = sprintf('%02d', $currentDay);
+
+                    $app->reg_no = $modifiedString . '/' . $day . $month . $currentYear . $petitionNumber;
+
+                    //if reg no does not exist it means it is a new record that's why create details are here.
+                    $app->created_at = Carbon::now()->toDateTimeLocalString();
+                    $app->created_by = Auth::user()->id;
+                    $app->created_from = $request->ip();
+                    $app->save();
                 }
 
-                $startDate = Carbon::createFromFormat('y-m-d', $startYear . '-04-01')->startOfDay();
-                $endDate = Carbon::createFromFormat('y-m-d', $endYear . '-03-31')->endOfDay();
-
-                $matchingRowCount = Application::whereBetween('created_at', [$startDate, $endDate])
-                    ->whereNotNull('reg_no')
-                    ->where('reg_no', 'LIKE', $modifiedString . '%')
-                    ->count();
-
-                if($matchingRowCount > 0)
-                    $count = $matchingRowCount + 1 ;
-                elseif($matchingRowCount == 0)
-                    $count =  1;
-
-                if ($count <= 9999) {
-                    $petitionNumber = sprintf('%04d', $count);
+                //file save
+                if ($request->hasFile('file_path')) {
+                    $this->applicantFileCommon($app, $request);
                 } else {
-                    $petitionNumber = $count;
-                }
+                    if ($app->file_path) {
+                        $currentFilePath = base64_decode($app->file_path);
+                        if (Storage::disk('upload')->exists($currentFilePath)) {
+                            $fname = str_replace('/', '_', $app->reg_no);
+                            $extension = pathinfo($currentFilePath, PATHINFO_EXTENSION);
+                            $newFileName = $fname . '.' . $extension;
+                            if ($currentFilePath !== $newFileName) {
+                                $newFilePath = 'applications/' . $app->id . '/' . $newFileName;
 
-                $month = sprintf('%02d', $currentMonth);
-                $day = sprintf('%02d', $currentDay);
+                                // Move the existing file to the new file name
+                                Storage::disk('upload')->move($currentFilePath, $newFilePath);
 
-                $app->reg_no = $modifiedString . '/' . $day . $month . $currentYear . $petitionNumber;
-
-                //if reg no does not exist it means it is a new record that's why create details are here.
-                $app->created_at = Carbon::now()->toDateTimeLocalString();
-                $app->created_by = Auth::user()->id;
-                $app->created_from = $request->ip();
-                $app->save();
-            }
-
-            //file save
-            if ($request->hasFile('file_path')) {
-                $fname = str_replace('/', '_', $app->reg_no);
-                $filename = $fname . '.' . $request->file('file_path')->getClientOriginalExtension();
-                $path = $request->file('file_path')->storeAs('applications/' . $app->id . '/', $filename, 'upload');
-                $app->file_path = base64_encode($path);
-                $app->update(['file_path' => base64_encode($path)]);
-            }
-            else {
-                if($app->file_path){
-                    $currentFilePath = base64_decode($app->file_path);
-                    if (Storage::disk('upload')->exists($currentFilePath)) {
-                        $fname = str_replace('/', '_', $app->reg_no);
-                        $extension = pathinfo($currentFilePath, PATHINFO_EXTENSION);
-                        $newFileName = $fname . '.' . $extension;
-                        if ($currentFilePath !== $newFileName) {
-                            $newFilePath = 'applications/' . $app->id . '/' . $newFileName;
-
-                            // Move the existing file to the new file name
-                            Storage::disk('upload')->move($currentFilePath, $newFilePath);
-
-                            // Update the file_path attribute with the new file name
-                            $app->file_path = base64_encode($newFilePath);
-                            $app->save();
+                                // Update the file_path attribute with the new file name
+                                $app->file_path = base64_encode($newFilePath);
+                                $app->save();
+                            }
                         }
                     }
                 }
-            }
 
-            $applicationId = $app->id;
-            $status = $app->statuses()->wherePivot('active', 1)->get();
-            $app->statuses()->updateExistingPivot(
-                $status,
-                [
-                    'active' => 0,
-                    'updated_at'=> carbon::now()->toDateTimeLocalString()
-                ]
-            );
-            $statusId = 2;
-            $status = Status::find($statusId);
-            if ($status) {
-                $app->statuses()->attach($status, [
-                    'created_from' => $request->ip(),
-                    'created_by' => Auth::user()->id,
-                    'created_at'=>carbon::now()->toDateTimeLocalString()
-                ]);
-            }
-
-            return view('application_view', compact('app'));
-        }
-
-        elseif ($request->input('submit') === 'Draft') {
-            if ($app->id){
-                $app->updated_at = Carbon::now()->toDateTimeLocalString();
-                $app->last_updated_by = Auth::user()->id;
-                $app->last_updated_from = $request->ip();
-            }
-            else {
-                $app->created_at = Carbon::now()->toDateTimeLocalString();
-                $app->created_by = Auth::user()->id;
-                $app->created_from = $request->ip();
-            }
-            if ($app->save()) {
-                if ($request->hasFile('file_path')) {
-                    $fname = str_replace('/', '_', $app->reg_no);
-                    $filename = $fname . '.' . $request->file('file_path')->getClientOriginalExtension();
-                    $path = $request->file('file_path')->storeAs('applications/' . $app->id . '/', $filename, 'upload');
-
-                    $app->file_path = base64_encode($path);
-                    $app->update(['file_path' => base64_encode($path)]);
-                }
                 $applicationId = $app->id;
                 $status = $app->statuses()->wherePivot('active', 1)->get();
                 $app->statuses()->updateExistingPivot(
                     $status,
                     [
                         'active' => 0,
-                        'updated_at'=> carbon::now()->toDateTimeLocalString()
+                        'updated_at' => carbon::now()->toDateTimeLocalString()
                     ]
                 );
-                $statusId = 0;
+                $statusId = 2;
                 $status = Status::find($statusId);
                 if ($status) {
                     $app->statuses()->attach($status, [
                         'created_from' => $request->ip(),
                         'created_by' => Auth::user()->id,
-                        'created_at'=>carbon::now()->toDateTimeLocalString()
+                        'created_at' => carbon::now()->toDateTimeLocalString()
                     ]);
                 }
-                return redirect(url(route('applications.index')))->with('success', 'Draft created successfully.');
+
+                return $this->ReturnapplicationView($app);
             }
         }
 
-        elseif ($request->input('submit') == 'Submit') {
+        elseif($request->input('submit') === 'Draft') {
+            if ($app->id == null || ($app->created_by == auth()->user()->id && auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0) )) {
+                if ($app->id) {
+                    $app->updated_at = Carbon::now()->toDateTimeLocalString();
+                    $app->last_updated_by = Auth::user()->id;
+                    $app->last_updated_from = $request->ip();
+                } else {
+                    $app->created_at = Carbon::now()->toDateTimeLocalString();
+                    $app->created_by = Auth::user()->id;
+                    $app->created_from = $request->ip();
+                }
+                if ($app->save()) {
+                    if ($request->hasFile('file_path')) {
+                        $this->applicantFileCommon($app, $request);
+                    }
+                    $applicationId = $app->id;
+                    $status = $app->statuses()->wherePivot('active', 1)->get();
+                    $app->statuses()->updateExistingPivot(
+                        $status,
+                        [
+                            'active' => 0,
+                            'updated_at' => carbon::now()->toDateTimeLocalString()
+                        ]
+                    );
+                    $statusId = 0;
+                    $status = Status::find($statusId);
+                    if ($status) {
+                        $app->statuses()->attach($status, [
+                            'created_from' => $request->ip(),
+                            'created_by' => Auth::user()->id,
+                            'created_at' => carbon::now()->toDateTimeLocalString()
+                        ]);
+                    }
+                    return redirect(url(route('applications.index')))->with('success', 'Draft created successfully.');
+                }
+            }
+        }
+
+        elseif (($request->input('submit') == 'Submit') && (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(4) && $app->reply == '') ) {
             $app = Application::find($request->id);
             $app->reply = $request->input('reply');
             $app->updated_at = Carbon::now()->toDateTimeLocalString();
@@ -413,7 +505,8 @@ class ApplicationController extends Controller
                     'created_at'=>carbon::now()->toDateTimeLocalString()
                 ]);
             }
-            return view('application_view', compact('app'));
+
+            return $this->ReturnapplicationView($app);
 
         }
 
@@ -429,25 +522,50 @@ class ApplicationController extends Controller
 
     }
 
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        $app = Application::find($id);
+        if(!$app)
+            abort(404);
+        return $this->ReturnapplicationView($app);
+    }
+
+    /**
+     * update/demote the status of application
+     */
     public function updateStatus(Request $request,string $application_id)
     {
         $action = $request->input('submit');
         $application = Application::findOrFail($application_id);
-        $status = $application->statuses()->wherePivot('active', 1)->get();
-        $application->statuses()->updateExistingPivot(
-            $status,
-            [
-                'active' => 0,
-                'updated_at'=> carbon::now()->toDateTimeLocalString()
-            ]
-        );
+        if($application->statuses->first() && $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2)){
+            $allowSO=true;
+        }else{
+            $allowSO=false;
+        }
+        if($application->statuses->first() && $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)){
+            $allowUS=true;
+        }else{
+            $allowUS=false;
+        }
+
 
         $remarks = $request->input('remarks');
         $user = auth()->user();
         $role_ids = $user->roles()->pluck('role_id')->toArray();
 
-        if (in_array(2, $role_ids)) {
-            if ($action == 'Approve') {
+        if ((in_array(2, $role_ids)) && $allowSO ){
+            if ($action == 'Approve')  {
+                $status = $application->statuses()->wherePivot('active', 1)->get();
+                $application->statuses()->updateExistingPivot(
+                    $status,
+                    [
+                        'active' => 0,
+                        'updated_at'=> carbon::now()->toDateTimeLocalString()
+                    ]
+                );
                 $status_id = 3;
                 $status = Status::findOrFail($status_id);
                 $application->statuses()->attach(
@@ -462,7 +580,15 @@ class ApplicationController extends Controller
 
                 return redirect(url(route('applications.index')))->with('success', 'Status created successfully.');
             }
-            elseif ($action == 'Return') {
+            elseif ($action == 'Return')   {
+                $status = $application->statuses()->wherePivot('active', 1)->get();
+                $application->statuses()->updateExistingPivot(
+                    $status,
+                    [
+                        'active' => 0,
+                        'updated_at'=> carbon::now()->toDateTimeLocalString()
+                    ]
+                );
                 $status_id = 1;
                 $status = Status::findOrFail($status_id);
                 $application->statuses()->attach(
@@ -480,12 +606,29 @@ class ApplicationController extends Controller
         }
 
 
-        if (in_array(3, $role_ids)) {
+        if ((in_array(3, $role_ids)) && ($allowUS)) {
             if ($action == 'Approve') {
+                $status = $application->statuses()->wherePivot('active', 1)->get();
+                $application->statuses()->updateExistingPivot(
+                    $status,
+                    [
+                        'active' => 0,
+                        'updated_at'=> carbon::now()->toDateTimeLocalString()
+                    ]
+                );
                 $application->authority_id = Auth::user()->sign_id ;
                 $application->save();
                 $status_id = 4;
-
+                $status = Status::findOrFail($status_id);
+                $application->statuses()->attach(
+                    $status,
+                    [
+                        'remarks' => $remarks,
+                        'created_from' => $request->ip(),
+                        'created_by' => Auth::user()->id,
+                        'created_at'=>carbon::now()->toDateTimeLocalString()
+                    ]
+                );
                 if ($application->acknowledgement === 'Y') {
 
 //                    CURL
@@ -502,7 +645,517 @@ class ApplicationController extends Controller
                     Log::info('post param:'.json_encode($postParameter));
                     event(new GeneratePdfEventAck($postParameter, $application));
 
-//                    ProcessApplicationJob::dispatch($application, $action, $remarks); // <-- Pass $remarks here
+//                    // Perform the cURL request and generate the PDF
+//                    //server
+//                    $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
+//                    //local
+////                    $curlHandle = curl_init('http://localhost:8081/getMLPdf');
+//                    //sir
+////                  $curlHandle = curl_init('http://10.21.160.179:8081/getMLPdf');
+//
+//                    curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
+//                    curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
+//                    $curlResponse = curl_exec($curlHandle);
+//                    curl_close($curlHandle);
+//
+//                    // Check if the response contains a valid PDF
+//                    if ($curlResponse && substr($curlResponse, 0, 4) == '%PDF') {
+//                        // Save the PDF to storage
+//                        $fname = str_replace('/', '_', $application->reg_no);
+//                        $fileName = $fname . '_acknowledgement.pdf';
+//                        $path = 'applications/' . $application->id . '/' . $fileName;
+//                        if (Storage::disk('upload')->put($path, $curlResponse)) {
+//                            $application->acknowledgement_path = base64_encode($path);
+//                            $application->save();
+//                        }
+//                    }
+//                    if (($application->email_id != null)&&($application->ack_mail_sent == 0 || $application->ack_mail_sent == '' )&&($application->acknowledgement_path !==null)){
+////                $email = $application->email_id;
+////                    $email = 'us.petitions@rb.nic.in';
+////                    $cc = [];
+////                    $cc[] = 'sayantan.saha@gov.in';
+////                    $cc[] = 'so-public1@rb.nic.in';
+////                    $cc[] = 'so-public2@rb.nic.in';
+////                    $cc[] = 'prustysarthak123@gmail.com';
+//                        $fname = str_replace('/', '_', $application->reg_no);
+//                        $email = 'sayantan.saha@gov.in';
+//                        $cc = [];
+//                        $cc[] = 'prustysarthak123@gmail.com';
+//                        $cc[] = 'shantanubaliyan935@gmail.com';
+//                        $subject = 'Reply From Rashtrapati Bhavan';
+//                        $details = $application->applicant_title . " " . $application->applicant_name . ",<br><br>
+//                                 Your Petition has been received in Rashtrapati Bhavan with ref no " . $application->reg_no . " and forwarded to " . $application->department_org->org_desc . " for further necessary action.<br><br>
+//                                    Regards, <br>
+//                             President's Secretariat<br>";
+//                        $content = storage::disk('upload')->get(base64_decode($application->acknowledgement_path));
+//                        try {
+//                            Mail::send([], [], function ($message) use ($email, $subject, $details, $content, $cc,$fname) {
+//                                $message->to($email)->cc($cc[0])
+//                                    ->cc($cc[1])
+////                            ->cc($cc[2])
+////                            ->cc($cc[3])
+//                                    ->subject($subject)
+//                                    ->html($details)
+//                                    ->attachData($content, $fname . '_acknowledgement.pdf', [
+//                                        'mime' => 'application/pdf',
+//                                    ]);
+//                            });
+//                            $application->ack_mail_sent = 1;
+//                            $application->save();
+//                        } catch (\Exception $e) {
+//                            $application->ack_mail_sent = 0;
+//                            $application->save();
+//                            Log::error('Failed to send ack email: ' . $e->getMessage());
+//                        }
+//                    }
+//                    if ($application->email_id == null){
+//                        $application->ack_mail_sent = 0;
+//                        $application->save();
+//                    }
+                }
+
+
+                if ($application->department_org && $application->department_org->id !== null) {
+                    $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
+                    $imageData = file_get_contents($imagePath);
+                    $imageBase64 = base64_encode($imageData);
+                    $logoPath = public_path('storage/logo.png');
+                    $logoData = file_get_contents($logoPath);
+                    $logoBase64 = base64_encode($logoData);
+                    $html = view('forwardedletter', compact('application','imageBase64','logoBase64'))->render();;
+                    $postParameter = array(
+                        'htmlSource' => $html
+                    );
+                    Log::info('post param:'.json_encode($postParameter));
+                    $name=Auth::user()->authority->name;
+                    $name_hin=Auth::user()->authority->name_hin;
+                    event(new GeneratePdfEventFwd($postParameter, $application,$name,$name_hin));
+////                    $curlHandle = curl_init('http://localhost:8081/getMLPdf');
+//                    $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
+//
+//
+//                    curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
+//                    curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
+//                    $curlResponse = curl_exec($curlHandle);
+//                    if(!$curlResponse){
+//                        Log::error('curl error'.curl_error($curlHandle));
+//                    }
+//                    curl_close($curlHandle);
+//                    if ($curlResponse && substr($curlResponse, 0, 4) == '%PDF') {
+//                        $fname = str_replace('/', '_', $application->reg_no);
+//                        $fileName = $fname.'_forward.pdf';
+//                        $path = 'applications/' . $application->id . '/' . $fileName;
+//                        if (Storage::disk('upload')->put($path, $curlResponse)) {
+//                            $application->forwarded_path = base64_encode($path);
+//                            $application->save();
+//                        }
+//                    }
+//                    if (($application->department_org->mail !== null)&&($application->mail_sent == 0 || $application->mail_sent == '' ) && ($application->forwarded_path !== null)) {
+////                    $email = $application->department_org->mail;
+//                        $fname = str_replace('/', '_', $application->reg_no);
+//                        $email = 'sayantan.saha@gov.in';
+//                        $cc = [];
+//                        $cc[] = 'prustysarthak123@gmail.com';
+//                        $cc[] = 'shantanubaliyan935@gmail.com';
+////                    $email = 'us.petitions@rb.nic.in';
+////                    $cc = [];
+////                    $cc[] = 'sayantan.saha@gov.in';
+////                    $cc[] = 'so-public1@rb.nic.in';
+////                    $cc[] = 'so-public2@rb.nic.in';
+////                    $cc[] = 'prustysarthak123@gmail.com';
+//                        $subject = $application->reg_no;
+//                        $details = "महोदय / महोदया,<br>
+//                                    Sir / Madam,<br><br>
+//                                    कृपया उपरोक्त विषय पर भारत के राष्ट्रपति जी को संबोधित स्वतः स्पष्ट याचिका उपयुक्त ध्यानाकर्षण के लिए संलग्न है। याचिका पर की गई कार्रवाई की सूचना सीधे याचिकाकर्ता को दे दी जाये।<br>
+//                                    Attached please find for appropriate attention a petition addressed to the President of India which is self-explanatory. Action taken on the petition may please be communicated to the petitioner directly.<br>
+//                                    सादर,<br>
+//                                    regards,<br><br>
+//                                    ($name)<br>
+//                                    ($name_hin)<br>
+//                                    अवर सचिव<br>
+//                                    Under Secretary<br>
+//                                    राष्ट्रपति सचिवालय<br>
+//                                    President's Secretariat<br>
+//                                    राष्ट्रपति भवन, नई दिल्ली<br>
+//                                    Rashtrapati Bhavan, New Delhi";
+//
+//                        $content = storage::disk('upload')->get(base64_decode($application->forwarded_path));
+//                        $file = storage::disk('upload')->get(base64_decode($application->file_path));
+//                        try {
+//                            $callback = function ($message) use ($email, $subject, $content, $cc, $file, $fname, $details) {
+//                                $message->to($email)->cc($cc[0])
+//                                    ->cc($cc[1])
+////                                    ->cc($cc[2])
+////                                    ->cc($cc[3])
+//                                    ->subject($subject)
+//                                    ->html($details)
+//                                    ->attachData($content, $fname . '_forward letter.pdf', [
+//                                        'mime' => 'application/pdf',
+//                                    ]);
+//                                if (!empty($file)) {
+//                                    $message->attachData($file, $fname . '_file.pdf', [
+//                                        'mime' => 'application/pdf',
+//                                    ]);
+//                                }
+//                            };
+//                            Mail::send([], [], $callback);
+//                            $application->mail_sent = 1;
+//                            $application->save();
+//                        } catch (\Exception $e) {
+//                            $application->mail_sent = 0;
+//                            $application->save();
+//                            Log::error('Failed to send fwd email: ' . $e->getMessage());
+//                        }
+//
+//                    }
+//                    if ($application->department_org->mail == null){
+//                        $application->mail_sent = 0;
+//                        $application->save();
+//                    }
+                }
+                return redirect(url(route('applications.index')))->with('success', 'Status created successfully.');
+            }
+
+            elseif ($action == 'Return') {
+                $status = $application->statuses()->wherePivot('active', 1)->get();
+                $application->statuses()->updateExistingPivot(
+                    $status,
+                    [
+                        'active' => 0,
+                        'updated_at'=> carbon::now()->toDateTimeLocalString()
+                    ]
+                );
+                $status_id = 2;
+                $status = Status::findOrFail($status_id);
+                $application->statuses()->attach(
+                    $status,
+                    [
+                        'remarks' => $remarks,
+                        'created_from' => $request->ip(),
+                        'created_by' => Auth::user()->id,
+                        'created_at'=>carbon::now()->toDateTimeLocalString()
+                    ]
+                );
+                return redirect(url(route('applications.index')))->with('success', 'Status created successfully.');
+            }
+        }
+
+        else {
+            return redirect()->back()->with('error', 'role not found');
+        }
+
+    }
+
+    /**
+     * table or letter genration
+     */
+    public function reportprint(Request $request)
+    {
+        $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+
+//        $organizationIds="";
+        $name="";
+        $organizations = Organization::all();
+        $arr = [];
+        $arr[] = ['active', 1];
+        if ($request->reg_no && $request->reg_no != '') {
+            $arr[] = ['reg_no', 'like', '%' . $request->reg_no . '%'];
+        }
+        if ($request->app_date_from && $request->app_date_from != '') {
+            $arr[] = ['created_at', '>=', $request->app_date_from];
+            $date_from = \Carbon\Carbon::parse($request->app_date_from)->format('d-m-Y');
+        }
+        if ($request->app_date_to && $request->app_date_to != '') {
+            $endDate = (new \DateTime($request->app_date_to))->setTime(23, 59, 59);
+            $arr[] = ['created_at', '<=', $endDate->format('Y-m-d H:i:s')];
+            $date_to = \Carbon\Carbon::parse($request->app_date_to)->format('d-m-Y');
+        }
+
+        if ($request->orgTypeMin && $request->orgTypeMin != '') {
+            if($request->orgTypeMin=='name'){
+                $arr[] = ['action_org', 'F'];
+                if ($request->orgDescMin && $request->orgDescMin != '') {
+                    $arr[] = ['department_org_id', $request->orgDescMin];
+                }
+            }
+            elseif ($request->orgTypeMin=='type'){
+                $arr[] = ['action_org', 'S'];
+                if ($request->orgDescStat && $request->orgDescStat != '') {
+                    $arr[] = ['department_org_id', $request->orgDescStat];
+                }
+            }
+        }
+
+        if ($request->orgTT && $request->orgTT != '') {
+            if($request->orgTT=='name'){
+                $arr[] = ['action_org', 'F'];
+                if ($request->orgDescMM && $request->orgDescMM != '') {
+                    $arr[] = ['department_org_id', $request->orgDescMM];
+                    $org = Organization::findOrFail($request->orgDescMM);
+                    $name = $org->org_desc;
+                }
+            }
+            elseif ($request->orgTT=='type'){
+                $arr[] = ['action_org', 'S'];
+                if ($request->orgDescSS && $request->orgDescSS != '') {
+                    $arr[] = ['department_org_id', $request->orgDescSS];
+                    $org = Organization::findOrFail($request->orgDescSS);
+                    $name = $org->org_desc;
+                }
+            }
+        }
+        $us=SignAuthority::where('active',1)->first();
+
+//        if ($request->state && $request->state != '') {
+//            $state= State::findOrFail($request->state);
+//            $name = $state->state_name;
+//            $organizationIds = Organization::where('state_id',$request->state)->pluck('id')->toArray();
+//            $arr[] = ['department_org_id', $organizationIds];
+//        }
+
+        // Common query parts
+        // Initialize the query builder
+        $query = Application::where($arr)
+            ->whereIn('created_by', function ($query) use ($org_id) {
+                $query->select('users.id')
+                    ->from('users')
+                    ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
+                    ->whereIn('user_organization.org_id', $org_id);
+            })
+            ->whereHas('statuses', function ($query) {
+                $query->whereIn('status_id', [4, 5])
+                    ->where('application_status.active', 1);
+            });
+
+// Add additional conditions based on the 'submit' value
+        switch ($request->input('submit')) {
+            case 'acknowledgement':
+                $query->where('acknowledgement', 'Y')
+//                    ->where('acknowledgement_path', '!=', null)
+                    ->when($request->filled('mail') && $request->mail == 'filtered', function ($query) {
+                        return $query->whereIn('ack_mail_sent', [null, 0]);
+                    });
+                $applications = $query->get();
+                return view('acknowledgementprint', compact('applications'));
+
+            case 'Forward':
+                $query->whereIn('action_org', ['S', 'F'])
+//                    ->where('forwarded_path', '!=', null)
+                    ->when($request->filled('mail') && $request->mail == 'filtered', function ($query) {
+                        return $query->whereIn('mail_sent', [null, 0]);
+                    });
+                $applications = $query->get();
+                return view('forwardprint', compact('applications'));
+
+            case 'forwardTable':
+                $query->where('department_org_id', '!=', null);
+                $applications = $query->get();
+                return view('forwardTableReport', compact('applications', 'organizations', 'date_from', 'date_to', 'name','us'));
+
+            case 'final_Reply':
+                $query->where('reply', '!=', null);
+                $applications = $query->get();
+                return view('finalReplyReport', compact('applications', 'organizations', 'date_from', 'date_to', 'name','us'));
+
+            default:
+                // Handle the default case if needed
+        }
+
+    }
+
+    /**
+     * counts by status of application
+     */
+    public function dashboard(Request $request)
+    {
+
+        $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+        $org="All";
+        if ($request->organization && $request->organization != '') {
+            $org_id=  $request->organization ;
+            $org =Organization::find($org_id)->org_desc;
+        }
+
+        $applicationStatusCounts = Application::where('applications.active', 1)
+            ->whereIn('applications.created_by', function ($query) use ($org_id) {
+                $query->select('user_organization.user_id')
+                    ->from('user_organization')
+                    ->where('user_organization.org_id', $org_id);
+            })
+            ->withCount([
+                'statuses as pending_with_dh' => function ($query) {
+                    $query->where('application_status.status_id', 1)->where('application_status.active', 1);
+                },
+                'statuses as pending_with_so' => function ($query) {
+                    $query->where('application_status.status_id', 2)->where('application_status.active', 1);
+                },
+                'statuses as pending_with_us' => function ($query) {
+                    $query->where('application_status.status_id', 3)->where('application_status.active', 1);
+                },
+                'statuses as in_draft' => function ($query) {
+                    $query->where('application_status.status_id', 0)->where('application_status.active', 1);
+                },
+                'statuses as approved' => function ($query) {
+                    $query->where('application_status.status_id', 4)->where('application_status.active', 1);
+                },
+                'statuses as submitted' => function ($query) {
+                    $query->where('application_status.status_id', 5)->where('application_status.active', 1);
+                },
+            ])
+            ->get();
+
+        $pending_with_dh = $applicationStatusCounts->sum('pending_with_dh');
+        $pending_with_so = $applicationStatusCounts->sum('pending_with_so');
+        $pending_with_us = $applicationStatusCounts->sum('pending_with_us');
+        $in_draft = $applicationStatusCounts->sum('in_draft');
+        $approved = $applicationStatusCounts->sum('approved');
+        $submitted = $applicationStatusCounts->sum('submitted');
+
+        $organizations = Organization::all();
+        $org_id = auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray();
+
+        if(auth()->check() && auth()->user()->organizations()->where('user_organization.active', 1)->count()>1) {
+            $allowfilter = true;
+        }
+        else{
+            $allowfilter = false;
+        }
+        return view('dashboard', compact('in_draft', 'pending_with_dh', 'pending_with_so', 'pending_with_us', 'approved', 'submitted','org','allowfilter','organizations','org_id'));
+    }
+
+    /**
+     * file of application
+     */
+    public function getFile(String $path)
+    {
+        // return response()->file(base64_decode($path));
+        $content = Storage::disk('upload')->get(base64_decode($path));
+        if ($content != '') {
+            return response($content, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline');
+        } else {
+            return response()->json(['code' => 404, 'msg' => 'Details not found'], 404);
+        }
+    }
+
+
+
+
+
+    /**
+     * @param $app
+     * @return bool
+     */
+    public function Forwardbuttoncommon($app): bool
+    {
+        if (($app->created_by == auth()->user()->id) && (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(1))) {
+            $allowOnlyForward = true;
+        } else {
+            $allowOnlyForward = false;
+        }
+        return $allowOnlyForward;
+    }
+
+    /**
+     * @param Application $app
+     * @param Request $request
+     * @return void
+     */
+    public function applicantFileCommon(Application $app, Request $request): void
+    {
+        $fname = str_replace('/', '_', $app->reg_no);
+        $filename = $fname . '.' . $request->file('file_path')->getClientOriginalExtension();
+        $path = $request->file('file_path')->storeAs('applications/' . $app->id . '/', $filename, 'upload');
+        $app->file_path = base64_encode($path);
+        $app->update(['file_path' => base64_encode($path)]);
+    }
+
+    /**
+     * @param $app
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application
+     */
+    public function ReturnapplicationView($app): \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Foundation\Application|\Illuminate\Contracts\View\View
+    {
+        if($app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->whereIn('status_id', [1, 2, 3])){
+            $notecheck = true;}
+        else{
+            $notecheck = false;}
+
+        if ((auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && $app->statuses->first() && ($app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))) || (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3))){
+            $noteblock=true;}
+        else{
+            $noteblock=false;}
+        if( auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(4) && $app->reply == ''){
+            $finalreplyblock=true;}
+        else{
+            $finalreplyblock=false;}
+        if ($app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(5)){
+            $hasActiveStatusFive = true;}
+        else{
+            $hasActiveStatusFive = false;}
+
+        $statuses = $app->statuses()
+            ->whereIn('application_status.active', [0, 1])
+            ->whereNotNull('remarks')
+            ->get();
+        foreach ($statuses as $status)
+            $status->user = User::findorfail($status->pivot->created_by);
+        return view('application_view', compact('app', 'noteblock', 'finalreplyblock', 'notecheck', 'statuses', 'hasActiveStatusFive'));
+    }
+
+    /**
+     * @param \Illuminate\Contracts\Pagination\LengthAwarePaginator $applications
+     * @return void
+     */
+    public function applicationlistRequirements(\Illuminate\Contracts\Pagination\LengthAwarePaginator $applications): void
+    {
+        foreach ($applications as $application) {
+            if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && ($application->created_by == auth()->user()->id) && ($application->statuses->isEmpty() || $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(1) || $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0))) {
+                $application->allowEdit = true;
+            } else {
+                $application->allowEdit = false;
+            }
+
+            if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $application->statuses->first() && $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(4) && $application->reply == '') {
+                $application->allowFinalReply = true;
+            } else {
+                $application->allowFinalReply = false;
+            }
+
+            if($application->department_org && $application->department_org->org_desc) {
+                $remark = $application->department_org->org_desc;
+                $application->trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
+            }
+            elseif($application->reason && $application->reason->reason_desc){
+                $remark = $application->reason->reason_desc;
+                $application->trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
+            }
+        }
+    }
+
+
+
+
+//    public function generateAcknowledgementLetter($id)
+//    {
+//        $application = Application::findOrFail($id);
+//        return view('acknowledgementletter',compact('application',));
+//    }
+//
+//    public function generateForwardLetter($id)
+//    {
+//
+//        $application = Application::findOrFail($id);
+//        return view('forwardedletter',compact('application',));
+//    }
+
+
+
+
+
+
+//ProcessApplicationJob::dispatch($application, $action, $remarks); // <-- Pass $remarks here
 
 //                    $dompdf = new Dompdf();
 //                    $options = new Options();
@@ -566,494 +1219,4 @@ class ApplicationController extends Controller
 //                            return "Failed to send SMS: " . $e->getMessage();
 //                        }
 //                    }
-
-                }
-
-
-                if ($application->department_org && $application->department_org->id !== null) {
-                    $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
-                    $imageData = file_get_contents($imagePath);
-                    $imageBase64 = base64_encode($imageData);
-                    $logoPath = public_path('storage/logo.png');
-                    $logoData = file_get_contents($logoPath);
-                    $logoBase64 = base64_encode($logoData);
-                    $html = view('forwardedletter', compact('application','imageBase64','logoBase64'))->render();;
-                    $postParameter = array(
-                        'htmlSource' => $html
-                    );
-                    Log::info('post param:'.json_encode($postParameter));
-                    $name=Auth::user()->authority->name;
-                    $name_hin=Auth::user()->authority->name_hin;
-                    event(new GeneratePdfEventFwd($postParameter, $application,$name,$name_hin));
-                }
-
-                $status = Status::findOrFail($status_id);
-                $application->statuses()->attach(
-                    $status,
-                    [
-                        'remarks' => $remarks,
-                        'created_from' => $request->ip(),
-                        'created_by' => Auth::user()->id,
-                        'created_at'=>carbon::now()->toDateTimeLocalString()
-                    ]
-                );
-
-                return redirect(url(route('applications.index')))->with('success', 'Status created successfully.');
-            }
-            elseif ($action == 'Return') {
-                $status_id = 2;
-                $status = Status::findOrFail($status_id);
-                $application->statuses()->attach(
-                    $status,
-                    [
-                        'remarks' => $remarks,
-                        'created_from' => $request->ip(),
-                        'created_by' => Auth::user()->id,
-                        'created_at'=>carbon::now()->toDateTimeLocalString()
-                    ]
-                );
-
-                return redirect(url(route('applications.index')))->with('success', 'Status created successfully.');
-            }
-        }
-
-        else {
-            return redirect()->back()->with('error', 'role not found');
-        }
-
-    }
-
-
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        $app = Application::find($id);
-        if(!$app)
-            abort(404);
-        return view('application_view', compact('app'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
-        if (in_array(174, $org_id)) {
-            $grievances=Grievance::where('section',11)->get();
-        }
-        elseif (in_array(175, $org_id)) {
-            $grievances=Grievance::where('section',12)->get();
-        }
-        $app = Application::find($id);
-        $states=State::all();
-        $organizationStates = Organization::where('org_type','S')->get();
-        $organizationM = Organization::where('org_type','M')->get();
-        $reasonM = Reason::where('action_code',99)->get();
-        $reasonN = Reason::where('action_code',10)->get();
-        return view('application', compact('app','organizationStates','states','grievances','reasonM','reasonN','organizationM'));
-
-//        $userOrganizationId = Auth::user()->org_id;
-//        $userRoleId = Auth::user()->roles()->where('user_id', Auth::user()->id)->pluck('role_id')->first();
-//        $allowNew = false;
-//        if($userOrganizationId == 3 && $userRoleId == 1)
-//            $allowNew = true;
-//        return view('application', compact('app','organizations','states','grievances','allowNew'));
-
-    }
-
-    public function getFile(String $path)
-    {
-        // return response()->file(base64_decode($path));
-        $content = Storage::disk('upload')->get(base64_decode($path));
-        if ($content != '') {
-            return response($content, 200)
-                ->header('Content-Type', 'application/pdf')
-                ->header('Content-Disposition', 'inline');
-        } else {
-            return response()->json(['code' => 404, 'msg' => 'Details not found'], 404);
-        }
-    }
-
-    public function search(Request $request)
-    {
-        $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
-        $qr=  [0,1,2,3,4,5] ;
-        $arr=[];
-        $arr[]= ['active', 1];
-        if ($request->reg_no && $request->reg_no != '') {
-            $arr[]=   ['reg_no', 'like', '%' . $request->reg_no . '%'];
-        }
-        if ($request->state_id && $request->state_id != '') {
-            $arr[]=   ['state_id', '=', $request->state_id ];
-        }
-        if ($request->letter_no && $request->letter_no != '') {
-            $arr[]=  ['letter_no', 'like', '%' . $request->letter_no . '%'];
-        }
-        if ($request->applicant_name && $request->applicant_name != '') {
-            $arr[]=   ['applicant_name', 'like', '%' . $request->applicant_name . '%'];
-        }
-        if ($request->app_date_from && $request->app_date_from != '') {
-            $arr[]=   ['created_at','>=', $request->app_date_from ];
-        }
-        if ($request->app_date_to && $request->app_date_to != '') {
-            $arr[]=   ['created_at','<=',  $request->app_date_to ];
-        }
-        if ($request->orgDesc && $request->orgDesc != '') {
-            $arr[] = ['department_org_id', $request->orgDesc];
-        }
-        if ($request->orgTy && $request->orgTy != '') {
-            if($request->orgTy=='name')
-                $arr[] = ['action_org', 'F'];
-            elseif ($request->orgTy=='type')
-                $arr[] = ['action_org', 'S'];
-        }
-        if ($request->organization && $request->organization != '') {
-            $org_id=  $request->organization ;
-        }
-        if ($request->status !== null && $request->status != '') {
-            $qr=  [$request->status] ;
-        }
-
-        $organizations=Organization::all();
-
-        $applications = Application::with(relations: 'state')->where($arr)
-            ->whereIn('created_by', function ($query) use ($org_id) {
-                $query->select('users.id')
-                    ->from('users')
-                    ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
-                    ->where('user_organization.org_id', $org_id);
-            })
-            ->whereHas('statuses', function ($query)use ($qr) {
-                $query->wherein('status_id', $qr)
-                    ->where('application_status.active', 1);
-            })
-            ->paginate(18);
-        $states=State::all();
-        return view('application_list', compact('applications','states','organizations'));
-    }
-
-    public function dashboard(Request $request)
-    {
-
-        $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
-        $org="All";
-        if ($request->organization && $request->organization != '') {
-            $org_id=  $request->organization ;
-            $org =Organization::find($org_id)->org_desc;
-        }
-
-        $applicationStatusCounts = Application::where('applications.active', 1)
-            ->whereIn('applications.created_by', function ($query) use ($org_id) {
-                $query->select('user_organization.user_id')
-                    ->from('user_organization')
-                    ->where('user_organization.org_id', $org_id);
-            })
-            ->withCount([
-                'statuses as pending_with_dh' => function ($query) {
-                    $query->where('application_status.status_id', 1)->where('application_status.active', 1);
-                },
-                'statuses as pending_with_so' => function ($query) {
-                    $query->where('application_status.status_id', 2)->where('application_status.active', 1);
-                },
-                'statuses as pending_with_us' => function ($query) {
-                    $query->where('application_status.status_id', 3)->where('application_status.active', 1);
-                },
-                'statuses as in_draft' => function ($query) {
-                    $query->where('application_status.status_id', 0)->where('application_status.active', 1);
-                },
-                'statuses as approved' => function ($query) {
-                    $query->where('application_status.status_id', 4)->where('application_status.active', 1);
-                },
-                'statuses as submitted' => function ($query) {
-                    $query->where('application_status.status_id', 5)->where('application_status.active', 1);
-                },
-            ])
-            ->get();
-
-        $pending_with_dh = $applicationStatusCounts->sum('pending_with_dh');
-        $pending_with_so = $applicationStatusCounts->sum('pending_with_so');
-        $pending_with_us = $applicationStatusCounts->sum('pending_with_us');
-        $in_draft = $applicationStatusCounts->sum('in_draft');
-        $approved = $applicationStatusCounts->sum('approved');
-        $submitted = $applicationStatusCounts->sum('submitted');
-
-        return view('dashboard', compact('in_draft', 'pending_with_dh', 'pending_with_so', 'pending_with_us', 'approved', 'submitted','org'));
-    }
-
-    public function reportprint(Request $request)
-    {
-        $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
-
-        $organizationIds="";
-        $name="";
-        $organizations = Organization::all();
-        $ar=[];
-        $arr = [];
-        $arr[] = ['active', 1];
-        if ($request->reg_no && $request->reg_no != '') {
-            $arr[] = ['reg_no', 'like', '%' . $request->reg_no . '%'];
-        }
-        if ($request->app_date_from && $request->app_date_from != '') {
-            $arr[] = ['created_at', '>=', $request->app_date_from];
-            $date_from = $request->app_date_from;
-        }
-        if ($request->app_date_to && $request->app_date_to != '') {
-            $endDate = (new \DateTime($request->app_date_to))->setTime(23, 59, 59);
-            $arr[] = ['created_at', '<=', $endDate->format('Y-m-d H:i:s')];
-            $date_to = $request->app_date_to;
-        }
-        if ($request->orgDesc && $request->orgDesc != '') {
-            $arr[] = ['department_org_id', $request->orgDesc];
-            $org = Organization::findOrFail($request->orgDesc);
-            $name = $org->org_desc;
-        }
-
-        if ($request->state && $request->state != '') {
-            $state= State::findOrFail($request->state);
-            $name = $state->state_name;
-            $organizationIds = Organization::where('state_id',$request->state)->pluck('id')->toArray();
-            $ar[] = ['department_org_id', $organizationIds];
-        }
-
-        if ($request->input('submit') === 'acknowledgement')
-        {
-            if ($request->mail && $request->mail != '' && $request->mail=='filtered') {
-                $applications = Application::where($arr)
-                    ->where('acknowledgement', 'Y')
-                    ->where('acknowledgement_path', '!=', null)
-                    ->wherein('ack_mail_sent', [null,0])
-                    ->whereIn('created_by', function ($query) use ($org_id) {
-                        $query->select('users.id')
-                            ->from('users')
-                            ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
-                            ->whereIn('user_organization.org_id', $org_id);
-                    })
-
-                    ->whereHas('statuses', function ($query) {
-                        $query->wherein('status_id', [4, 5])
-                            ->where('application_status.active', 1);
-                    })
-                    ->get();
-
-                return view('acknowledgementprint',compact('applications'));
-
-            }
-            else {
-                $applications = Application::where($arr)
-                    ->where('acknowledgement', 'Y')
-                    ->where('acknowledgement_path', '!=', null)
-                    ->whereIn('created_by', function ($query) use ($org_id) {
-                        $query->select('users.id')
-                            ->from('users')
-                            ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
-                            ->whereIn('user_organization.org_id', $org_id);
-                    })
-                    ->whereHas('statuses', function ($query) {
-                        $query->wherein('status_id', [4, 5])
-                            ->where('application_status.active', 1);
-                    })
-                    ->get();
-
-                return view('acknowledgementprint', compact('applications'));
-            }
-
-//            $pdf = PDFMerger::init();
-//            $pdf->addPDF('');
-//            $pdf->addPDF('');
-//
-//            $oMerger->stream();
-
-//            $pdfFilePaths = [];
-//            foreach ($applications as $application) {
-//                $pdfPath = base64_decode($application->acknowledgement_path);
-//                $pdfData[] = Storage::disk('upload')->get($pdfPath);
-//                if ($pdfData) {
-//                    $fileName = time() . '_' . uniqid() . '.pdf';
-//                    $pdfFilePath = storage_path('app/' . $fileName);
-//
-//                    file_put_contents($pdfFilePath, $pdfData);
-//
-//                    $pdfFilePaths[] = $pdfFilePath;
-//                }
-//            }
-//
-//            if (!empty($pdfFilePaths)) {
-//                $pdf = PDFMerger::init();
-//                foreach ($pdfFilePaths as $pdfFilePath) {
-//                    $pdf->addPDF($pdfFilePath, 'all');
-//                }
-//
-//                $mergedFileName = time() . '.pdf';
-//                $pdf->merge();
-//                $pdf->save(storage_path('app/' . $mergedFileName));
-//
-//                // Clean up temporary PDF files
-//                foreach ($pdfFilePaths as $pdfFilePath) {
-//                    unlink($pdfFilePath);
-//                }
-//
-//                return response()->download(storage_path('app/' . $mergedFileName))->deleteFileAfterSend(true);
-//            } else {
-//                return back()->withErrors([
-//                    'pdf_error' => 'No PDFs found to merge.',
-//                ]);
-//            }
-
-//            $pdfFiles = [
-//                'C:\Users\prust\OneDrive\Desktop\petition\applications\80\1689256090.pdf',
-//                'C:\Users\prust\OneDrive\Desktop\petition\applications\80\forward.pdf',
-//                // Add more PDF files here
-//            ];
-//
-//            $pdf = new Fpdi();
-//// Loop through the PDF files and add them to the merged PDF
-//            foreach ($pdfFiles as $file) {
-//                $pageCount = $pdf->setSourceFile($file);
-//                for ($pageNumber = 1; $pageNumber <= $pageCount; $pageNumber++) {
-//                    $pdf->AddPage();
-//                    $template = $pdf->importPage($pageNumber);
-//                    $pdf->useTemplate($template);
-//                }
-//            }
-//        $pdf = new Fpdi();
-//        $pdf->setPrintHeader(false);
-//        $pdf->setPrintFooter(false);
-//        $pdf->SetMargins(10, 10, 10);
-//        $pdf->SetAutoPageBreak(true, 10);
-//        $pdf->AddPage();
-//        foreach ($applications as $application) {
-//            $pdfPath = base64_decode($application->acknowledgement_path);
-//            $pdfData = Storage::disk('upload')->get($pdfPath);
-//            $pdf->writeHTML($pdfData);
-//            $pdf->AddPage();
-//        }
-//            upar foreach nahele tala ta
-//            foreach ($applications as $application) {
-//                $pdfPath = base64_decode($application->acknowledgement_path);
-//                $pdfData = Storage::disk('upload')->get($pdfPath);
-//                $pdf->AddPage();
-//
-//                // Create a temporary stream resource for the PDF data
-//                $pdfStream = fopen('php://temp', 'rb+');
-//                fwrite($pdfStream, $pdfData);
-//                rewind($pdfStream);
-//
-//                // Set the source file and import the first page
-//                $pageCount = $pdf->setSourceFile($pdfStream);
-//                $tplIdx = $pdf->importPage(1);
-//
-//                // Use the imported page as a template
-//                $pdf->useTemplate($tplIdx, 10, 10, 190, 270);
-//            }
-//        $pdfContent = $pdf->Output('', 'S');
-//        $tempPdfPath = storage_path('app/temp/merged_pdf.pdf');
-//        file_put_contents($tempPdfPath, $pdfContent);
-//        $pdfUrl = asset('storage/temp/merged_pdf.pdf');
-//        return view('pdfmerge', compact('pdfUrl'));
-        }
-
-        elseif($request->input('submit') === 'Forward')
-        {
-            if ($request->mail && $request->mail != ''&&$request->mail=='filtered') {
-                    $applications = Application::where($arr)
-                        ->wherein('action_org', ['S','F'])
-                        ->where('forwarded_path','!=',null)
-                        ->wherein('mail_sent', [null,0])
-                        ->whereIn('created_by', function ($query) use ($org_id) {
-                            $query->select('users.id')
-                                ->from('users')
-                                ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
-                                ->whereIn('user_organization.org_id', $org_id);
-                        })
-                        ->whereHas('statuses', function ($query) {
-                            $query->whereIn('status_id', [4,5])
-                                ->where('application_status.active', 1);
-                        })->get();
-
-                    return view('forwardprint',compact('applications'));}
-
-                else
-                {
-                    $applications = Application::where($arr)
-                        ->wherein('action_org', ['S','F'])
-                        ->where('forwarded_path','!=',null)
-                        ->whereIn('created_by', function ($query) use ($org_id) {
-                            $query->select('users.id')
-                                ->from('users')
-                                ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
-                                ->whereIn('user_organization.org_id', $org_id);
-                        })
-                        ->whereHas('statuses', function ($query) {
-                            $query->whereIn('status_id', [4,5])
-                                ->where('application_status.active', 1);
-                        })->get();
-
-                    return view('forwardprint',compact('applications'));
-                }
-            }
-
-
-
-        elseif($request->input('submit') === 'forwardTable'){
-            $applications = Application::where($arr)
-                ->whereIn('created_by', function ($query) use ($org_id) {
-                    $query->select('users.id')
-                        ->from('users')
-                        ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
-                        ->whereIn('user_organization.org_id', $org_id);
-                })
-                ->when(!empty($ar), function ($query) use ($organizationIds) {
-                    return $query->whereIn('department_org_id', $organizationIds);
-                })
-                ->where('department_org_id','!=',null)
-                ->whereHas('statuses', function ($query) {
-                    $query->whereIn('status_id',[4,5])
-                        ->where('application_status.active', 1);
-                })->get();
-            return view('forwardTableReport',compact('applications','organizations','date_from','date_to','name'));
-        }
-
-        elseif($request->input('submit') === 'final_Reply'){
-            $applications = Application::where($arr)
-                ->whereIn('created_by', function ($query) use ($org_id) {
-                    $query->select('users.id')
-                        ->from('users')
-                        ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
-                        ->whereIn('user_organization.org_id', $org_id);
-                })
-                ->when(!empty($ar), function ($query) use ($organizationIds) {
-                    return $query->whereIn('department_org_id', $organizationIds);
-                })
-                ->where('reply','!=',null)
-                ->whereHas('statuses', function ($query) {
-                    $query->whereIn('status_id', [4,5])
-                        ->where('application_status.active', 1);
-                })->get();
-            return view('finalReplyReport',compact('applications','organizations','date_from','date_to','name'));
-        }
-
-    }
-
-
-    public function generateAcknowledgementLetter($id)
-    {
-        $application = Application::findOrFail($id);
-        return view('acknowledgementletter',compact('application',));
-    }
-
-    public function generateForwardLetter($id)
-    {
-
-        $application = Application::findOrFail($id);
-        return view('forwardedletter',compact('application',));
-    }
-
-
 }
-
-
-

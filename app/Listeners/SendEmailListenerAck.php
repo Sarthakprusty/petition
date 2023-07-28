@@ -21,13 +21,12 @@ class SendEmailListenerAck implements ShouldQueue
     /**
      * Handle the event.
      *
-     * @param  SendEmailEventAck  $event
+     * @param  SendEmailEventAck $event
      * @return void
      */
     public function handle(SendEmailEventAck $event)
     {
         $application = $event->application;
-
 
         if (($application->email_id != null)&&($application->ack_mail_sent == 0 || $application->ack_mail_sent == '' )&&($application->acknowledgement_path !==null)){
 //                $email = $application->email_id;
@@ -43,9 +42,9 @@ class SendEmailListenerAck implements ShouldQueue
             $cc[] = 'prustysarthak123@gmail.com';
             $cc[] = 'shantanubaliyan935@gmail.com';
             $subject = 'Reply From Rashtrapati Bhavan';
-            $details =  $application->applicant_title." ". $application->applicant_name . ",<br><br>
+            $details = $application->applicant_title . " " . $application->applicant_name . ",<br><br>
                                  Your Petition has been received in Rashtrapati Bhavan with ref no " . $application->reg_no . " and forwarded to " . $application->department_org->org_desc . " for further necessary action.<br><br>
-                                    Regards <br>
+                                    Regards, <br>
                              President's Secretariat<br>";
             $content = storage::disk('upload')->get(base64_decode($application->acknowledgement_path));
             try {
@@ -56,7 +55,7 @@ class SendEmailListenerAck implements ShouldQueue
 //                            ->cc($cc[3])
                         ->subject($subject)
                         ->html($details)
-                        ->attachData($content,$fname.'_acknowledgement.pdf', [
+                        ->attachData($content, $fname . '_acknowledgement.pdf', [
                             'mime' => 'application/pdf',
                         ]);
                 });
@@ -67,7 +66,6 @@ class SendEmailListenerAck implements ShouldQueue
                 $application->save();
                 Log::error('Failed to send ack email: ' . $e->getMessage());
             }
-
         }
         if ($application->email_id == null){
             $application->ack_mail_sent = 0;

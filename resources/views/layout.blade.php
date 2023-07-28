@@ -185,16 +185,16 @@
                             $organizationM = \App\Models\Organization::where('org_type','M')->get();
                         @endphp
                         <div class="mb-3" id="organizationSt" style="display: none;">
-                            <select class="form-control" id="orgS" name="orgDesc">
+                            <select class="form-control" id="orgS" name="orgDescSt">
                                 <option value="">Select an State</option>
-                                @foreach($organizationStates as $state)
-                                    <option value="{{ $state->id }}">{{ $state->org_desc }}</option>
+                                @foreach($organizationStates as $organizationState)
+                                    <option value="{{ $organizationState->id }}">{{ $organizationState->org_desc }}</option>
                                 @endforeach
                             </select>
                         </div>
 
                         <div class="mb-3" id="organizationMi" style="display: none;">
-                            <select class="form-control" id="orgM" name="orgDesc">
+                            <select class="form-control" id="orgM" name="orgDescMi">
                                 <option value="">Select an Organization</option>
                                 @foreach($organizationM as $organization)
                                     <option value="{{ $organization->id }}">{{ $organization->org_desc }}</option>
@@ -290,7 +290,7 @@
                         <div class="row">
                             <div class="mb-3">
                                 <label class="form-label" for="organizationType">Organization:</label>
-                                <select class="form-control" name="orgType">
+                                <select class="form-control" name="orgTypeMin">
                                     <option value="">Select an option</option>
                                     <option id="typeOrganizationType" value="type" >State GOV.</option>
                                     <option id="typeOrganizationName" value="name">Center GOV.</option>
@@ -302,25 +302,25 @@
                             $organizationM = \App\Models\Organization::where('org_type','M')->get();
                         @endphp
                         <div class="mb-3" id="organizationTypeDropdown" style="display: none;">
-                            <select class="form-control" id="orgDesc" name="orgDesc">
+                            <select class="form-control" id="orgDesc" name="orgDescStat">
                                 <option value="">Select an State</option>
-                                @foreach($organizationStates as $state)
-                                    <option value="{{ $state->id }}">{{ $state->org_desc }}</option>
+                                @foreach($organizationStates as $organizationStat)
+                                    <option value="{{ $organizationStat->id }}">{{ $organizationStat->org_desc }}</option>
                                 @endforeach
                             </select>
                         </div>
 
                         <div class="mb-3" id="organizationNameDropdown" style="display: none;">
-                            <select class="form-control" id="orgDesc" name="orgDesc">
+                            <select class="form-control" id="orgDesc" name="orgDescMin">
                                 <option value="">Select an Organization</option>
-                                @foreach($organizationM as $organization)
-                                    <option value="{{ $organization->id }}">{{ $organization->org_desc }}</option>
+                                @foreach($organizationM as $organizationMin)
+                                    <option value="{{ $organizationMin->id }}">{{ $organizationMin->org_desc }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <script>
                             $(document).ready(function() {
-                                $('select[name="orgType"]').change(function() {
+                                $('select[name="orgTypeMin"]').change(function() {
                                     var selectedType = $(this).val();
                                     if (selectedType === "type") {
                                         $('#organizationTypeDropdown').show();
@@ -371,7 +371,7 @@
                         <div class="row">
                             <div class="mb-3">
                                 <label class="form-label" for="organizationType">Organization:</label>
-                                <select class="form-control" name="orgT">
+                                <select class="form-control" name="orgTT">
                                     <option value="">Select an option</option>
                                     <option id="typeOrganizationType" value="type" >State GOV.</option>
                                     <option id="typeOrganizationName" value="name">Center GOV.</option>
@@ -383,25 +383,25 @@
                             $organizationM = \App\Models\Organization::where('org_type','M')->get();
                         @endphp
                         <div class="mb-3" id="organizationS" style="display: none;">
-                            <select class="form-control" id="orgS" name="orgDesc">
+                            <select class="form-control" id="orgS" name="orgDescSS">
                                 <option value="">Select an State</option>
-                                @foreach($organizationStates as $state)
-                                    <option value="{{ $state->id }}">{{ $state->org_desc }}</option>
+                                @foreach($organizationStates as $organizationSS)
+                                    <option value="{{ $organizationSS->id }}">{{ $organizationSS->org_desc }}</option>
                                 @endforeach
                             </select>
                         </div>
 
                         <div class="mb-3" id="organizationM" style="display: none;">
-                            <select class="form-control" id="orgM" name="orgDesc">
+                            <select class="form-control" id="orgM" name="orgDescMM">
                                 <option value="">Select an Organization</option>
-                                @foreach($organizationM as $organization)
-                                    <option value="{{ $organization->id }}">{{ $organization->org_desc }}</option>
+                                @foreach($organizationM as $organizationMM)
+                                    <option value="{{ $organizationMM->id }}">{{ $organizationMM->org_desc }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <script>
                             $(document).ready(function() {
-                                $('select[name="orgT"]').change(function() {
+                                $('select[name="orgTT"]').change(function() {
                                     var selectedType = $(this).val();
                                     if (selectedType === "type") {
                                         $('#organizationS').show();

@@ -23,7 +23,13 @@ class SignAuthorityController extends Controller
         $organizations = Organization::all();
         $authority_id= Auth::user()->sign_id;
         $authority = SignAuthority::findorfail($authority_id);
-        return view('sign_authority_list', compact('authority','organizations','states'));
+        if(auth()->check() && auth()->user()->roles->pluck('id')->contains(3) && auth()->user()->sign_id == $authority->id){
+            $allowSeeSign=true;
+        }
+        else{
+            $allowSeeSign=false;
+        }
+        return view('sign_authority_list', compact('authority','organizations','states','allowSeeSign'));
 
     }
 

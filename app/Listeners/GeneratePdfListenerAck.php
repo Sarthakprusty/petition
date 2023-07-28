@@ -31,9 +31,9 @@ class GeneratePdfListenerAck implements ShouldQueue
 
         // Perform the cURL request and generate the PDF
         //server
-//        $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
+        $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
         //local
-        $curlHandle = curl_init('http://localhost:8081/getMLPdf');
+//        $curlHandle = curl_init('http://localhost:8081/getMLPdf');
         //sir
 //        $curlHandle = curl_init('http://10.21.160.179:8081/getMLPdf');
 

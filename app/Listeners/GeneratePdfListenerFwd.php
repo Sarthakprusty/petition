@@ -31,8 +31,8 @@ class GeneratePdfListenerFwd implements ShouldQueue
         $name = $event->name;
         $name_hin = $event->name_hin;
 
-        //                    $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
-        $curlHandle = curl_init('http://localhost:8081/getMLPdf');
+        $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
+//        $curlHandle = curl_init('http://localhost:8081/getMLPdf');
 
         curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
         curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);

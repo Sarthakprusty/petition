@@ -88,10 +88,12 @@ class SendEmailListenerFwd implements ShouldQueue
                 $application->save();
                 Log::error('Failed to send fwd email: ' . $e->getMessage());
             }
+
         }
         if ($application->department_org->mail == null){
             $application->mail_sent = 0;
             $application->save();
         }
+
     }
 }

@@ -8,6 +8,7 @@
             <li class="breadcrumb-item active" aria-current="page"style="font-size: 160%;">Applications / {{$app->reg_no}}</li>
         </ol>
     </nav>
+
     <style>
         body{margin-top:20px;
             background:#eee;
@@ -197,52 +198,31 @@
 
     <div class="container" style="width: 90%">
         <div class="row">
-            @if (isset($_GET['submit']) && $_GET['submit'] === 'Details')
-                @if((auth()->check() && auth()->user()->roles->pluck('id')->contains(2) &&
-                     $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))
-                     ||
-                     (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) &&
-                     $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)))
-                    <div class="col-md-9">
-                @endif
-            @endif
-            @if (isset($_GET['submit']) && $_GET['submit'] === 'final reply' && (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) &&
-                     $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(4)&& $app->reply==''))
+            @if ((isset($_GET['submit']) && $_GET['submit'] === 'Details' && $noteblock) || (isset($_GET['submit']) && $_GET['submit'] === 'final reply' && $finalreplyblock))
                 <div class="col-md-9">
-            @endif
-            @if($app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->whereIn('status_id', [1, 2, 3]))
-                    @php
-                        $statuses = $app->statuses()
-                            ->whereIn('application_status.active', [0, 1])
-                            ->whereNotNull('remarks')
-                            ->get();
-                    @endphp
+                    @endif
 
-                    @if ($statuses->isNotEmpty())
+                @if($notecheck)
+                   @if (isset($statuses) && $statuses->isNotEmpty())
                         <div class="card text-white bg-info mb-3">
                             <div class="card-header">Note:</div>
                             <div class="card-body">
                                 @foreach ($statuses as $status)
-                                    @php
-                                        $user = \App\Models\User::findorfail($status->pivot->created_by);
-                                    @endphp
                                     <p class="card-text">
-                                        {{ $user ? $user->username : 'N/A' }} - {{ $status->pivot->remarks }}
+                                        {{ $status->user ? $status->user->username : 'N/A' }} - {{ $status->pivot->remarks }}
                                     </p>
                                 @endforeach
                             </div>
                         </div>
                     @endif
-                    @endif
-                    @if($app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(5))
-                    @if($app->reply)
+                @endif
+                    @if($hasActiveStatusFive && $app->reply)
                         <div class="card text-white bg-warning mb-3">
                             <div class="card-header">Final Reply:</div>
                             <div class="card-body">
                                 {{$app->reply}}
                             </div>
                         </div>
-                    @endif
                     @endif
                 <div class="ibox-content">
                     <div class="row">
@@ -271,8 +251,8 @@
                             <div class="col-lg-5">
                             <dl class="dl-horizontal">
                                 <dt style="text-decoration: underline; color: black;">Status</dt><dd>
-                                    @if($app->reg_no)
-                                        <span class="label label-primary">{{ $app->statuses()->where('application_status.active', 1)->first()?->status_desc ?? '' }}</span></dd>
+                                @if($app->reg_no)
+                                    <span class="label label-primary">{{ $app->statuses()->where('application_status.active', 1)->first()?->status_desc ?? '' }}</span></dd>
                                 @else
                                     <br>
                                 @endif
@@ -408,7 +388,7 @@
                             <div class="list-group-item">
                                 <span class="float-start" style="font-weight: bold">Action</span>
                                 <span class="float-end" style="text-align: right">
-                                                    @if ($app->action_org === 'N')
+                                    @if ($app->action_org === 'N')
                                         No Action
                                     @elseif ($app->action_org === 'F')
                                         Forward to Central Govt. Ministry/Department
@@ -426,10 +406,6 @@
                                 <span class="float-end" style="text-align: right">
                                     {{$app->reason ? $app->reason->reason_desc : ''}}</span>
                             </div>
-{{--                            <div class="list-group-item">--}}
-{{--                                <span class="float-start" style="font-weight: bold">Min/Dept/Gov Code</span>--}}
-{{--                                <span class="float-end" style="text-align: right">{{$app->min_dept_gov_code}}</span>--}}
-{{--                            </div>--}}
                             @elseif($app->department_org)
                             <div class="list-group-item">
                                 <span class="float-start" style="font-weight: bold">Ministry/Department</span>
@@ -455,27 +431,8 @@
                     </div>
                 </div>
 
-
-                @if (isset($_GET['submit']) && $_GET['submit'] === 'Details')
-                    @if((auth()->check() && auth()->user()->roles->pluck('id')->contains(2) &&
-                         $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))
-                         ||
-                         (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) &&
-                         $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)))
-                        </div>
-                    @endif
-                @endif
-
-                @if (isset($_GET['submit']) && $_GET['submit'] === 'final reply')
-                        </div>
-                @endif
-
-            @if (isset($_GET['submit']) && $_GET['submit'] === 'Details')
-                @if((auth()->check() && auth()->user()->roles->pluck('id')->contains(2) &&
-                      $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))
-                      ||
-                      (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) &&
-                      $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)))
+            @if (isset($_GET['submit']) && $_GET['submit'] === 'Details' && $noteblock)
+                </div>
                 <div class="col-md-3">
                     <form method="post" action="{{ route('applications.updateStatus', ['application_id' => $app->id]) }}">
                         @csrf
@@ -498,10 +455,9 @@
                         </div>
                     </form>
                 </div>
-                @endif
 
-            @elseif (isset($_GET['submit']) && $_GET['submit'] === 'final reply' && (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) &&
-                     $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(4)&& $app->reply==''))
+            @elseif (isset($_GET['submit']) && $_GET['submit'] === 'final reply' && $finalreplyblock)
+                    </div>
                         <div class="col-md-3">
                     <form method="POST" action="{{route('applications.store')}}" >
                         @csrf

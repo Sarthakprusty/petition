@@ -66,19 +66,12 @@
 
                         @if($application->department_org)
                             <div class="card-subject">
-                                @php
-                                    $remark = $application->department_org->org_desc;
-                                    $trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
-                                @endphp
-                                Fwd: {{ $trimmedremark }}
+
+                                Fwd: {{  $application->trimmedremark }}
                             </div>
                         @elseif($application->reason)
                             <div class="card-subject">
-                                @php
-                                    $remark = $application->reason->reason_desc;
-                                    $trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
-                                @endphp
-                                Reason: {{ $trimmedremark }}
+                                Reason: {{  $application->trimmedremark }}
                             </div>
                         @else
                             <div class="card-subject">
@@ -111,23 +104,21 @@
 {{--                        @endif--}}
                     </div>
                     <div class="card-footer text-body-secondary">
-                        {{--                            @if ($application->statuses->first()->pivot->status_id != 0 && $application->statuses->first()->pivot->status_id != 4)--}}
+{{--                            @if ($application->statuses->first()->pivot->status_id != 0 && $application->statuses->first()->pivot->status_id != 4)--}}
                         <div class="float-start">
                             <form action="{{ route('applications.show', ['application' => $application]) }}" method="GET">
                                 <button type="submit" class="btn btn-outline-primary" name="submit" value="Details">Details</button>
                             </form>
                         </div>
-                        {{--                            @endif--}}
-                        @if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && ($application->created_by == auth()->user()->id)&&
-                        ($application->statuses->isEmpty() || $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(1) || $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0)))
+{{--                            @endif--}}
+                        @if($application->allowEdit == true)
                             <div class="float-end">
                                 <form action="{{ route('applications.edit', ['application' => $application]) }}" method="GET">
                                     <button type="submit" class="btn btn-outline-warning">EDIT</button>
                                 </form>
                             </div>
                         @endif
-                        @if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) &&
-                            $application->statuses->first() && $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(4) && $application->reply=='')
+                        @if($application->allowFinalReply == true)
                             <div class="float-end">
                                 <form action="{{ route('applications.show', ['application' => $application]) }}" method="GET">
                                     <button type="submit" class="btn btn-outline-warning" name="submit" value="final reply">Final Reply</button>

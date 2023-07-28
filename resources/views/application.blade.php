@@ -19,28 +19,21 @@
     {{--        alert("{{ session('error') }}");--}}
     {{--    </script>--}}
     {{--@endif--}}
-    @php
-        $statuses = $app->statuses()
-            ->whereIn('application_status.active', [0, 1])
-            ->whereNotNull('remarks')
-            ->get();
-    @endphp
 
-    @if ($statuses->isNotEmpty())
+
+    @if (isset($statuses) && $statuses->isNotEmpty())
         <div class="card text-white bg-info mb-3">
             <div class="card-header">Note:</div>
             <div class="card-body">
                 @foreach ($statuses as $status)
-                    @php
-                        $user = \App\Models\User::findorfail($status->pivot->created_by);
-                    @endphp
                     <p class="card-text">
-                        {{ $user ? $user->username : 'N/A' }} - {{ $status->pivot->remarks }}
+                        {{ $status->user ? $status->user->username : 'N/A' }} - {{ $status->pivot->remarks }}
                     </p>
                 @endforeach
             </div>
         </div>
     @endif
+
 
 
 
@@ -423,13 +416,14 @@
 
                         <div class="row">
                             <span id="file-status"></span>
-                            @if($app->statuses->isEmpty() || $app->statuses->first()->pivot->status_id ==0 )
+                            @if($allowDraft)
                                 <div class="col-6" style="text-align: right">
                                     <input type="submit" class="btn btn-outline-warning" name="submit" value="Draft"></div>
                                 <div class="col-6" style="text-align: left">
                                     <input type="submit" class="btn btn-outline-success" name="submit" value="Forward">
                                 </div>
-                            @else
+                            @endif
+                            @if($allowOnlyForward)
                                 <div style="text-align: center">
                                     <input type="submit" class="btn btn-outline-success" name="submit" value="Forward">
                                 </div>

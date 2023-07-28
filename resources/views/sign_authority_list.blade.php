@@ -69,7 +69,7 @@
                         <div class="row"></div>
                         <hr>
                         <div class="row"></div>
-                        @if (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) && auth()->user()->sign_id == $authority->id )
+                        @if ($allowSeeSign )
                             <div class ="row">
                                 <div class="col-6">
                                     @if($authority->Sign_path)

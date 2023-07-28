@@ -207,10 +207,10 @@
                 <br>
                 <div class="centered">
                     <div class="note">
-                        Note:- You may use <a href="https://helpline.rb.nic.in" style="text-decoration: underline;">https://helpline.rb.nic.in</a> for submitting your petition/grievance online.
+                        Note:- You may use <a href="https://helpline.rashtrapatibhavan.gov.in" style="text-decoration: underline;">https://helpline.rashtrapatibhavan.gov.in</a> for submitting your petition/grievance online.
                     </div>
                     <div class="note">
-                        नोट: आप अपनी याचिका दर्ज करने के लिए <a href="https://helpline.rb.nic.in" style="text-decoration: underline;">https://helpline.rb.nic.in</a> का उपयोग कर सकते हैं.
+                        नोट: आप अपनी याचिका दर्ज करने के लिए <a href="https://helpline.rashtrapatibhavan.gov.in" style="text-decoration: underline;">https://helpline.rashtrapatibhavan.gov.in</a> का उपयोग कर सकते हैं.
                     </div>
                 </div>
 
