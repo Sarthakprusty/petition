@@ -35,16 +35,16 @@ class SendEmailListenerFwd implements ShouldQueue
         if (($application->department_org->mail !== null)&&($application->mail_sent == 0 || $application->mail_sent == '' ) && ($application->forwarded_path !== null)) {
 //                    $email = $application->department_org->mail;
             $fname = str_replace('/', '_', $application->reg_no);
-            $email = 'sayantan.saha@gov.in';
-            $cc = [];
-            $cc[] = 'prustysarthak123@gmail.com';
-            $cc[] = 'shantanubaliyan935@gmail.com';
-//                    $email = 'us.petitions@rb.nic.in';
-//                    $cc = [];
-//                    $cc[] = 'sayantan.saha@gov.in';
-//                    $cc[] = 'so-public1@rb.nic.in';
-//                    $cc[] = 'so-public2@rb.nic.in';
-//                    $cc[] = 'prustysarthak123@gmail.com';
+//            $email = 'sayantan.saha@gov.in';
+//            $cc = [];
+//            $cc[] = 'prustysarthak123@gmail.com';
+//            $cc[] = 'shantanubaliyan935@gmail.com';
+                    $email = 'us.petitions@rb.nic.in';
+                    $cc = [];
+                    $cc[] = 'sayantan.saha@gov.in';
+                    $cc[] = 'so-public1@rb.nic.in';
+                    $cc[] = 'so-public2@rb.nic.in';
+                    $cc[] = 'prustysarthak123@gmail.com';
             $subject = $application->reg_no;
             $details = "महोदय / महोदया,<br>
                                     Sir / Madam,<br><br>
@@ -67,8 +67,8 @@ class SendEmailListenerFwd implements ShouldQueue
                 $callback = function ($message) use ($email, $subject, $content, $cc, $file, $fname, $details) {
                     $message->to($email)->cc($cc[0])
                         ->cc($cc[1])
-//                                    ->cc($cc[2])
-//                                    ->cc($cc[3])
+                                    ->cc($cc[2])
+                                    ->cc($cc[3])
                         ->subject($subject)
                         ->html($details)
                         ->attachData($content, $fname . '_forward letter.pdf', [
