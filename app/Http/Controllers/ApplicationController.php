@@ -40,6 +40,7 @@ use Twilio\Rest\Client;
 use App\Models\Status;
 use PhpParser\Node\Stmt\Echo_;
 use Twilio\Http\CurlClient;
+use Illuminate\Support\Facades\Http;
 class ApplicationController extends Controller
 {
     /**
@@ -630,6 +631,8 @@ class ApplicationController extends Controller
                 );
                 $application->authority_id = Auth::user()->sign_id ;
                 $application->save();
+
+
                 if ($application->acknowledgement === 'Y') {
 //                    CURL
                     $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
@@ -649,7 +652,7 @@ class ApplicationController extends Controller
 //                    //server
                     $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
 //                    //local
-////                    $curlHandle = curl_init('http://localhost:8081/getMLPdf');
+//                    $curlHandle = curl_init('http://localhost:8081/getMLPdf');
 //                    //sir
 ////                  $curlHandle = curl_init('http://10.21.160.179:8081/getMLPdf');
 //
@@ -657,7 +660,6 @@ class ApplicationController extends Controller
                     curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
                     $curlResponse = curl_exec($curlHandle);
                     curl_close($curlHandle);
-
                     // Check if the response contains a valid PDF
                     if ($curlResponse && substr($curlResponse, 0, 4) == '%PDF') {
                         // Save the PDF to storage
@@ -670,43 +672,114 @@ class ApplicationController extends Controller
                         }
                     }
                     if (($application->email_id != null)&&($application->ack_mail_sent == 0 || $application->ack_mail_sent == '' )&&($application->acknowledgement_path !==null)){
-//                $email = $application->email_id;
-                    $email = 'us.petitions@rb.nic.in';
-                    $cc = [];
-                    $cc[] = 'sayantan.saha@gov.in';
-                    $cc[] = 'so-public1@rb.nic.in';
-                    $cc[] = 'so-public2@rb.nic.in';
-                    $cc[] = 'prustysarthak123@gmail.com';
-                        $fname = str_replace('/', '_', $application->reg_no);
-//                        $email = 'sayantan.saha@gov.in';
-//                        $cc = [];
-//                        $cc[] = 'prustysarthak123@gmail.com';
-//                        $cc[] = 'shantanubaliyan935@gmail.com';
-                        $subject = 'Reply From Rashtrapati Bhavan';
-                        $details = $application->applicant_title . " " . $application->applicant_name . ",<br><br>
+                        $content = storage::disk('upload')->get(base64_decode($application->acknowledgement_path));
+                        if($content && $content != null){
+                            $base644data=base64_encode($content);
+                            $fname = str_replace('/', '_', $application->reg_no);
+                            $file_name=$fname."_acknowledgement.pdf";
+                            $body = $application->applicant_title . " " . $application->applicant_name . ",<br><br>
                                  Your Petition has been received in Rashtrapati Bhavan with ref no " . $application->reg_no . " and forwarded to " . $application->department_org->org_desc . " for further necessary action.<br><br>
                                     Regards, <br>
                              President's Secretariat<br>";
-                        $content = storage::disk('upload')->get(base64_decode($application->acknowledgement_path));
-                        try {
-                            Mail::send([], [], function ($message) use ($email, $subject, $details, $content, $cc,$fname) {
-                                $message->to($email)->cc($cc[0])
-                                    ->cc($cc[1])
-                                    ->cc($cc[2])
-                                    ->cc($cc[3])
-                                    ->subject($subject)
-                                    ->html($details)
-                                    ->attachData($content, $fname . '_acknowledgement.pdf', [
-                                        'mime' => 'application/pdf',
-                                    ]);
-                            });
-                            $application->ack_mail_sent = 1;
-                            $application->save();
-                        } catch (\Exception $e) {
+//                        $to = $application->email_id;
+                            $to = "us.petitions@rb.nic.in";
+                            $data = [
+                                "From" => "us.petitions@rb.nic.in",
+                                "To" => [$to],
+                                "Cc"=>[
+                                    "sayantan.saha@gov.in",
+                                    "prustysarthak123@gmail.com",
+                                    "so-public1@rb.nic.in",
+                                    "so-public2@rb.nic.in",
+//                                    "us.petitions@rb.nic.in"
+                                ],
+                                "Subject" => "Reply From Rashtrapati Bhavan",
+                                "Body" =>  $body,
+                                "Attachments"=> [
+                                    [
+                                        "AttachmentName"=>$file_name,
+                                        "AttachmentFile"=>$base644data
+                                    ],
+                                ]
+                            ];
+                            if($base644data && $base644data != null) {
+                                $headers = [
+                                    'Authorization: Bearer YourAccessToken',
+                                    'Content-Type: application/json',
+                                    'Custom-Header: Value'
+                                ];
+                                $jsonData = json_encode($data);
+
+                                $apiUrl = 'https://rb.nic.in/emailapi/api/emailsend';
+                                $curl = curl_init();
+                                curl_setopt($curl, CURLOPT_URL, $apiUrl);
+                                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
+                                curl_setopt($curl, CURLOPT_POSTFIELDS, $jsonData);
+                                curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+                                curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+                                curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+
+                                $curlResponse = curl_exec($curl);
+                                $decode_curlResponse=json_decode($curlResponse);
+                                if ($decode_curlResponse == "Email sent successfully") {
+                                    $application->ack_mail_sent = 1;
+                                    $application->save();
+                                }
+                                else {
+//                                    $error = curl_error($curl);
+                                    $application->ack_mail_sent = 0;
+                                    $application->save();
+                                    Log::error('Failed to send ack email: ' . $curlResponse);
+                                }
+                                curl_close($curl);
+                            }
+                            else{
+                                $application->ack_mail_sent = 0;
+                                $application->save();
+                            }
+                        }
+                        else{
                             $application->ack_mail_sent = 0;
                             $application->save();
-                            Log::error('Failed to send ack email: ' . $e->getMessage());
                         }
+
+//                $email = $application->email_id;
+//                    $email = 'us.petitions@rb.nic.in';
+//                    $cc = [];
+//                    $cc[] = 'sayantan.saha@gov.in';
+//                    $cc[] = 'so-public1@rb.nic.in';
+//                    $cc[] = 'so-public2@rb.nic.in';
+//                    $cc[] = 'prustysarthak123@gmail.com';
+//                        $fname = str_replace('/', '_', $application->reg_no);
+////                        $email = 'sayantan.saha@gov.in';
+////                        $cc = [];
+////                        $cc[] = 'prustysarthak123@gmail.com';
+////                        $cc[] = 'shantanubaliyan935@gmail.com';
+//                        $subject = 'Reply From Rashtrapati Bhavan';
+//                        $details = $application->applicant_title . " " . $application->applicant_name . ",<br><br>
+//                                 Your Petition has been received in Rashtrapati Bhavan with ref no " . $application->reg_no . " and forwarded to " . $application->department_org->org_desc . " for further necessary action.<br><br>
+//                                    Regards, <br>
+//                             President's Secretariat<br>";
+//                        $content = storage::disk('upload')->get(base64_decode($application->acknowledgement_path));
+//                        try {
+//                            Mail::send([], [], function ($message) use ($email, $subject, $details, $content, $cc,$fname) {
+//                                $message->to($email)->cc($cc[0])
+//                                    ->cc($cc[1])
+//                                    ->cc($cc[2])
+//                                    ->cc($cc[3])
+//                                    ->subject($subject)
+//                                    ->html($details)
+//                                    ->attachData($content, $fname . '_acknowledgement.pdf', [
+//                                        'mime' => 'application/pdf',
+//                                    ]);
+//                            });
+//                            $application->ack_mail_sent = 1;
+//                            $application->save();
+//                        } catch (\Exception $e) {
+//                            $application->ack_mail_sent = 0;
+//                            $application->save();
+//                            Log::error('Failed to send ack email: ' . $e->getMessage());
+//                        }
                     }
                     if ($application->email_id == null){
                         $application->ack_mail_sent = 0;
@@ -750,21 +823,33 @@ class ApplicationController extends Controller
                             $application->save();
                         }
                     }
+
                     if (($application->department_org->mail !== null)&&($application->mail_sent == 0 || $application->mail_sent == '' ) && ($application->forwarded_path !== null)) {
-//                    $email = $application->department_org->mail;
-                        $fname = str_replace('/', '_', $application->reg_no);
-//                        $email = 'sayantan.saha@gov.in';
-//                        $cc = [];
-//                        $cc[] = 'prustysarthak123@gmail.com';
-//                        $cc[] = 'shantanubaliyan935@gmail.com';
-                    $email = 'us.petitions@rb.nic.in';
-                    $cc = [];
-                    $cc[] = 'sayantan.saha@gov.in';
-                    $cc[] = 'so-public1@rb.nic.in';
-                    $cc[] = 'so-public2@rb.nic.in';
-                    $cc[] = 'prustysarthak123@gmail.com';
-                        $subject = $application->reg_no;
-                        $details = "महोदय / महोदया,<br>
+
+                        $content = storage::disk('upload')->get(base64_decode($application->forwarded_path));
+                        if($content && $content!= null){
+                            $base64co=base64_encode($content);
+                            $fname = str_replace('/', '_', $application->reg_no);
+                            $attachments = [
+                                [
+                                    "AttachmentName" => $fname . "_forward letter.pdf",
+                                    "AttachmentFile" => $base64co,
+                                ],
+                            ];
+
+                            if($application->file_path){
+                                $file = storage::disk('upload')->get(base64_decode($application->file_path));
+                                if($file && $file!= null) {
+                                    $bas64file = base64_encode($file);
+                                    $attachments[] = [
+                                        "AttachmentName" => $fname . "_file.pdf",
+                                        "AttachmentFile" => $bas64file,
+                                    ];
+                                }
+                            }
+
+
+                            $body="महोदय / महोदया,<br>
                                     Sir / Madam,<br><br>
                                     कृपया उपरोक्त विषय पर भारत के राष्ट्रपति जी को संबोधित स्वतः स्पष्ट याचिका उपयुक्त ध्यानाकर्षण के लिए संलग्न है। याचिका पर की गई कार्रवाई की सूचना सीधे याचिकाकर्ता को दे दी जाये।<br>
                                     Attached please find for appropriate attention a petition addressed to the President of India which is self-explanatory. Action taken on the petition may please be communicated to the petitioner directly.<br>
@@ -778,34 +863,116 @@ class ApplicationController extends Controller
                                     President's Secretariat<br>
                                     राष्ट्रपति भवन, नई दिल्ली<br>
                                     Rashtrapati Bhavan, New Delhi";
+                            $subject = $application->reg_no;
+//                        $to = $application->department_org->mail;
+                            $to = "us.petitions@rb.nic.in";
+                            $data = [
+                                "From"=> "us.petitions@rb.nic.in",
+                                "To" => [$to],
+                                "Cc"=>[
+                                    "sayantan.saha@gov.in",
+                                    "so-public1@rb.nic.in",
+                                    "so-public2@rb.nic.in",
+                                    "prustysarthak123@gmail.com"
+//                                    "us.petitions@rb.nic.in"
+                                ],
+                                "Subject" => $subject,
+                                "Body" =>  $body,
+                                "Attachments"=> $attachments,
+                            ];
+                            if($base64co && $base64co != null) {
+                                $headers = [
+                                    'Authorization: Bearer YourAccessToken',
+                                    'Content-Type: application/json',
+                                    'Custom-Header: Value'
+                                ];
+                                $jsonData = json_encode($data);
+                                $apiUrl = 'https://rb.nic.in/emailapi/api/emailsend';
+                                $curl = curl_init();
+                                curl_setopt($curl, CURLOPT_URL, $apiUrl);
+                                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
+                                curl_setopt($curl, CURLOPT_POSTFIELDS, $jsonData);
+                                curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+                                curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+                                curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
 
-                        $content = storage::disk('upload')->get(base64_decode($application->forwarded_path));
-                        $file = storage::disk('upload')->get(base64_decode($application->file_path));
-                        try {
-                            $callback = function ($message) use ($email, $subject, $content, $cc, $file, $fname, $details) {
-                                $message->to($email)->cc($cc[0])
-                                    ->cc($cc[1])
-                                    ->cc($cc[2])
-                                    ->cc($cc[3])
-                                    ->subject($subject)
-                                    ->html($details)
-                                    ->attachData($content, $fname . '_forward letter.pdf', [
-                                        'mime' => 'application/pdf',
-                                    ]);
-                                if (!empty($file)) {
-                                    $message->attachData($file, $fname . '_file.pdf', [
-                                        'mime' => 'application/pdf',
-                                    ]);
+                                $curlResponse = curl_exec($curl);
+                                $decode_curlResponse=json_decode($curlResponse);
+                                if ($decode_curlResponse == "Email sent successfully") {
+                                    $application->mail_sent = 1;
+                                    $application->save();
                                 }
-                            };
-                            Mail::send([], [], $callback);
-                            $application->mail_sent = 1;
-                            $application->save();
-                        } catch (\Exception $e) {
+                                else {
+                                    $application->mail_sent = 0;
+                                    $application->save();
+                                    Log::error('Failed to send forward email: ' . $curlResponse);
+                                }
+                                curl_close($curl);
+                            }
+                            else{
+                                $application->mail_sent = 0;
+                                $application->save();
+                            }
+                        }
+                        else{
                             $application->mail_sent = 0;
                             $application->save();
-                            Log::error('Failed to send fwd email: ' . $e->getMessage());
                         }
+//                    $email = $application->department_org->mail;
+//                        $fname = str_replace('/', '_', $application->reg_no);
+////                        $email = 'sayantan.saha@gov.in';
+////                        $cc = [];
+////                        $cc[] = 'prustysarthak123@gmail.com';
+////                        $cc[] = 'shantanubaliyan935@gmail.com';
+//                    $email = 'us.petitions@rb.nic.in';
+//                    $cc = [];
+//                    $cc[] = 'sayantan.saha@gov.in';
+//                    $cc[] = 'so-public1@rb.nic.in';
+//                    $cc[] = 'so-public2@rb.nic.in';
+//                    $cc[] = 'prustysarthak123@gmail.com';
+//                        $subject = $application->reg_no;
+//                        $details = "महोदय / महोदया,<br>
+//                                    Sir / Madam,<br><br>
+//                                    कृपया उपरोक्त विषय पर भारत के राष्ट्रपति जी को संबोधित स्वतः स्पष्ट याचिका उपयुक्त ध्यानाकर्षण के लिए संलग्न है। याचिका पर की गई कार्रवाई की सूचना सीधे याचिकाकर्ता को दे दी जाये।<br>
+//                                    Attached please find for appropriate attention a petition addressed to the President of India which is self-explanatory. Action taken on the petition may please be communicated to the petitioner directly.<br>
+//                                    सादर,<br>
+//                                    regards,<br><br>
+//                                    ($name)<br>
+//                                    ($name_hin)<br>
+//                                    अवर सचिव<br>
+//                                    Under Secretary<br>
+//                                    राष्ट्रपति सचिवालय<br>
+//                                    President's Secretariat<br>
+//                                    राष्ट्रपति भवन, नई दिल्ली<br>
+//                                    Rashtrapati Bhavan, New Delhi";
+//
+//                        $content = storage::disk('upload')->get(base64_decode($application->forwarded_path));
+//                        $file = storage::disk('upload')->get(base64_decode($application->file_path));
+//                        try {
+//                            $callback = function ($message) use ($email, $subject, $content, $cc, $file, $fname, $details) {
+//                                $message->to($email)->cc($cc[0])
+//                                    ->cc($cc[1])
+//                                    ->cc($cc[2])
+//                                    ->cc($cc[3])
+//                                    ->subject($subject)
+//                                    ->html($details)
+//                                    ->attachData($content, $fname . '_forward letter.pdf', [
+//                                        'mime' => 'application/pdf',
+//                                    ]);
+//                                if (!empty($file)) {
+//                                    $message->attachData($file, $fname . '_file.pdf', [
+//                                        'mime' => 'application/pdf',
+//                                    ]);
+//                                }
+//                            };
+//                            Mail::send([], [], $callback);
+//                            $application->mail_sent = 1;
+//                            $application->save();
+//                        } catch (\Exception $e) {
+//                            $application->mail_sent = 0;
+//                            $application->save();
+//                            Log::error('Failed to send fwd email: ' . $e->getMessage());
+//                        }
 
                     }
                     if ($application->department_org->mail == null){
@@ -839,7 +1006,6 @@ class ApplicationController extends Controller
                 return redirect(url(route('applications.index')))->with('success', 'Status created successfully.');
             }
         }
-
         else {
             return redirect()->back()->with('error', 'role not found');
         }
