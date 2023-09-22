@@ -198,7 +198,7 @@
 
     <div class="container" style="width: 90%">
         <div class="row">
-            @if ((isset($_GET['submit']) && $_GET['submit'] === 'Details' && $noteblock) || (isset($_GET['submit']) && $_GET['submit'] === 'final reply' && $finalreplyblock))
+            @if ((isset($_GET['submit']) && $_GET['submit'] === 'Details' && $noteblock) || (isset($_GET['submit']) && $_GET['submit'] === 'final reply' && $finalreplyblock) || (isset($_GET['submit']) && $_GET['submit'] === 'Details' && $signbutton))
                 <div class="col-md-9">
                     @endif
 
@@ -456,31 +456,51 @@
                     </form>
                 </div>
 
-            @elseif (isset($_GET['submit']) && $_GET['submit'] === 'final reply' && $finalreplyblock)
+                @elseif (isset($_GET['submit']) && $_GET['submit'] === 'Details' && $signbutton)
                     </div>
                         <div class="col-md-3">
-                    <form method="POST" action="{{route('applications.store')}}" >
-                        @csrf
-                        @if(isset($app->id))
-                            <input type="hidden" value="{{$app->id}}" name="id" >
-                        @endif
-                        <div class="wrapper wrapper-content project-manager">
-                            <div class="spacing" style="margin-top: 3%;"></div>
-                            <strong><label style="font-size: 130%" for="reply">Final Reply:</label></strong>
-                            <div class="spacing" style="margin-top: 2%;"></div>
-                            <div class="spacing" style="margin-top: 2%;"></div>
-                            <div class="row" style="margin-left: 0%; margin-right: 1.5%;">
-                                <textarea class="form-control" id="reply" name="reply" style="height: 200px;" placeholder="abc....">{{ old('reply') }}</textarea>
-                            </div>
+                            <div class="wrapper wrapper-content project-manager">
+                                <div class="spacing" style="margin-top: 3%;"></div>
+                                <strong><label style="font-size: 130%" for="remarks">Note:</label></strong>
 
-                            <div class="row">
-                                <div style="text-align: center">
-                                    <input style="padding: 5% 10%" type="submit" class="button" name="submit" value="Submit">
+                                <div class="spacing" style="margin-top: 2%;"></div>
+                                <div class="row" style="margin-left: 0%; margin-right: 1.5%;">
+                                    You haven't inserted any signature yet Or System doesn't have your signature, in order to Approve or Reject kindly insert Your Signature and Basic details by clicking this button down below.
+                                </div>
+                                <div class="row">
+                                    <div class="col-2"></div>
+                                    <div class="col-6" style="text-align: right" >
+                                        <a href="{{ route('authority.create') }}" class="button">Sign</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </form>
+
+            @elseif (isset($_GET['submit']) && $_GET['submit'] === 'final reply' && $finalreplyblock)
                 </div>
+                    <div class="col-md-3">
+                        <form method="POST" action="{{route('applications.store')}}" >
+                            @csrf
+                            @if(isset($app->id))
+                                <input type="hidden" value="{{$app->id}}" name="id" >
+                            @endif
+                            <div class="wrapper wrapper-content project-manager">
+                                <div class="spacing" style="margin-top: 3%;"></div>
+                                <strong><label style="font-size: 130%" for="reply">Final Reply:</label></strong>
+                                <div class="spacing" style="margin-top: 2%;"></div>
+                                <div class="spacing" style="margin-top: 2%;"></div>
+                                <div class="row" style="margin-left: 0%; margin-right: 1.5%;">
+                                    <textarea class="form-control" id="reply" name="reply" style="height: 200px;" placeholder="abc....">{{ old('reply') }}</textarea>
+                                </div>
+
+                                <div class="row">
+                                    <div style="text-align: center">
+                                        <input style="padding: 5% 10%" type="submit" class="button" name="submit" value="Submit">
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
             @endif
 
 

@@ -59,7 +59,7 @@
                                 <i class="fs-4 bi-search"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Search</span>
                             </a>
                         </li>
-                        @if (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) && auth()->user()->sign_id != null)
+                        @if (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) && auth()->user()->sign_id != null && Auth::user()->authority && Auth::user()->authority->Sign_path && Auth::user()->authority->Sign_path!=null)
 
                                 <br>
                                 <li>
@@ -68,7 +68,7 @@
                                     </a>
                                 </li>
                             @endif
-                        @if (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) && auth()->user()->sign_id == null)
+                        @if (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) && auth()->user()->sign_id == null && (!Auth::user()->authority || !Auth::user()->authority->Sign_path || Auth::user()->authority->Sign_path==null))
                                 <br>
                                 <li>
                                     <a href="{{route('authority.create')}}" >

@@ -608,7 +608,21 @@ class ApplicationController extends Controller
 
 
         if ((in_array(3, $role_ids)) && ($allowUS)) {
-            if ($action == 'Approve') {
+            if(Auth::user()->authority && Auth::user()->authority->Sign_path && Auth::user()->authority->Sign_path!=null){
+            $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
+                try{
+                    $imageData = file_get_contents($imagePath);
+                }
+                catch (\Exception $e) {
+                    Log::error('Failed to get signature:' . $e->getMessage());
+                    return redirect(url(route('authority.create')));
+                }
+            }
+            else{
+                return redirect(url(route('authority.create')));
+            }
+
+            if ($action == 'Approve' && $imageData) {
                 $status = $application->statuses()->wherePivot('active', 1)->get();
                 $application->statuses()->updateExistingPivot(
                     $status,
@@ -671,6 +685,9 @@ class ApplicationController extends Controller
                             $application->save();
                         }
                     }
+//                    else
+//                        Log::error('pdf service down' . $curlResponse);
+
                     if (($application->email_id != null)&&($application->ack_mail_sent == 0 || $application->ack_mail_sent == '' )&&($application->acknowledgement_path !==null)){
                         $content = storage::disk('upload')->get(base64_decode($application->acknowledgement_path));
                         if($content && $content != null){
@@ -681,8 +698,8 @@ class ApplicationController extends Controller
                                  Your Petition has been received in Rashtrapati Bhavan with ref no " . $application->reg_no . " and forwarded to " . $application->department_org->org_desc . " for further necessary action.<br><br>
                                     Regards, <br>
                              President's Secretariat<br>";
-//                        $to = $application->email_id;
-                            $to = "us.petitions@rb.nic.in";
+                            $to = $application->email_id;
+//                            $to = "us.petitions@rb.nic.in";
                             $data = [
                                 "From" => "us.petitions@rb.nic.in",
                                 "To" => [$to],
@@ -823,6 +840,8 @@ class ApplicationController extends Controller
                             $application->save();
                         }
                     }
+//                    else
+//                        Log::error('pdf service down' . $curlResponse);
 
                     if (($application->department_org->mail !== null)&&($application->mail_sent == 0 || $application->mail_sent == '' ) && ($application->forwarded_path !== null)) {
 
@@ -1005,11 +1024,14 @@ class ApplicationController extends Controller
                 );
                 return redirect(url(route('applications.index')))->with('success', 'Status created successfully.');
             }
+
+            else {
+                return redirect()->back()->with('error', 'approve not working');
+            }
         }
         else {
             return redirect()->back()->with('error', 'role not found');
         }
-        return redirect()->back()->with('error', 'something got wrong while updating');
     }
 
     /**
@@ -1248,7 +1270,7 @@ class ApplicationController extends Controller
         else{
             $notecheck = false;}
 
-        if ((auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && $app->statuses->first() && ($app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))) || (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3))){
+        if ((auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && $app->statuses->first() && ($app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))) || (auth()->check() && auth()->user()->roles->pluck('id')->contains(3)&& Auth::user()->authority && Auth::user()->authority->Sign_path && Auth::user()->authority->Sign_path!=null && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3))){
             $noteblock=true;}
         else{
             $noteblock=false;}
@@ -1260,6 +1282,10 @@ class ApplicationController extends Controller
             $hasActiveStatusFive = true;}
         else{
             $hasActiveStatusFive = false;}
+        if (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3) && (!Auth::user()->authority || !Auth::user()->authority->Sign_path || Auth::user()->authority->Sign_path==null)){
+            $signbutton=true;}
+        else{
+            $signbutton=false;}
 
         $statuses = $app->statuses()
             ->whereIn('application_status.active', [0, 1])
@@ -1267,7 +1293,7 @@ class ApplicationController extends Controller
             ->get();
         foreach ($statuses as $status)
             $status->user = User::findorfail($status->pivot->created_by);
-        return view('application_view', compact('app', 'noteblock', 'finalreplyblock', 'notecheck', 'statuses', 'hasActiveStatusFive'));
+        return view('application_view', compact('app', 'noteblock', 'signbutton','finalreplyblock', 'notecheck', 'statuses', 'hasActiveStatusFive'));
     }
 
     /**
