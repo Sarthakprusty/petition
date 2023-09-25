@@ -69,7 +69,7 @@ class SignAuthorityController extends Controller
         $signAuthority->created_from = $request->ip();
 
         if ($request->input('submit') == 'Save') {
-            SignAuthority::where('created_by', auth()->user()->id)
+            SignAuthority::where('created_by', auth()->user()->id)->where('active',1)
                 ->update([
                     'active' => 0,
                     'to_date' => Carbon::now()->toDateString(),
@@ -116,6 +116,26 @@ class SignAuthorityController extends Controller
             return response()->json(['code' => 404, 'msg' => 'Details not found'], 404);
         }
     }
+
+
+    public function removeOnly(Request $request)
+    {
+        SignAuthority::where('created_by', auth()->user()->id)->where('active',1)
+            ->update([
+                'active' => 0,
+                'to_date' => Carbon::now()->toDateString(),
+                'deleted_at' => Carbon::now()->toDateTimeLocalString(),
+                'last_updated_by' =>Auth::user()->id,
+                'last_updated_from'=>$request->ip()
+            ]);
+
+        $user = Auth::user();
+        $user->sign_id = null;
+        $user->save();
+        return redirect(url(route('authority.create')))->with('success', 'sign removed successfully.');
+
+    }
+
 
     /**
      * Display the specified resource.

@@ -224,8 +224,8 @@
                             </div>
                         </div>
                     @endif
-                <div class="ibox-content">
-                    <div class="row">
+                    <div class="card shadow">
+                    <div class="ibox-content">
                         <div class="col-lg-12">
                             <div class="m-b-md">
                                 <div class="row">
@@ -235,7 +235,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+
                     <div class="spacing" style="margin-top: 2%;"></div>
                     <div class="row">
                         <div class="col-lg-5">
@@ -430,7 +430,7 @@
                         </div>
                     </div>
                 </div>
-
+                    </div>
             @if (isset($_GET['submit']) && $_GET['submit'] === 'Details' && $noteblock)
                 </div>
                 <div class="col-md-3">

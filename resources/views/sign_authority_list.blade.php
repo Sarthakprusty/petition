@@ -1,14 +1,19 @@
 @extends('layout')
 
 @section('content')
-    {{--    <div class="row">--}}
-    {{--        <div class="col-md-8">--}}
-    {{--            <h3 class="display-3">--}}
-    {{--                Authority--}}
-    {{--            </h3>--}}
-    {{--        </div>--}}
-    {{--    </div>--}}
-    <div class="row" style="padding-right: 68%;" >
+        <div class="row">
+            <div class="col-md-8">
+                <h3 class="display-3">
+                    Authority
+                    <a href="{{ route('authority.create') }}" class="btn btn-primary">
+                        <i class="bi bi-pencil-square"> New Authority?</i>
+                    </a>
+                </h3>
+            </div>
+        </div>
+        <hr class="row-divider">
+
+        <div class="row" style="padding-right: 68%;" >
         <div class="container" style="width: 90%; margin-bottom: 10%" >
             <style>
                 body {
@@ -37,6 +42,8 @@
                     margin-top: 2rem !important;
                 }
             </style>
+
+
             <section class="mx-auto my-5" style="max-width: 23rem;">
 
                 <div class="card testimonial-card mt-2 mb-3">
@@ -80,8 +87,8 @@
                                 </div>
                                 <div class="col-6">
                                     {{--                            <form action="{{ route('authority.edit', ['authority' => $authority]) }}" method="GET">--}}
-                                    <form action="{{ route('authority.create') }}" method="GET">
-                                        <button type="submit" class="btn btn-outline-danger" style="font-size: 88%"><i class="bi bi-pencil-square">Delete/New</i></button>
+                                    <form action="{{ route('authority.remove') }}" method="post">@csrf
+                                        <button type="submit" class="btn btn-outline-danger" style="font-size: 97%;">Delete sign</button>
                                     </form>
                                 </div>
                             </div>
