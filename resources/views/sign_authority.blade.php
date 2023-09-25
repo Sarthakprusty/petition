@@ -79,7 +79,7 @@
                     @if($signAuthority->Sign_path!='')
                         <div class="row">
                             <div class="col-6" style="text-align: right">
-                                <a href="/api/signFile/{{$signAuthority->Sign_path}}" target="_blank">
+                                <a href="{{url('/api/signFile/'.$signAuthority->Sign_path)}}" target="_blank">
                                     <button type="button" class="btn btn-outline-primary">View sign</button>
                                 </a>
                             </div>

@@ -421,7 +421,7 @@
                                 <span class="float-start" style="font-weight: bold">File</span>
                                 @if($app->file_path)
                                     <span class="float-end" style="text-align: right;text-decoration: underline;color: #1d00ff">
-                                        <a href="/api/getFile/{{$app->file_path}}" target="_blank">
+                                        <a href="{{url('/api/getFile/'.$app->file_path)}}" target="_blank">
                                           View File
                                         </a>
                                     </span>
