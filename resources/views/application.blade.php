@@ -386,7 +386,7 @@
                         @if($app->file_path)
                             <div class="row">
                                 <div class="col-6" style="text-align: right">
-                                    <a href="/api/getFile/{{$app->file_path}}" target="_blank">
+                                    <a href="{{url('/api/getFile/'.$app->file_path)}}" target="_blank">
                                         <button type="button" class="btn btn-outline-primary">View File</button>
                                     </a>
                                 </div>
