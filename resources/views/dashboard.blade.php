@@ -94,7 +94,7 @@
                             <div class ='mb-3'>
                                 <label for="org" class="form-label">Choose Organization</label>
                                     <select class="form-control" id="organization" name="organization">
-                                        <option value="">Select an Organization</option>
+                                        <option value="">-ALL-</option>
                                         @foreach($organizations as $organization)
                                             @if(in_array($organization->id, $org_id))
                                                 <option value="{{ $organization->id }}">{{ $organization->org_desc }}</option>

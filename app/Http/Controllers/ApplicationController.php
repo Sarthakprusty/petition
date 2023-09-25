@@ -131,7 +131,8 @@ class ApplicationController extends Controller
             }
         }
         if ($request->organization && $request->organization != '') {
-            $org_id=  $request->organization ;
+            $org_id=[] ;
+            $org_id[]=  $request->organization ;
         }
         if ($request->status !== null && $request->status != '') {
             $qr=  [$request->status] ;
@@ -145,7 +146,7 @@ class ApplicationController extends Controller
                 $query->select('users.id')
                     ->from('users')
                     ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
-                    ->where('user_organization.org_id', $org_id);
+                    ->wherein('user_organization.org_id', $org_id);
             })
             ->whereHas('statuses', function ($query)use ($qr) {
                 $query->wherein('status_id', $qr)
@@ -1159,16 +1160,20 @@ class ApplicationController extends Controller
 
         $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
         $org="All";
+
         if ($request->organization && $request->organization != '') {
             $org_id=  $request->organization ;
             $org =Organization::find($org_id)->org_desc;
+            $org_id=  [] ;
+            $org_id[]=$request->organization;
         }
+
 
         $applicationStatusCounts = Application::where('applications.active', 1)
             ->whereIn('applications.created_by', function ($query) use ($org_id) {
                 $query->select('user_organization.user_id')
                     ->from('user_organization')
-                    ->where('user_organization.org_id', $org_id);
+                    ->wherein('user_organization.org_id', $org_id);
             })
             ->withCount([
                 'statuses as pending_with_dh' => function ($query) {
