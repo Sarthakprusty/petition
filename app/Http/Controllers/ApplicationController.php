@@ -134,6 +134,7 @@ class ApplicationController extends Controller
             $org_id=[] ;
             $org_id[]=  $request->organization ;
         }
+
         if ($request->status !== null && $request->status != '') {
             $qr=  [$request->status] ;
         }
@@ -1160,12 +1161,14 @@ class ApplicationController extends Controller
 
         $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
         $org="All";
+        $org_idclick=[];
 
         if ($request->organization && $request->organization != '') {
             $org_id=  $request->organization ;
             $org =Organization::find($org_id)->org_desc;
             $org_id=  [] ;
             $org_id[]=$request->organization;
+            $org_idclick[]=$request->organization;
         }
 
 
@@ -1213,7 +1216,7 @@ class ApplicationController extends Controller
         else{
             $allowfilter = false;
         }
-        return view('dashboard', compact('in_draft', 'pending_with_dh', 'pending_with_so', 'pending_with_us', 'approved', 'submitted','org','allowfilter','organizations','org_id'));
+        return view('dashboard', compact('in_draft', 'pending_with_dh', 'pending_with_so', 'pending_with_us', 'approved', 'submitted','org','allowfilter','organizations','org_id','org_idclick'));
     }
 
     /**

@@ -17,6 +17,9 @@
 
     <div class="row"></div>
     <form method="get" action="{{route('application.search')}}">
+        @if(isset($org_idclick))
+            <input type="hidden" value="{{ implode(',', $org_idclick) }}" name="organization" >
+        @endif
     <div class="row" id="pageContent" >
         <div class="col col-md-4" style="padding: 2%; ">
             <a href="#" onclick="submitForm(0)">
