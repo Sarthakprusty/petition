@@ -103,7 +103,7 @@
                 <br><br><br>
 
                 <div class="row" style="padding-left: 84%">
-                    <img src='/api/signFile/{{$application->authority->Sign_path}}' style='width: 100px;' />
+                    <img src="{{url('/api/signFile/'.$application->authority->Sign_path)}}" style='width: 100px;' />
                 </div>
 
 

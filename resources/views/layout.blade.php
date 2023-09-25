@@ -263,13 +263,13 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="appdttxtfrom" class="form-label">From Date</label>
+                                    <label for="appdttxtfrom" class="form-label">From Date<span style="color: red;" class="required">*</span></label>
                                     <input type="date" class="form-control" id="appdttxtfrom" name="app_date_from" placeholder="Search By Application Date" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="appdttxtto" class="form-label">To Date</label>
+                                    <label for="appdttxtto" class="form-label">To Date<span style="color: red;" class="required">*</span></label>
                                     <input type="date" class="form-control" id="appdttxtto" name="app_date_to" placeholder="Search By Application Date" required>
                                 </div>
                             </div>
@@ -357,13 +357,13 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="appdttxtfrom" class="form-label">From Date</label>
+                                    <label for="appdttxtfrom" class="form-label">From Date<span style="color: red;" class="required">*</span></label>
                                     <input type="date" class="form-control" id="appdttxtfrom" name="app_date_from" placeholder="Search By Application Date" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="appdttxtto" class="form-label">To date</label>
+                                    <label for="appdttxtto" class="form-label">To date<span style="color: red;" class="required">*</span></label>
                                     <input type="date" class="form-control" id="appdttxtto" name="app_date_to" placeholder="Search By Application Date" required>
                                 </div>
                             </div>
