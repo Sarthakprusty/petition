@@ -2,13 +2,15 @@
 
 @section('content')
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-md-3">
                 <h3 class="display-3">
                     Authority
-                    <a href="{{ route('authority.create') }}" class="btn btn-primary">
-                        <i class="bi bi-pencil-square"> New Authority?</i>
-                    </a>
                 </h3>
+            </div>
+            <div class="col-md-4" style="margin-top: 4%">
+            <form action="{{ route('authority.create') }}" method="GET">
+                <button type="submit" class="btn btn-outline-primary" name="submit" value="New Authority"><i class="bi bi-pencil-square"> New Authority?</i></button>
+            </form>
             </div>
         </div>
         <hr class="row-divider">

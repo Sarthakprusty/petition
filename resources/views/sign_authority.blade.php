@@ -13,6 +13,15 @@
     @endif
     <div class="card shadow" xmlns="http://www.w3.org/1999/html">
         <div class="card-body">
+            <div class="row">
+                <div class="col-md-2"></div>
+            <div class="col-md-10">
+                @if (isset($_GET['submit']) && $_GET['submit'] === 'New Authority' )
+                    <i class="bi bi-info-circle"> Click <b>'Save'</b> button to replace the existed signature with a new one.</i>
+                @endif
+            </div>
+            </div>
+
             <form method="POST" action="{{route('authority.store')}}" enctype="multipart/form-data">
                 @csrf
                 <div class="row"></div>
