@@ -235,9 +235,13 @@ class ApplicationController extends Controller
     {
 //        $errors = ['error' => 'Sorry, something went wrong.'];
 //        return back()->withErrors($errors);
-
+        $app = new Application();
+        if(isset($request->id) && $request->id){
+            $app = Application::find($request->id);
+        }
         if($request->language_of_letter!='O'){
             if ($request->input('submit') == 'Forward') {
+//                $validatedData=$request->validate([
                 $request->validate([
                     'reg_no'=>'nullable',
                     'applicant_title'=>'nullable',
@@ -264,15 +268,13 @@ class ApplicationController extends Controller
                     'department_org_id' => 'required_if:action_org,==,F,S|nullable|numeric',
                     'remarks'=>'nullable',
                     'reply'=>'nullable',
-                    'file_path' => 'file|mimes:pdf|max:2048',
-
+                    'file_path' => $app->file_path && $app->file_path != null ? 'nullable|file|mimes:pdf|max:20480' : 'required|file|mimes:pdf|max:20480',
                 ]);
+//                if(!$validatedData)
+//                    return back()->with('error',$validatedData);
             }}
 
-        $app = new Application();
-        if(isset($request->id) && $request->id){
-            $app = Application::find($request->id);
-        }
+
         $app->applicant_title = $request->applicant_title;
         $app->applicant_name = $request->applicant_name;
         $app->address = $request->address;
@@ -610,7 +612,8 @@ class ApplicationController extends Controller
 
 
         if ((in_array(3, $role_ids)) && ($allowUS)) {
-            if(Auth::user()->authority && Auth::user()->authority->Sign_path && Auth::user()->authority->Sign_path!=null){
+
+                if(Auth::user()->authority && Auth::user()->authority->Sign_path && Auth::user()->authority->Sign_path!=null){
             $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
                 try{
                     $imageData = file_get_contents($imagePath);
@@ -702,16 +705,20 @@ class ApplicationController extends Controller
                              President's Secretariat<br>";
                             $to = $application->email_id;
 //                            $to = "us.petitions@rb.nic.in";
+
+                            $cc=[];
+                            $cc[]="sayantan.saha@gov.in";
+                            $cc[]="prustysarthak123@gmail.com";
+                            $cc[]="us.petitions@rb.nic.in";
+                            if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(174))
+                                $cc[]="so-public1@rb.nic.in";
+                            if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(175))
+                                $cc[]="so-public2@rb.nic.in";
+
                             $data = [
                                 "From" => "us.petitions@rb.nic.in",
                                 "To" => [$to],
-                                "Cc"=>[
-                                    "sayantan.saha@gov.in",
-                                    "prustysarthak123@gmail.com",
-                                    "so-public1@rb.nic.in",
-                                    "so-public2@rb.nic.in",
-//                                    "us.petitions@rb.nic.in"
-                                ],
+                                "Cc"=>$cc,
                                 "Subject" => "Reply From Rashtrapati Bhavan",
                                 "Body" =>  $body,
                                 "Attachments"=> [
@@ -887,16 +894,19 @@ class ApplicationController extends Controller
                             $subject = $application->reg_no;
 //                        $to = $application->department_org->mail;
                             $to = "us.petitions@rb.nic.in";
+
+                            $cc=[];
+                            $cc[]="sayantan.saha@gov.in";
+                            $cc[]="prustysarthak123@gmail.com";
+                            $cc[]="us.petitions@rb.nic.in";
+                            if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(174))
+                                $cc[]="so-public1@rb.nic.in";
+                            if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(175))
+                                $cc[]="so-public2@rb.nic.in";
                             $data = [
                                 "From"=> "us.petitions@rb.nic.in",
                                 "To" => [$to],
-                                "Cc"=>[
-                                    "sayantan.saha@gov.in",
-                                    "so-public1@rb.nic.in",
-                                    "so-public2@rb.nic.in",
-                                    "prustysarthak123@gmail.com"
-//                                    "us.petitions@rb.nic.in"
-                                ],
+                                "Cc"=>$cc,
                                 "Subject" => $subject,
                                 "Body" =>  $body,
                                 "Attachments"=> $attachments,

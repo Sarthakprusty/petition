@@ -434,7 +434,7 @@
             @if (isset($_GET['submit']) && $_GET['submit'] === 'Details' && $noteblock)
                 </div>
                 <div class="col-md-3">
-                    <form method="post" action="{{ route('applications.updateStatus', ['application_id' => $app->id]) }}">
+                    <form method="post" action="{{ route('applications.updateStatus', ['application_id' => $app->id]) }}" id="submitstatusform">
                         @csrf
                         <div class="wrapper wrapper-content project-manager">
                             <div class="spacing" style="margin-top: 3%;"></div>
@@ -446,10 +446,10 @@
                             </div>
                             <div class="row">
                                 <div class="col-6" style="text-align: right">
-                                    <input type="submit" class="button" name="submit" value="Approve">
+                                    <button type="submit" class="button" name="submit" value="Approve" onclick="return confirm('Are you sure, You want to Approve this petition?')">Approve</button>
                                 </div>
                                 <div class="col-6" style="text-align: left">
-                                    <input type="submit" class="buttonRed" name="submit" value="Return">
+                                    <button type="submit" class="buttonRed" name="submit" value="Return" onclick="return confirm('Are you sure, You want to Reject this petition?')">Return</button>
                                 </div>
                             </div>
                         </div>
@@ -479,7 +479,7 @@
             @elseif (isset($_GET['submit']) && $_GET['submit'] === 'final reply' && $finalreplyblock)
                 </div>
                     <div class="col-md-3">
-                        <form method="POST" action="{{route('applications.store')}}" >
+                        <form method="POST" action="{{route('applications.store')}}" id="submitForm">
                             @csrf
                             @if(isset($app->id))
                                 <input type="hidden" value="{{$app->id}}" name="id" >
@@ -495,7 +495,7 @@
 
                                 <div class="row">
                                     <div style="text-align: center">
-                                        <input style="padding: 5% 10%" type="submit" class="button" name="submit" value="Submit">
+                                        <button type="submit" class="button" style="padding: 5% 10%" name="submit" value="Submit" onclick="return confirm('Are you sure,you want to Submit Final Reply? it cannot be changed again.')">Submit Reply</button>
                                     </div>
                                 </div>
                             </div>

@@ -57,7 +57,7 @@
     <div class="row"></div>
     <div class="card shadow" xmlns="http://www.w3.org/1999/html">
         <div class="card-body">
-            <form method="POST" action="{{route('applications.store')}}" enctype="multipart/form-data">
+            <form method="POST" action="{{route('applications.store')}}" enctype="multipart/form-data" >
                 @csrf
                 <div>
                     <div>
@@ -68,11 +68,11 @@
                         </div>
                         <div class="row">
                             <div class="col-md-3" style="text-align: right">
-                                <label class="form-label">Language of Letter:<span style="color: red;">*</span></label>
+                                <label class="form-label" >Language of Letter:<span style="color: red;">*</span></label>
                             </div>
                             <div class="col">
                                 <label class="form-check-label">
-                                    <input type="radio" name="language_of_letter" value="E" id="language_of_letter_english" {{ $app->language_of_letter === 'E' || old('language_of_letter') === 'E' ? 'checked' : '' }}>
+                                    <input type="radio" name="language_of_letter" value="E" id="language_of_letter_english" {{ $app->language_of_letter === 'E' || old('language_of_letter') === 'E' ? 'checked' : '' }} required>
                                     English
                                 </label>
                                 <label class="form-check-label">
@@ -91,7 +91,7 @@
                             <div class="col-md-3" style="text-align: right"><label class="form-label">Name:<span style="color: red;" class="required">*</span></label></div>
                             <div class="col">
                                 <div class="input-group">
-                                    <select class="form-control col-md-1" name="applicant_title" id="applicant_title">
+                                    <select class="form-control col-md-1" name="applicant_title" id="applicant_title" >
                                         <option value="">-Title-</option>
                                         <option value="Shri" {{ (old('applicant_title') ?: $app->applicant_title) === "Shri" ? 'selected' : '' }}>Shri</option>
                                         <option value="Smt" {{ (old('applicant_title') ?: $app->applicant_title) === "Smt" ? 'selected' : '' }}>Shrimati</option>
@@ -173,6 +173,7 @@
                                     <input type="radio" name="gender" value="O" id="gender_other" {{ $app->gender === 'O' || old('gender') === 'O' ? 'checked' : '' }}>
                                     Other
                                 </label>
+{{--                                <span class="text-danger">@error('gender'){{$message}}@enderror</span>--}}
                             </div>
                             <div class="col-md-3" style="text-align: right">
                                 <label class="form-label" for="mobile_no" >Mobile number:</label>
@@ -372,7 +373,7 @@
                                 </div>
                             </div>
 
-                            <div class="row">
+                        <div class="row">
                             <div class="col-md-3" style="text-align: right">
                                 <label class="form-label" for="remarks">Remarks:</label>
                             </div>
@@ -387,27 +388,43 @@
                             <div class="row">
                                 <div class="col-6" style="text-align: right">
                                     <a href="{{url('/api/getFile/'.$app->file_path)}}" target="_blank">
-                                        <button type="button" class="btn btn-outline-primary">View File</button>
+                                        <button type="button" class="btn btn-outline-primary">View old File</button>
                                     </a>
                                 </div>
                                 <div class="col-6" >
                                     <div class="input-group">
                                         <div class="custom-file">
-                                            <input type="file" class="custom-file-input" id="file_path" name="file_path" accept=".pdf">(.pdf)(max-2MB)
+                                            <input type="file" class="custom-file-input" id="file_path" name="file_path" accept=".pdf">(.pdf)(max-20MB)
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                                <div class="row">
+                                    <div class="col-6" style="padding-left: 32.8%">
+                                        <button type="button" class="btn btn-outline-primary" id="openFileButton" onclick="openSelectedFile()" style="display: none;">Open Selected File</button>
+                                    </div>
+                                    <div class="col-6" >
+                                        <button type="button" class="btn btn-outline-danger" id="removeFileButton" onclick="removeSelectedFile()" style="display: none;">Remove selected File</button>
+                                    </div>
+                                </div>
                         @else
                             <div class="row">
                                 <div class="col-md-6 offset-md-4" style="margin-left: 38%">
                                     <div class="input-group">
                                         <div class="custom-file">
-                                            <input type="file" class="custom-file-input" id="file_path" name="file_path" accept=".pdf"> (.pdf)(max-2MB)
+                                            <input type="file" class="custom-file-input" id="file_path" name="file_path" accept=".pdf" required> (.pdf)(max-2MB)
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                                <div class="row">
+                                    <div class="col-6" style="padding-left: 32.8%">
+                                        <button type="button" class="btn btn-outline-primary" id="openFileButton" onclick="openSelectedFile()" style="display: none;">Open Selected File</button>
+                                    </div>
+                                    <div class="col-6" >
+                                        <button type="button" class="btn btn-outline-danger" id="removeFileButton" onclick="removeSelectedFile()" style="display: none;">Remove selected File</button>
+                                    </div>
+                                </div>
                         @endif
 
                         <hr class="row-divider">
@@ -419,24 +436,74 @@
                             @if($allowDraft)
                                 <div class="col-6" style="text-align: right">
                                     <input type="submit" class="btn btn-outline-warning" name="submit" value="Draft"></div>
-                                <div class="col-6" style="text-align: left">
-                                    <input type="submit" class="btn btn-outline-success" name="submit" value="Forward">
+                                <div class="col-6" style="text-align: left" >
+                                    <button type="submit" class="btn btn-outline-success" name="submit" value="Forward" onclick="return confirm('Are you sure,you want to forward?')">Forward</button>
                                 </div>
                             @endif
                             @if($allowOnlyForward)
-                                <div style="text-align: center">
-                                    <input type="submit" class="btn btn-outline-success" name="submit" value="Forward">
+                                <div style="text-align: center" >
+                                    <button type="submit" class="btn btn-outline-success" name="submit" value="Forward" onclick="return confirm('Are you sure,you want to forward?')">Forward</button>
                                 </div>
                             @endif
                         </div>
-
-
                     </div>
                 </div>
             </form>
         </div>
         <script>
-            // calender
+
+            //open and remove file
+                function openSelectedFile() {
+                // Get the file input element
+                var fileInput = document.getElementById('file_path');
+
+                // Check if a file has been selected
+                if (fileInput.files.length > 0) {
+                var selectedFile = fileInput.files[0];
+
+                // Check if the selected file is a PDF (you can add more file type checks)
+                if (selectedFile.type === 'application/pdf') {
+                // Construct the URL to open the file
+                var fileURL = URL.createObjectURL(selectedFile);
+
+                // Open the file in a new tab
+                window.open(fileURL, '_blank');
+            } else {
+                alert('Please select a PDF file.');
+            }
+            } else {
+                alert('Please select a file first.');
+            }
+            }
+                function removeSelectedFile() {
+                    // Get the file input element
+                    var fileInput = document.getElementById('file_path');
+
+                    // Clear the selected file by setting its value to an empty string
+                    fileInput.value = '';
+
+                    // Hide both the "Open Selected File" and "Remove File" buttons
+                    var openFileButton = document.getElementById('openFileButton');
+                    var removeFileButton = document.getElementById('removeFileButton');
+                    openFileButton.style.display = 'none';
+                    removeFileButton.style.display = 'none';
+                }
+                // Add an event listener to show the button when a file is selected
+                var fileInput = document.getElementById('file_path');
+                fileInput.addEventListener('change', function () {
+                    var openFileButton = document.getElementById('openFileButton');
+                    var removeFileButton = document.getElementById('removeFileButton');
+                    if (fileInput.files.length > 0) {
+                        openFileButton.style.display = 'block';
+                        removeFileButton.style.display = 'block';
+                    } else {
+                        openFileButton.style.display = 'none';
+                        removeFileButton.style.display = 'none';
+                    }
+                });
+
+
+        // calender
             $(function() {
                 var today = new Date().toISOString().split('T')[0];
                 $(".datepicker").attr('max', today);
@@ -516,6 +583,7 @@
                     $('input[required]').removeAttr('required');
                     $('select[required]').removeAttr('required');
                     $('textarea[required]').removeAttr('required');
+                    $('file[required]').removeAttr('required');
                 }
 
                 function enableRequiredFields() {
@@ -532,6 +600,12 @@
                     });
 
                     $('textarea[data-required]').each(function() {
+                        if ($(this).data('required')) {
+                            $(this).attr('required', 'required');
+                        }
+                    });
+
+                    $('file[data-required]').each(function() {
                         if ($(this).data('required')) {
                             $(this).attr('required', 'required');
                         }
@@ -685,14 +759,14 @@
             // Function to toggle fields based on the selected language
             function toggleFields() {
                 if ($('input[name="language_of_letter"]:checked').val() === 'O') {
-                    $('#applicant_title').removeAttr('required');
+                    // $('#applicant_title').removeAttr('required');
                     $('#applicant_name').removeAttr('required');
                     $('#address').removeAttr('required');
                     $('#country').removeAttr('required');
                     $('#letter_subject').removeAttr('required');
                     $('.required').hide();
                 } else {
-                    $('#applicant_title').attr('required', 'required');
+                    // $('#applicant_title').attr('required', 'required');
                     $('#applicant_name').attr('required', 'required');
                     $('#address').attr('required', 'required');
                     $('#country').attr('required', 'required');
@@ -700,7 +774,37 @@
                     $('.required').show();
                 }
             }
+            // $(document).ready(function () {
+            //     // When the "Forward" button is clicked
+            //     $('#forwardButton').click(function () {
+            //         // Show a SweetAlert confirmation dialog
+            //         Swal.fire({
+            //             title: 'Are you sure?',
+            //             text: 'You are about to forward this form.',
+            //             icon: 'warning',
+            //             showCancelButton: true,
+            //             confirmButtonColor: '#3085d6',
+            //             cancelButtonColor: '#d33',
+            //             confirmButtonText: 'Yes, forward it!'
+            //         }).then((result) => {
+            //             if (result.isConfirmed) {
+            //                 $('#forwardButtonactual').click();
+            //             }
+            //         });
+            //     });
+            // });
 
+            // //confirmation for submit
+            // $(document).ready(function () {
+            //     // When the "Forward" button is clicked
+            //     $('#forwardButton').click(function () {
+            //         // Show a confirmation dialog
+            //         if (confirm('Are you sure you want to Forward?')) {
+            //             // User confirmed, submit the form
+            //             $('#forwardForm').submit();
+            //         }
+            //     });
+            // });
         </script>
     </div>
 @endsection
