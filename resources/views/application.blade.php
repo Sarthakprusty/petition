@@ -412,7 +412,7 @@
                                 <div class="col-md-6 offset-md-4" style="margin-left: 38%">
                                     <div class="input-group">
                                         <div class="custom-file">
-                                            <input type="file" class="custom-file-input" id="file_path" name="file_path" accept=".pdf" required> (.pdf)(max-2MB)
+                                            <input type="file" class="custom-file-input" id="file_path" name="file_path" accept=".pdf" required> (.pdf)(max-20MB)
                                         </div>
                                     </div>
                                 </div>
