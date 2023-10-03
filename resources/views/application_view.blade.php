@@ -251,11 +251,8 @@
                             <div class="col-lg-5">
                             <dl class="dl-horizontal">
                                 <dt style="text-decoration: underline; color: black;">Status</dt><dd>
-                                @if($app->reg_no)
                                     <span class="label label-primary">{{ $app->statuses()->where('application_status.active', 1)->first()?->status_desc ?? '' }}</span></dd>
-                                @else
                                     <br>
-                                @endif
                             </dl>
                         </div>
                     </div>
@@ -418,10 +415,30 @@
                                 <span class="float-end" style="text-align: right">{{$app->remarks}}</span>
                             </div>
                             <div class="list-group-item">
-                                <span class="float-start" style="font-weight: bold">File</span>
+                                <span class="float-start" style="font-weight: bold"> PetitionFile</span>
                                 @if($app->file_path)
                                     <span class="float-end" style="text-align: right;text-decoration: underline;color: #1d00ff">
                                         <a href="{{url('/api/getFile/'.$app->file_path)}}" target="_blank">
+                                          View File
+                                        </a>
+                                    </span>
+                                @endif
+                            </div>
+                            <div class="list-group-item">
+                                <span class="float-start" style="font-weight: bold">Acknowledgement File</span>
+                                @if($app->acknowledgement_path)
+                                    <span class="float-end" style="text-align: right;text-decoration: underline;color: #1d00ff">
+                                        <a href="{{url('/api/getFile/'.$app->acknowledgement_path)}}" target="_blank">
+                                          View File
+                                        </a>
+                                    </span>
+                                @endif
+                            </div>
+                            <div class="list-group-item">
+                                <span class="float-start" style="font-weight: bold">Forwarded File</span>
+                                @if($app->forwarded_path)
+                                    <span class="float-end" style="text-align: right;text-decoration: underline;color: #1d00ff">
+                                        <a href="{{url('/api/getFile/'.$app->forwarded_path)}}" target="_blank">
                                           View File
                                         </a>
                                     </span>

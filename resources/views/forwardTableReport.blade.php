@@ -43,7 +43,7 @@
             <div>Following Requests/Grievances addressed to the President of India are being forwarded to <strong>{{$name}}</strong> during the peroid from <strong>{{$date_from}}</strong> To <strong> {{$date_to}}</strong> for appropriate attention. Kindly expedite disposal/status report to the petitioner:
             </div>
         </div>
-<br>
+    <br>
         <div class="centered">
         <table class="table table-bordered">
             <thead>

@@ -32,8 +32,10 @@ Route::group(['middleware' => ['web']], function () {
     Route::get('applications/{id}/acknowledgement', [ApplicationController::class, 'generateAcknowledgementLetter'])->name('application.acknowledgement')->middleware('auth');
     Route::get('applications/{id}/forwarded', [ApplicationController::class, 'generateForwardLetter'])->name('application.forward')->middleware('auth');
     Route::post('applications/{application_id}/update-status', [ApplicationController::class, 'updateStatus'])->name('applications.updateStatus')->middleware('auth');
+    Route::post('applications/update-print', [ApplicationController::class, 'updatePrint'])->name('applications.updatePrint')->middleware('auth');
 
-   // Route::get('/application/search', 'ApplicationController@search')->name('application.search');
+
+    // Route::get('/application/search', 'ApplicationController@search')->name('application.search');
 
 
     Route::resource('applications', ApplicationController::class)->middleware('auth');

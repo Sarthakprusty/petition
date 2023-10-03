@@ -293,16 +293,30 @@ class ApplicationController extends Controller
         $app->letter_subject = $request->letter_subject;
         $app->letter_body = $request->letter_body;
         $app->acknowledgement=$request->acknowledgement;
+        if($request->acknowledgement && $request->acknowledgement=="Y"){
+            if(($request->email_id && $request->email_id !== null)&& ($app->email_id && $app->email_id !== null) )
+                $app->ack_mail_sent="R";
+            else
+                $app->ack_mail_sent="NR";
+            $app->ack_offline_post="R";
+        }else{
+            $app->ack_mail_sent="NR";
+            $app->ack_offline_post="NR";
+        }
         $app->grievance_category_id = $request->grievance_category_id;
         $app->action_org = $request->action_org;
         $app->remarks=$request->remarks;
         if($request->department_org_id && $request->reason_id==null) {
             $app->department_org_id = $request->department_org_id;
             $app->reason_id = null;
+            $app->fwd_mail_sent="R";
+            $app->fwd_offline_post="R";
         }
         if($request->reason_id && $request->department_org_id==null) {
             $app->department_org_id = null;
             $app->reason_id = $request->reason_id;
+            $app->fwd_mail_sent="NR";
+            $app->fwd_offline_post="NR";
         }
 
 
@@ -613,8 +627,8 @@ class ApplicationController extends Controller
 
         if ((in_array(3, $role_ids)) && ($allowUS)) {
 
-                if(Auth::user()->authority && Auth::user()->authority->Sign_path && Auth::user()->authority->Sign_path!=null){
-            $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
+            if(Auth::user()->authority && Auth::user()->authority->Sign_path && Auth::user()->authority->Sign_path!=null){
+                $imagePath = Storage::disk('upload')->path(base64_decode(Auth::user()->authority->Sign_path));
                 try{
                     $imageData = file_get_contents($imagePath);
                 }
@@ -693,7 +707,7 @@ class ApplicationController extends Controller
 //                    else
 //                        Log::error('pdf service down' . $curlResponse);
 
-                    if (($application->email_id != null)&&($application->ack_mail_sent == 0 || $application->ack_mail_sent == '' )&&($application->acknowledgement_path !==null)){
+                    if (($application->email_id != null)&&( $application->ack_mail_sent == "R" )&&($application->acknowledgement_path !==null)){
                         $content = storage::disk('upload')->get(base64_decode($application->acknowledgement_path));
                         if($content && $content != null){
                             $base644data=base64_encode($content);
@@ -748,24 +762,25 @@ class ApplicationController extends Controller
                                 $curlResponse = curl_exec($curl);
                                 $decode_curlResponse=json_decode($curlResponse);
                                 if ($decode_curlResponse == "Email sent successfully") {
-                                    $application->ack_mail_sent = 1;
+                                    $application->ack_mail_sent = "T";
+                                    $application->ack_offline_post = "F";
                                     $application->save();
                                 }
                                 else {
 //                                    $error = curl_error($curl);
-                                    $application->ack_mail_sent = 0;
+                                    $application->ack_mail_sent = "F";
                                     $application->save();
                                     Log::error('Failed to send ack email: ' . $curlResponse);
                                 }
                                 curl_close($curl);
                             }
                             else{
-                                $application->ack_mail_sent = 0;
+                                $application->ack_mail_sent = "F";
                                 $application->save();
                             }
                         }
                         else{
-                            $application->ack_mail_sent = 0;
+                            $application->ack_mail_sent = "F";
                             $application->save();
                         }
 
@@ -799,16 +814,17 @@ class ApplicationController extends Controller
 //                                        'mime' => 'application/pdf',
 //                                    ]);
 //                            });
-//                            $application->ack_mail_sent = 1;
+//                            $application->ack_mail_sent = "T";
+//                            $application->ack_offline_post = "F";
 //                            $application->save();
 //                        } catch (\Exception $e) {
-//                            $application->ack_mail_sent = 0;
+//                            $application->ack_mail_sent = "F";
 //                            $application->save();
 //                            Log::error('Failed to send ack email: ' . $e->getMessage());
 //                        }
                     }
                     if ($application->email_id == null){
-                        $application->ack_mail_sent = 0;
+                        $application->ack_mail_sent = "F";
                         $application->save();
                     }
                 }
@@ -852,7 +868,7 @@ class ApplicationController extends Controller
 //                    else
 //                        Log::error('pdf service down' . $curlResponse);
 
-                    if (($application->department_org->mail !== null)&&($application->mail_sent == 0 || $application->mail_sent == '' ) && ($application->forwarded_path !== null)) {
+                    if (($application->department_org->mail !== null)&&($application->fwd_mail_sent == "R" ) && ($application->forwarded_path !== null) && ($application->file_path)) {
 
                         $content = storage::disk('upload')->get(base64_decode($application->forwarded_path));
                         if($content && $content!= null){
@@ -930,23 +946,24 @@ class ApplicationController extends Controller
                                 $curlResponse = curl_exec($curl);
                                 $decode_curlResponse=json_decode($curlResponse);
                                 if ($decode_curlResponse == "Email sent successfully") {
-                                    $application->mail_sent = 1;
+                                    $application->fwd_mail_sent = "T";
+                                    $application->fwd_offline_post = "F";
                                     $application->save();
                                 }
                                 else {
-                                    $application->mail_sent = 0;
+                                    $application->fwd_mail_sent = "F";
                                     $application->save();
                                     Log::error('Failed to send forward email: ' . $curlResponse);
                                 }
                                 curl_close($curl);
                             }
                             else{
-                                $application->mail_sent = 0;
+                                $application->fwd_mail_sent = "F";
                                 $application->save();
                             }
                         }
                         else{
-                            $application->mail_sent = 0;
+                            $application->fwd_mail_sent = "F";
                             $application->save();
                         }
 //                    $email = $application->department_org->mail;
@@ -997,17 +1014,18 @@ class ApplicationController extends Controller
 //                                }
 //                            };
 //                            Mail::send([], [], $callback);
-//                            $application->mail_sent = 1;
+//                            $application->fwd_mail_sent = "T";
+//                            $application->fwd_offline_post = "F";
 //                            $application->save();
 //                        } catch (\Exception $e) {
-//                            $application->mail_sent = 0;
+//                            $application->fwd_mail_sent = "F";
 //                            $application->save();
 //                            Log::error('Failed to send fwd email: ' . $e->getMessage());
 //                        }
 
                     }
                     if ($application->department_org->mail == null){
-                        $application->mail_sent = 0;
+                        $application->fwd_mail_sent = "F";
                         $application->save();
                     }
                 }
@@ -1046,65 +1064,93 @@ class ApplicationController extends Controller
         }
     }
 
+
+    public function updatePrint(Request $request)
+    {
+        $applications = Application::find($request->input('selectedId'));
+        foreach ($applications as $application){
+            if($request->letter=='Acknowledgement Letter'){
+                $application->ack_offline_post = 'T';
+                $application->save();
+            }
+            elseif ($request->letter=='Forward Letter'){
+                $application->fwd_offline_post = 'T';
+                $application->save();
+            }
+        }
+        if($request->letter=='Acknowledgement Letter')
+            return view('acknowledgementprint', compact('applications'));
+        elseif($request->letter=='Forward Letter')
+            return view('forwardprint', compact('applications'));
+
+        return back()->withErrors([
+            'username' => 'Sorry, something got wrong',
+        ])->withInput();
+    }
+
     /**
      * table or letter genration
      */
     public function reportprint(Request $request)
     {
-        $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+        if(auth()->check() && auth()->user()->roles->pluck('id')->contains(1)) {
+            $org_id = auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
 
 //        $organizationIds="";
-        $name="";
-        $organizations = Organization::all();
-        $arr = [];
-        $arr[] = ['active', 1];
-        if ($request->reg_no && $request->reg_no != '') {
-            $arr[] = ['reg_no', 'like', '%' . $request->reg_no . '%'];
-        }
-        if ($request->app_date_from && $request->app_date_from != '') {
-            $arr[] = ['created_at', '>=', $request->app_date_from];
-            $date_from = \Carbon\Carbon::parse($request->app_date_from)->format('d-m-Y');
-        }
-        if ($request->app_date_to && $request->app_date_to != '') {
-            $endDate = (new \DateTime($request->app_date_to))->setTime(23, 59, 59);
-            $arr[] = ['created_at', '<=', $endDate->format('Y-m-d H:i:s')];
-            $date_to = \Carbon\Carbon::parse($request->app_date_to)->format('d-m-Y');
-        }
+            $name = "";
+            $organizations = Organization::all();
+            $arr = [];
+            $arr[] = ['active', 1];
+            if ($request->reg_no && $request->reg_no != '') {
+                $arr[] = ['reg_no', 'like', '%' . $request->reg_no . '%'];
+            }
+            if ($request->app_date_from && $request->app_date_from != '') {
+                $arr[] = ['created_at', '>=', $request->app_date_from];
+                $date_from = \Carbon\Carbon::parse($request->app_date_from)->format('d-m-Y');
+            }
+            if ($request->app_date_to && $request->app_date_to != '') {
+                $endDate = (new \DateTime($request->app_date_to))->setTime(23, 59, 59);
+                $arr[] = ['created_at', '<=', $endDate->format('Y-m-d H:i:s')];
+                $date_to = \Carbon\Carbon::parse($request->app_date_to)->format('d-m-Y');
+            }
 
-        if ($request->orgTypeMin && $request->orgTypeMin != '') {
-            if($request->orgTypeMin=='name'){
-                $arr[] = ['action_org', 'F'];
-                if ($request->orgDescMin && $request->orgDescMin != '') {
-                    $arr[] = ['department_org_id', $request->orgDescMin];
+            if ($request->orgTypeMin && $request->orgTypeMin != '') {
+                if ($request->orgTypeMin == 'name') {
+                    $arr[] = ['action_org', 'F'];
+                    if ($request->orgDescMin && $request->orgDescMin != '') {
+                        $arr[] = ['department_org_id', $request->orgDescMin];
+                    }
+                } elseif ($request->orgTypeMin == 'type') {
+                    $arr[] = ['action_org', 'S'];
+                    if ($request->orgDescStat && $request->orgDescStat != '') {
+                        $arr[] = ['department_org_id', $request->orgDescStat];
+                    }
                 }
             }
-            elseif ($request->orgTypeMin=='type'){
-                $arr[] = ['action_org', 'S'];
-                if ($request->orgDescStat && $request->orgDescStat != '') {
-                    $arr[] = ['department_org_id', $request->orgDescStat];
-                }
-            }
-        }
 
-        if ($request->orgTT && $request->orgTT != '') {
-            if($request->orgTT=='name'){
-                $arr[] = ['action_org', 'F'];
-                if ($request->orgDescMM && $request->orgDescMM != '') {
-                    $arr[] = ['department_org_id', $request->orgDescMM];
-                    $org = Organization::findOrFail($request->orgDescMM);
-                    $name = $org->org_desc;
+            if ($request->orgTT && $request->orgTT != '') {
+                if ($request->orgTT == 'name') {
+                    $arr[] = ['action_org', 'F'];
+                    if ($request->orgDescMM && $request->orgDescMM != '') {
+                        $arr[] = ['department_org_id', $request->orgDescMM];
+                        $org = Organization::findOrFail($request->orgDescMM);
+                        $name = $org->org_desc;
+                    }
+                } elseif ($request->orgTT == 'type') {
+                    $arr[] = ['action_org', 'S'];
+                    if ($request->orgDescSS && $request->orgDescSS != '') {
+                        $arr[] = ['department_org_id', $request->orgDescSS];
+                        $org = Organization::findOrFail($request->orgDescSS);
+                        $name = $org->org_desc;
+                    }
                 }
             }
-            elseif ($request->orgTT=='type'){
-                $arr[] = ['action_org', 'S'];
-                if ($request->orgDescSS && $request->orgDescSS != '') {
-                    $arr[] = ['department_org_id', $request->orgDescSS];
-                    $org = Organization::findOrFail($request->orgDescSS);
-                    $name = $org->org_desc;
-                }
+            if ($request->organization && $request->organization != '') {
+                $org_id = [];
+                $org_id[] = $request->organization;
             }
-        }
-        $us=SignAuthority::where('active',1)->first();
+
+            $us = SignAuthority::where('active', 1)->first();
 
 //        if ($request->state && $request->state != '') {
 //            $state= State::findOrFail($request->state);
@@ -1113,54 +1159,105 @@ class ApplicationController extends Controller
 //            $arr[] = ['department_org_id', $organizationIds];
 //        }
 
-        // Common query parts
-        // Initialize the query builder
-        $query = Application::where($arr)
-            ->whereIn('created_by', function ($query) use ($org_id) {
-                $query->select('users.id')
-                    ->from('users')
-                    ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
-                    ->whereIn('user_organization.org_id', $org_id);
-            })
-            ->whereHas('statuses', function ($query) {
-                $query->whereIn('status_id', [4, 5])
-                    ->where('application_status.active', 1);
-            });
+            $query = Application::where($arr)
+                ->whereIn('created_by', function ($query) use ($org_id) {
+                    $query->select('users.id')
+                        ->from('users')
+                        ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
+                        ->whereIn('user_organization.org_id', $org_id);
+                })
+                ->whereHas('statuses', function ($query) {
+                    $query->whereIn('status_id', [4, 5])
+                        ->where('application_status.active', 1);
+                });
 
 // Add additional conditions based on the 'submit' value
-        switch ($request->input('submit')) {
-            case 'acknowledgement':
-                $query->where('acknowledgement', 'Y')
+            switch ($request->input('submit')) {
+
+                case 'acknowledgement':
+                    $query->where('acknowledgement', 'Y')
 //                    ->where('acknowledgement_path', '!=', null)
-                    ->when($request->filled('mail') && $request->mail == 'filtered', function ($query) {
-                        return $query->whereIn('ack_mail_sent', [null, 0]);
-                    });
-                $applications = $query->get();
-                return view('acknowledgementprint', compact('applications'));
+                        ->when($request->filled('mail') && $request->mail == 'mailed', function ($query) {
+                            return $query->where('ack_mail_sent', "T")
+                                ->where('ack_offline_post', "NR");
+                        })
+                        ->when($request->filled('mail') && $request->mail == 'Pending', function ($query) {
+                            return $query->where('ack_mail_sent', "F")
+                                ->where('ack_offline_post', "R");
+                        })
+                        ->when($request->filled('mail') && $request->mail == 'Offline', function ($query) {
+                            return $query->where('ack_mail_sent', "F")
+                                ->where('ack_offline_post', "T");
+                        });
+//                    ->when($request->filled('mail') && $request->mail == 'none', function ($query) use (&$offlineAapplications) {
+//                        $offlineAapplications = $query->Where(function ($query) {
+//                            $query->where('ack_mail_sent', "F")
+//                                ->where('ack_offline_post', "R");
+//                        });
+//                        return $query;
+//                    });
+                    $applications = $query->get();
+//                if ((($request->filled('mail') && $request->mail == 'Pending')) || ($offlineAapplications && $offlineAapplications!==null)) {
+                    if (($request->filled('mail') && $request->mail == 'Pending')) {
+                        $letter = 'Acknowledgement Letter';
+                        return view('printList', compact('applications', 'letter'));
+                    } else {
+                        return view('acknowledgementprint', compact('applications'));
+                    }
 
-            case 'Forward':
-                $query->whereIn('action_org', ['S', 'F'])
+                case 'Forward':
+                    $query->whereIn('action_org', ['S', 'F'])
 //                    ->where('forwarded_path', '!=', null)
-                    ->when($request->filled('mail') && $request->mail == 'filtered', function ($query) {
-                        return $query->whereIn('mail_sent', [null, 0]);
-                    });
-                $applications = $query->get();
-                return view('forwardprint', compact('applications'));
+                        ->when($request->filled('mail') && $request->mail == 'mailed', function ($query) {
+                            return $query->where('fwd_mail_sent', "T")
+                                ->where('fwd_offline_post', "NR");
+                        })
+                        ->when($request->filled('mail') && $request->mail == 'Pending', function ($query) {
+                            return $query->where('fwd_mail_sent', "F")
+                                ->where('fwd_offline_post', "R");
+                        })
+                        ->when($request->filled('mail') && $request->mail == 'Offline', function ($query) {
+                            return $query->where('fwd_mail_sent', "F")
+                                ->where('fwd_offline_post', "T");
+                        });
+//                    ->when($request->filled('mail') && $request->mail == 'none', function ($query) use (&$offlineFapplications) {
+//                        $offlineFapplications = $query->Where(function ($query) {
+//                            $query->where('fwd_mail_sent', "F")
+//                                ->where('fwd_offline_post', "R");
+//                        });
+//                        return $query;
+//                    });
 
-            case 'forwardTable':
-                $query->where('department_org_id', '!=', null);
-                $applications = $query->get();
-                return view('forwardTableReport', compact('applications', 'organizations', 'date_from', 'date_to', 'name','us'));
+                    $applications = $query->get();
 
-            case 'final_Reply':
-                $query->where('reply', '!=', null);
-                $applications = $query->get();
-                return view('finalReplyReport', compact('applications', 'organizations', 'date_from', 'date_to', 'name','us'));
+//                if ((($request->filled('mail') && $request->mail == 'Pending')) || ($offlineFapplications && $offlineFapplications!==null)) {
+                    if (($request->filled('mail') && $request->mail == 'Pending')) {
+                        $letter = 'Forward Letter';
+                        return view('printList', compact('applications', 'letter'));
+                    } else {
+                        return view('forwardprint', compact('applications'));
+                    }
 
-            default:
-                // Handle the default case if needed
+                case 'forwardTable':
+                    $query->where('department_org_id', '!=', null);
+                    $applications = $query->get();
+                    return view('forwardTableReport', compact('applications', 'organizations', 'date_from', 'date_to', 'name', 'us'));
+
+                case 'final_Reply':
+                    $query->where('reply', '!=', null);
+                    $applications = $query->get();
+                    return view('finalReplyReport', compact('applications', 'organizations', 'date_from', 'date_to', 'name', 'us'));
+
+                default:
+                    // Handle the default case if needed
+            }
+            return back()->withErrors([
+                'username' => 'Sorry, something got wrong',
+            ])->withInput();
         }
-
+        return back()->withErrors([
+            'username' => 'Sorry, user not allowed',
+        ])->withInput();
     }
 
     /**
@@ -1207,8 +1304,28 @@ class ApplicationController extends Controller
                 'statuses as submitted' => function ($query) {
                     $query->where('application_status.status_id', 5)->where('application_status.active', 1);
                 },
+
             ])
             ->get();
+
+        $applicationMailCount = Application::where('applications.active', 1)
+            ->whereIn('applications.created_by', function ($query) use ($org_id) {
+                $query->select('user_organization.user_id')
+                    ->from('user_organization')
+                    ->wherein('user_organization.org_id', $org_id);
+            })->whereHas('statuses', function ($query) {
+                $query->wherein('status_id', [4,5])
+                    ->where('application_status.active', 1);
+            })->selectRaw('
+                    SUM(CASE WHEN fwd_mail_sent = "T" AND fwd_offline_post = "NR" THEN 1 ELSE 0 END) as fwdMailSent,
+                    SUM(CASE WHEN fwd_mail_sent = "F" AND fwd_offline_post = "R" THEN 1 ELSE 0 END) as fwdPending,
+                    SUM(CASE WHEN fwd_mail_sent = "F" AND fwd_offline_post = "T" THEN 1 ELSE 0 END) as fwdPostDispatch,
+                    SUM(CASE WHEN ack_mail_sent = "T" AND ack_offline_post = "NR" THEN 1 ELSE 0 END) as ackMailSent,
+                    SUM(CASE WHEN ack_mail_sent = "F" AND ack_offline_post = "R" THEN 1 ELSE 0 END) as ackPending,
+                    SUM(CASE WHEN ack_mail_sent = "F" AND ack_offline_post = "T" THEN 1 ELSE 0 END) as ackPostDispatch
+                ')
+            ->get();
+
 
         $pending_with_dh = $applicationStatusCounts->sum('pending_with_dh');
         $pending_with_so = $applicationStatusCounts->sum('pending_with_so');
@@ -1216,6 +1333,14 @@ class ApplicationController extends Controller
         $in_draft = $applicationStatusCounts->sum('in_draft');
         $approved = $applicationStatusCounts->sum('approved');
         $submitted = $applicationStatusCounts->sum('submitted');
+
+        $fwdMailSent = $applicationMailCount->pluck('fwdMailSent')->first();
+        $fwdPending = $applicationMailCount->pluck('fwdPending')->first();
+        $fwdDispatched = $applicationMailCount->pluck('fwdPostDispatch')->first();
+        $ackMailSent = $applicationMailCount->pluck('ackMailSent')->first();
+        $ackPending = $applicationMailCount->pluck('ackPending')->first();
+        $ackDispatched = $applicationMailCount->pluck('ackPostDispatch')->first();
+
 
         $organizations = Organization::all();
         $org_id = auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray();
@@ -1226,7 +1351,7 @@ class ApplicationController extends Controller
         else{
             $allowfilter = false;
         }
-        return view('dashboard', compact('in_draft', 'pending_with_dh', 'pending_with_so', 'pending_with_us', 'approved', 'submitted','org','allowfilter','organizations','org_id','org_idclick'));
+        return view('dashboard', compact('ackMailSent','ackPending','ackDispatched','fwdMailSent','fwdPending','fwdDispatched','in_draft', 'pending_with_dh', 'pending_with_so', 'pending_with_us', 'approved', 'submitted','org','allowfilter','organizations','org_id','org_idclick'));
     }
 
     /**
@@ -1244,9 +1369,6 @@ class ApplicationController extends Controller
             return response()->json(['code' => 404, 'msg' => 'Details not found'], 404);
         }
     }
-
-
-
 
 
     /**
@@ -1345,26 +1467,6 @@ class ApplicationController extends Controller
             }
         }
     }
-
-
-
-
-//    public function generateAcknowledgementLetter($id)
-//    {
-//        $application = Application::findOrFail($id);
-//        return view('acknowledgementletter',compact('application',));
-//    }
-//
-//    public function generateForwardLetter($id)
-//    {
-//
-//        $application = Application::findOrFail($id);
-//        return view('forwardedletter',compact('application',));
-//    }
-
-
-
-
 
 
 //ProcessApplicationJob::dispatch($application, $action, $remarks); // <-- Pass $remarks here

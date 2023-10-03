@@ -285,8 +285,10 @@
                             <div class="mb-3">
                                 <label class="form-label" for="mail">Mail:</label>
                                 <select class="form-control" name="mail">
-                                    <option id="mail" value="all" selected>All</option>
-                                    <option id="mail" value="filtered">Not Mailed</option>
+{{--                                    <option id="mail" value="none" selected>select option</option>--}}
+                                    <option id="mail" value="mailed">Mailed</option>
+                                    <option id="mail" value="Pending" selected>Pending</option>
+                                    <option id="mail" value="Offline">Offline post</option>
                                 </select>
                             </div>
                         </div>
