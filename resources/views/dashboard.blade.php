@@ -111,7 +111,8 @@
                 @if(isset($org_idclick))
                     <input type="hidden" value="{{ implode(',', $org_idclick) }}" name="organization" >
                 @endif
-                <div class="col col-md-4" style="padding: 2%; ">
+                    <input type="hidden" value="toPrintStatus" name="dashboard" >
+                    <div class="col col-md-4" style="padding: 2%; ">
                     <a href="#" onclick="submitAck('mailed')">
                         <div class="card bg-light mb-3" style="max-width: 18rem;">
                             <div class="card-header">Ack. mailed</div>
@@ -153,7 +154,7 @@
                 @if(isset($org_idclick))
                     <input type="hidden" value="{{ implode(',', $org_idclick) }}" name="organization" >
                 @endif
-
+                    <input type="hidden" value="toPrintStatus" name="dashboard" >
                 <div class="col col-md-4" style="padding: 2%; ">
                     <a href="#" onclick="submitFwd('mailed')">
                         <div class="card bg-light mb-3" style="max-width: 18rem;">

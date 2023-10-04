@@ -763,7 +763,7 @@ class ApplicationController extends Controller
                                 $decode_curlResponse=json_decode($curlResponse);
                                 if ($decode_curlResponse == "Email sent successfully") {
                                     $application->ack_mail_sent = "T";
-                                    $application->ack_offline_post = "F";
+                                    $application->ack_offline_post = "NR";
                                     $application->save();
                                 }
                                 else {
@@ -947,7 +947,7 @@ class ApplicationController extends Controller
                                 $decode_curlResponse=json_decode($curlResponse);
                                 if ($decode_curlResponse == "Email sent successfully") {
                                     $application->fwd_mail_sent = "T";
-                                    $application->fwd_offline_post = "F";
+                                    $application->fwd_offline_post = "NR";
                                     $application->save();
                                 }
                                 else {
@@ -1078,10 +1078,15 @@ class ApplicationController extends Controller
                 $application->save();
             }
         }
-        if($request->letter=='Acknowledgement Letter')
-            return view('acknowledgementprint', compact('applications'));
-        elseif($request->letter=='Forward Letter')
-            return view('forwardprint', compact('applications'));
+        if($request->input('action') === 'open') {
+            if($request->letter=='Acknowledgement Letter')
+                return view('acknowledgementprint', compact('applications'));
+            elseif($request->letter=='Forward Letter')
+                return view('forwardprint', compact('applications'));
+        }
+        if($request->input('action') === 'update'){
+            return redirect()->back()->with('success', 'dispatch Status updated successfully.');
+        }
 
         return back()->withErrors([
             'username' => 'Sorry, something got wrong',
@@ -1188,6 +1193,22 @@ class ApplicationController extends Controller
                         ->when($request->filled('mail') && $request->mail == 'Offline', function ($query) {
                             return $query->where('ack_mail_sent', "F")
                                 ->where('ack_offline_post', "T");
+                        })
+                        ->when($request->filled('mail') && $request->mail == 'all', function ($query) {
+                            return $query->where(function ($query){
+                                    $query->orWhere(function ($query) {
+                                        $query->where('ack_mail_sent', 'T')
+                                            ->where('ack_offline_post', 'NR');
+                                    })
+                                    ->orWhere(function ($query) {
+                                        $query->where('ack_mail_sent', 'F')
+                                            ->where('ack_offline_post', 'R');
+                                    })
+                                    ->orWhere(function ($query) {
+                                        $query->where('ack_mail_sent', 'F')
+                                            ->where('ack_offline_post', 'T');
+                                    });
+                            });
                         });
 //                    ->when($request->filled('mail') && $request->mail == 'none', function ($query) use (&$offlineAapplications) {
 //                        $offlineAapplications = $query->Where(function ($query) {
@@ -1198,7 +1219,13 @@ class ApplicationController extends Controller
 //                    });
                     $applications = $query->get();
 //                if ((($request->filled('mail') && $request->mail == 'Pending')) || ($offlineAapplications && $offlineAapplications!==null)) {
-                    if (($request->filled('mail') && $request->mail == 'Pending')) {
+//                    if (($request->filled('mail') && $request->mail == 'Pending')) {
+//                        $letter = 'Acknowledgement Letter';
+//                        return view('printList', compact('applications', 'letter'));
+//                    } else {
+//                        return view('acknowledgementprint', compact('applications'));
+//                    }
+                    if ($request->dashboard && $request->dashboard=="toPrintStatus" && $request->mail == 'Pending') {
                         $letter = 'Acknowledgement Letter';
                         return view('printList', compact('applications', 'letter'));
                     } else {
@@ -1219,6 +1246,22 @@ class ApplicationController extends Controller
                         ->when($request->filled('mail') && $request->mail == 'Offline', function ($query) {
                             return $query->where('fwd_mail_sent', "F")
                                 ->where('fwd_offline_post', "T");
+                        })
+                        ->when($request->filled('mail') && $request->mail == 'all', function ($query) {
+                            return $query->where(function ($query){
+                                $query->orWhere(function ($query) {
+                                    $query->where('fwd_mail_sent', "T")
+                                        ->where('fwd_offline_post', "NR");
+                                })
+                                    ->orWhere(function ($query) {
+                                        $query->where('fwd_mail_sent', "F")
+                                            ->where('fwd_offline_post', "R");
+                                    })
+                                    ->orWhere(function ($query) {
+                                        $query->where('fwd_mail_sent', "F")
+                                            ->where('fwd_offline_post', "T");
+                                    });
+                            });
                         });
 //                    ->when($request->filled('mail') && $request->mail == 'none', function ($query) use (&$offlineFapplications) {
 //                        $offlineFapplications = $query->Where(function ($query) {
@@ -1231,7 +1274,13 @@ class ApplicationController extends Controller
                     $applications = $query->get();
 
 //                if ((($request->filled('mail') && $request->mail == 'Pending')) || ($offlineFapplications && $offlineFapplications!==null)) {
-                    if (($request->filled('mail') && $request->mail == 'Pending')) {
+//                    if (($request->filled('mail') && $request->mail == 'Pending')) {
+//                        $letter = 'Forward Letter';
+//                        return view('printList', compact('applications', 'letter'));
+//                    } else {
+//                        return view('forwardprint', compact('applications'));
+//                    }
+                    if ($request->dashboard && $request->dashboard=="toPrintStatus" && $request->mail == 'Pending') {
                         $letter = 'Forward Letter';
                         return view('printList', compact('applications', 'letter'));
                     } else {
