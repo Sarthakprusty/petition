@@ -866,7 +866,6 @@ class ApplicationController extends Controller
                         $path = 'applications/' . $application->id . '/' . $fileName;
                         if (Storage::disk('upload')->put($path, $curlResponse)) {
                             $application->forwarded_path = base64_encode($path);
-                            $application->fwd_mail_sent = "F";
                             $application->save();
                         }
                     }
