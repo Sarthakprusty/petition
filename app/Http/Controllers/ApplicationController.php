@@ -866,7 +866,6 @@ class ApplicationController extends Controller
                         $path = 'applications/' . $application->id . '/' . $fileName;
                         if (Storage::disk('upload')->put($path, $curlResponse)) {
                             $application->forwarded_path = base64_encode($path);
-                            $application->fwd_mail_sent = "F";
                             $application->save();
                         }
                     }
@@ -915,8 +914,8 @@ class ApplicationController extends Controller
                                     राष्ट्रपति भवन, नई दिल्ली<br>
                                     Rashtrapati Bhavan, New Delhi";
                             $subject = $application->reg_no;
-//                        $to = $application->department_org->mail;
-                            $to = "us.petitions@rb.nic.in";
+                            $to = $application->department_org->mail;
+//                            $to = "us.petitions@rb.nic.in";
 
                             $cc=[];
                             $cc[]="sayantan.saha@gov.in";
