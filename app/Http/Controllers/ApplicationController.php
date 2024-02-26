@@ -704,8 +704,12 @@ class ApplicationController extends Controller
                             $application->save();
                         }
                     }
-//                    else
-//                        Log::error('pdf service down' . $curlResponse);
+                    else{
+                        Log::error('pdf service down' . $curlResponse);
+                        $application->ack_mail_sent = "F";
+                        $application->save();
+                    }
+
 
                     if (($application->email_id != null)&&( $application->ack_mail_sent == "R" )&&($application->acknowledgement_path !==null)){
                         $content = storage::disk('upload')->get(base64_decode($application->acknowledgement_path));
@@ -862,12 +866,15 @@ class ApplicationController extends Controller
                         $path = 'applications/' . $application->id . '/' . $fileName;
                         if (Storage::disk('upload')->put($path, $curlResponse)) {
                             $application->forwarded_path = base64_encode($path);
+                            $application->fwd_mail_sent = "F";
                             $application->save();
                         }
                     }
-//                    else
-//                        Log::error('pdf service down' . $curlResponse);
-
+                    else{
+                        Log::error('pdf service down' . $curlResponse);
+                        $application->fwd_mail_sent = "F";
+                        $application->save();
+                    }
                     if (($application->department_org->mail !== null)&&($application->fwd_mail_sent == "R" ) && ($application->forwarded_path !== null) && ($application->file_path)) {
 
                         $content = storage::disk('upload')->get(base64_decode($application->forwarded_path));
