@@ -550,7 +550,7 @@
                 if ($('#country').val() !== 'I') {
                     $('#state_id').prop('disabled', true);
                     $('#pincode').prop('disabled', true);
-
+                    $('#state_id, #pincode').hide();
                 }
 
                 // Handle change event of the Country dropdown
@@ -558,11 +558,11 @@
                     if ($(this).val() === 'I') {
                         $('#state_id').prop('disabled', false);
                         $('#pincode').prop('disabled', false);
-
+                        $('#state_id, #pincode').show();
                     } else {
                         $('#state_id').prop('disabled', true);
                         $('#pincode').prop('disabled', true);
-
+                        $('#state_id, #pincode').hide();
                     }
                 });
             });

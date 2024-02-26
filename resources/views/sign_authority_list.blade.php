@@ -51,7 +51,7 @@
                 <div class="card testimonial-card mt-2 mb-3">
                     <div class="card-up aqua-gradient"></div>
                     <div class="avatar mx-auto white">
-                        <img src="https://tse4.mm.bing.net/th?id=OIP.FjSRywv2jSoO2kdlijRZ4gHaHa&pid=Api&P=0&h=180 " class="rounded-circle img-fluid">
+                        <img src="https://wvnpa.org/content/uploads/blank-profile-picture-973460_1280-768x768.png" class="rounded-circle img-fluid">
                     </div>
                     <div class="card-body text-center">
                         <h4 class="card-title font-weight-bold"> @if($authority->name)
