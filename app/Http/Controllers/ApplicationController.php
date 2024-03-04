@@ -730,6 +730,7 @@ class ApplicationController extends Controller
                             $cc[]="us.petitions@rb.nic.in";
                             if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(174))
                                 $cc[]="so-public1@rb.nic.in";
+                            $cc[] = "suman.kumari55@rb.nic.in";
                             if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(175))
                                 $cc[]="so-public2@rb.nic.in";
 
