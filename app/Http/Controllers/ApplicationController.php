@@ -728,12 +728,14 @@ class ApplicationController extends Controller
                             $cc[]="sayantan.saha@gov.in";
                             $cc[]="prustysarthak123@gmail.com";
                             $cc[]="us.petitions@rb.nic.in";
-                            if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(174))
-                                $cc[]="so-public1@rb.nic.in";
-                            $cc[] = "suman.kumari55@rb.nic.in";
-                            if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(175))
-                                $cc[]="so-public2@rb.nic.in";
-
+                            if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(174)) {
+                                $cc[] = "so-public1@rb.nic.in";
+                                $cc[] = "suman.kumari55@rb.nic.in";
+                            }
+                            if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(175)) {
+                                $cc[] = "so-public2@rb.nic.in";
+                                $cc[] = "rakesh.kumar.rb.@nic.in";
+                            }
                             $data = [
                                 "From" => "us.petitions@rb.nic.in",
                                 "To" => [$to],
@@ -915,8 +917,8 @@ class ApplicationController extends Controller
                                     राष्ट्रपति भवन, नई दिल्ली<br>
                                     Rashtrapati Bhavan, New Delhi";
                             $subject = $application->reg_no;
-//                            $to = $application->department_org->mail;
-                            $to = "us.petitions@rb.nic.in";
+                            $to = $application->department_org->mail;
+//                            $to = "us.petitions@rb.nic.in";
                             $cc=[];
                             $cc[]="sayantan.saha@gov.in";
                             $cc[]="prustysarthak123@gmail.com";
@@ -927,6 +929,7 @@ class ApplicationController extends Controller
                             }
                             if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(175)) {
                                 $cc[] = "so-public2@rb.nic.in";
+                                $cc[] = "rakesh.kumar.rb.@nic.in";
                             }
                             $data = [
                                 "From"=> "us.petitions@rb.nic.in",
