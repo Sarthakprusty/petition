@@ -268,7 +268,7 @@ class ApplicationController extends Controller
                     'department_org_id' => 'required_if:action_org,==,F,S|nullable|numeric',
                     'remarks'=>'nullable',
                     'reply'=>'nullable',
-//                    'file_path' => $app->file_path && $app->file_path != null ? 'nullable|file|mimes:pdf|max:20480' : 'required|file|mimes:pdf|max:20480',
+                    'file_path' => $app->file_path && $app->file_path != null ? 'nullable|file|mimes:pdf|max:20480' : 'required|file|mimes:pdf|max:20480',
                 ]);
 //                if(!$validatedData)
 //                    return back()->with('error',$validatedData);

@@ -452,6 +452,13 @@
         </div>
         <script>
 
+            $('input[name=gender]').click(function() {
+                if (this.previous) {
+                    this.checked = false;
+                }
+                this.previous = this.checked;
+            });
+
             //open and remove file
                 function openSelectedFile() {
                 // Get the file input element
