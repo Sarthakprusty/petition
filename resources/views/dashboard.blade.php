@@ -110,7 +110,7 @@
             <form method="get" action="{{route('application.indDetails')}}">
                 <div class="row">
                     <div class="col-md-12">
-                        <div class="card shadow text-white bg-warning mb-3">
+                        <div class="card shadow mb-3">
                             <div class="card-body">
                                 <table class="table">
                                     <thead class="text-center">
