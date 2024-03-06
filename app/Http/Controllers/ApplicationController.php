@@ -1330,6 +1330,8 @@ class ApplicationController extends Controller
         $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
         $org="All";
         $org_idclick=[];
+        $userDetailsp1=[];
+        $userDetailsp2=[];
 
         if ($request->organization && $request->organization != '') {
             $org_id=  $request->organization ;
@@ -1338,10 +1340,11 @@ class ApplicationController extends Controller
             $org_id[]=$request->organization;
             $org_idclick[]=$request->organization;
         }
+
         if(in_array(174, $org_id))
-        $userDetails = User::getUsersWithCountsForOrg174();
+        $userDetailsp1 = User::getUsersWithCountsForOrg174();
         if(in_array(175, $org_id))
-        $userDetails = User::getUsersWithCountsForOrg175();
+        $userDetailsp2 = User::getUsersWithCountsForOrg175();
 
         $applicationStatusCounts = Application::where('applications.active', 1)
             ->whereIn('applications.created_by', function ($query) use ($org_id) {
@@ -1415,7 +1418,7 @@ class ApplicationController extends Controller
             $allowfilter = false;
         }
 
-        return view('dashboard', compact('ackMailSent','ackPending','ackDispatched','fwdMailSent','fwdPending','fwdDispatched','in_draft', 'pending_with_dh', 'pending_with_so', 'pending_with_us', 'approved', 'submitted','org','allowfilter','organizations','org_id','org_idclick','userDetails'));
+        return view('dashboard', compact('ackMailSent','ackPending','ackDispatched','fwdMailSent','fwdPending','fwdDispatched','in_draft', 'pending_with_dh', 'pending_with_so', 'pending_with_us', 'approved', 'submitted','org','allowfilter','organizations','org_id','org_idclick','userDetailsp1','userDetailsp2'));
     }
 
     public function indDetails(Request $request)

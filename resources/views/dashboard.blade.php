@@ -119,12 +119,39 @@
                                         <th>Today's entry</th>
                                         <th>Weekly entry</th>
                                         <th>Drafts</th>
-                                        <th>Petition Pending</th>
+                                        <th>Pending with DH</th>
                                         <th>Lifetime entry</th>
                                     </tr>
                                     </thead>
                                     <tbody class="text-center">
-                                    @foreach ($userDetails as $userDetail)
+                                    @foreach ($userDetailsp1 as $userDetail)
+                                        <tr>
+                                            <td style="display: none">{{ $userDetail['id'] }}</td>
+                                            <td>{{ $userDetail['name'] }}</td>
+                                            <td style="text-decoration: underline;color:red">
+                                                <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'today_count')">
+                                                    {{ $userDetail['today_count'] }}
+                                                </a>
+                                            </td>
+                                            <td style="text-decoration: underline;color:red">
+                                                <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'weekly_count')">
+                                                    {{ $userDetail['weekly_count'] }}
+                                                </a>
+                                            </td>
+                                            <td style="text-decoration: underline;color:red">
+                                                <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'draft')">
+                                                    {{ $userDetail['draft'] }}
+                                                </a>
+                                            </td>
+                                            <td style="text-decoration: underline;color:red">
+                                                <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'pending_dh')">
+                                                    {{ $userDetail['pending_dh'] }}
+                                                </a>
+                                            </td>
+                                            <td>{{ $userDetail['lifetime_count'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                    @foreach ($userDetailsp2 as $userDetail)
                                         <tr>
                                             <td style="display: none">{{ $userDetail['id'] }}</td>
                                             <td>{{ $userDetail['name'] }}</td>
