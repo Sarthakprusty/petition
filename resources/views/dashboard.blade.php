@@ -33,164 +33,227 @@
 
     <div class="row"></div>
     <div class="row" id="pageContent" >
-        <form method="get" action="{{route('application.search')}}">
-            @if(isset($org_idclick))
-                <input type="hidden" value="{{ implode(',', $org_idclick) }}" name="organization" >
-            @endif
+        <div class="row" id="formDetails" >
+            <form method="get" action="{{route('application.search')}}">
+                <div class="row">
+                    @if(isset($org_idclick))
+                        <input type="hidden" value="{{ implode(',', $org_idclick) }}" name="organization" >
+                    @endif
 
-            <div class="row" id="formDetails" >
-                <div class="col col-md-4" style="padding: 2%; ">
-                    <a href="#" onclick="submitForm(0)">
-                        <div class="card bg-light mb-3" style="max-width: 18rem;">
-                            <div class="card-header">Draft</div>
-                            <div class="card-body">
-                                <h5 class="card-title" style="font-size: xx-large">{{$in_draft}}</h5>
+                    <div class="col col-md-2" style="padding: 1%; ">
+                        <a href="#" onclick="submitForm(0)">
+                            <div class="card shadow bg-light mb-3" style="max-width: 18rem;">
+                                <div class="card-header">Draft</div>
+                                <div class="card-body">
+                                    <h5 class="card-title" style="font-size: xx-large">{{$in_draft}}</h5>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                </div>
-                <div class="col col-md-4" style="padding: 2%; ">
-                    <a href="#" onclick="submitForm(1)">
-                        <div class="card text-white bg-warning mb-3" style="max-width: 18rem;">
-                            <div class="card-header">Pending at DH</div>
-                            <div class="card-body">
-                                <h5 class="card-title"style="font-size: xx-large">{{$pending_with_dh}}</h5>
+                        </a>
+                    </div>
+                    <div class="col col-md-2" style="padding: 1%; ">
+                        <a href="#" onclick="submitForm(1)">
+                            <div class="card shadow text-white bg-warning mb-3" style="max-width: 18rem;">
+                                <div class="card-header">Pending at DH</div>
+                                <div class="card-body">
+                                    <h5 class="card-title"style="font-size: xx-large">{{$pending_with_dh}}</h5>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                </div>
+                        </a>
+                    </div>
 
-                <div class="col col-md-4" style="padding: 2%; ">
-                    <a href="#" onclick="submitForm(2)">
-                        <div class="card text-white bg-success mb-3" style="max-width: 18rem;">
-                            <div class="card-header">Pending at SO</div>
+                    <div class="col col-md-2" style="padding: 1%; ">
+                        <a href="#" onclick="submitForm(2)">
+                            <div class="card shadow text-white bg-success mb-3" style="max-width: 18rem;">
+                                <div class="card-header">Pending at SO</div>
+                                <div class="card-body">
+                                    <h5 class="card-title"style="font-size: xx-large">{{$pending_with_so}}</h5>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col col-md-2" style="padding: 1%; ">
+                        <a href="#" onclick="submitForm(3)">
+                            <div class="card shadow text-white bg-danger mb-3" style="max-width: 18rem;">
+                                <div class="card-header">Pending at US</div>
+                                <div class="card-body">
+                                    <h5 class="card-title"style="font-size: xx-large">{{$pending_with_us}}</h5>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col col-md-2" style="padding: 1%; ">
+                        <a href="#" onclick="submitForm(4)">
+                            <div class="card shadow text-white bg-primary mb-3" style="max-width: 18rem;">
+                                <div class="card-header">Approved</div>
+                                <div class="card-body">
+                                    <h5 class="card-title"style="font-size: xx-large">{{$approved}}</h5>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col col-md-2" style="padding: 1%; ">
+                        <a href="#" onclick="submitForm(5)">
+                            <div class="card shadow text-white bg-info  mb-3" style="max-width: 18rem;">
+                                <div class="card-header">Final Replies</div>
+                                <div class="card-body">
+                                    <h5 class="card-title"style="font-size: xx-large">{{$submitted}}</h5>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <input type="hidden" name="status" id="statusInput">
+                <button type="submit" id="submitBtn" style="display: none;"></button>
+            </form>
+
+
+            <form method="get" action="{{route('application.indDetails')}}">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card shadow text-white bg-warning mb-3">
                             <div class="card-body">
-                                <h5 class="card-title"style="font-size: xx-large">{{$pending_with_so}}</h5>
+                                <table class="table">
+                                    <thead class="text-center">
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Today's entry</th>
+                                        <th>Weekly entry</th>
+                                        <th>Drafts</th>
+                                        <th>Petition Pending</th>
+                                        <th>Lifetime entry</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody class="text-center">
+                                    @foreach ($userDetails as $userDetail)
+                                        <tr>
+                                            <td style="display: none">{{ $userDetail['id'] }}</td>
+                                            <td>{{ $userDetail['name'] }}</td>
+                                            <td style="text-decoration: underline;color:red">
+                                                <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'today_count')">
+                                                    {{ $userDetail['today_count'] }}
+                                                </a>
+                                            </td>
+                                            <td style="text-decoration: underline;color:red">
+                                                <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'weekly_count')">
+                                                    {{ $userDetail['weekly_count'] }}
+                                                </a>
+                                            </td>
+                                            <td style="text-decoration: underline;color:red">
+                                                <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'draft')">
+                                                    {{ $userDetail['draft'] }}
+                                                </a>
+                                            </td>
+                                            <td style="text-decoration: underline;color:red">
+                                                <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'pending_dh')">
+                                                    {{ $userDetail['pending_dh'] }}
+                                                </a>
+                                            </td>
+                                            <td>{{ $userDetail['lifetime_count'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                    </a>
+                    </div>
                 </div>
-                <div class="col col-md-4" style="padding: 2%; ">
-                    <a href="#" onclick="submitForm(3)">
-                        <div class="card text-white bg-danger mb-3" style="max-width: 18rem;">
-                            <div class="card-header">Pending at US</div>
-                            <div class="card-body">
-                                <h5 class="card-title"style="font-size: xx-large">{{$pending_with_us}}</h5>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-                <div class="col col-md-4" style="padding: 2%; ">
-                    <a href="#" onclick="submitForm(4)">
-                        <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
-                            <div class="card-header">Approved</div>
-                            <div class="card-body">
-                                <h5 class="card-title"style="font-size: xx-large">{{$approved}}</h5>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-                <div class="col col-md-4" style="padding: 2%; ">
-                    <a href="#" onclick="submitForm(5)">
-                        <div class="card text-white bg-info  mb-3" style="max-width: 18rem;">
-                            <div class="card-header">Response by Ministry/State</div>
-                            <div class="card-body">
-                                <h5 class="card-title"style="font-size: xx-large">{{$submitted}}</h5>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-            <input type="hidden" name="status" id="statusInput">
-            <button type="submit" id="submitBtn" style="display: none;"></button>
-        </form>
+                <input type="hidden" name="userId" id="userId">
+                <input type="hidden" name="countDetail" id="countDetail">
+                <button type="submit" id="submitInd" style="display: none;"></button>
+            </form>
+        </div>
+
+
 
         <div class="row" id="dispatch" style="display: none">
             <form method="get" action="{{route('application.reportprint')}}">
                 <div class="row">
-                @if(isset($org_idclick))
-                    <input type="hidden" value="{{ implode(',', $org_idclick) }}" name="organization" >
-                @endif
+                    @if(isset($org_idclick))
+                        <input type="hidden" value="{{ implode(',', $org_idclick) }}" name="organization" >
+                    @endif
                     <input type="hidden" value="toPrintStatus" name="dashboard" >
                     <div class="col col-md-4" style="padding: 2%; ">
-                    <a href="#" onclick="submitAck('mailed')">
-                        <div class="card bg-light mb-3" style="max-width: 18rem;">
-                            <div class="card-header">Ack. mailed</div>
-                            <div class="card-body">
-                                <h5 class="card-title" style="font-size: xx-large">{{$ackMailSent}}</h5>
+                        <a href="#" onclick="submitAck('mailed')">
+                            <div class="card shadow bg-light mb-3" style="max-width: 18rem;">
+                                <div class="card-header">Ack. mailed</div>
+                                <div class="card-body">
+                                    <h5 class="card-title" style="font-size: xx-large">{{$ackMailSent}}</h5>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                </div>
-                <div class="col col-md-4" style="padding: 2%; ">
-                    <a href="#" onclick="submitAck('Pending')">
-                        <div class="card bg-warning mb-3" style="max-width: 18rem;">
-                            <div class="card-header">Ack. Pending</div>
-                            <div class="card-body">
-                                <h5 class="card-title"style="font-size: xx-large">{{$ackPending}}</h5>
+                        </a>
+                    </div>
+                    <div class="col col-md-4" style="padding: 2%; ">
+                        <a href="#" onclick="submitAck('Pending')">
+                            <div class="card shadow bg-warning mb-3" style="max-width: 18rem;">
+                                <div class="card-header">Ack. Pending</div>
+                                <div class="card-body">
+                                    <h5 class="card-title"style="font-size: xx-large">{{$ackPending}}</h5>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                </div>
+                        </a>
+                    </div>
 
-                <div class="col col-md-4" style="padding: 2%; ">
-                    <a href="#" onclick="submitAck('Offline')">
-                        <div class="card text-white bg-success mb-3" style="max-width: 18rem;">
-                            <div class="card-header">Ack. dispatched</div>
-                            <div class="card-body">
-                                <h5 class="card-title"style="font-size: xx-large">{{$ackDispatched}}</h5>
+                    <div class="col col-md-4" style="padding: 2%; ">
+                        <a href="#" onclick="submitAck('Offline')">
+                            <div class="card shadow text-white bg-success mb-3" style="max-width: 18rem;">
+                                <div class="card-header">Ack. dispatched</div>
+                                <div class="card-body">
+                                    <h5 class="card-title"style="font-size: xx-large">{{$ackDispatched}}</h5>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                </div>
+                        </a>
+                    </div>
 
-                <input type="hidden" name="mail" id="printInputAck">
-                <button type="submit" id="submitAck" value="acknowledgement" name="submit" style="display: none;"></button>
+                    <input type="hidden" name="mail" id="printInputAck">
+                    <button type="submit" id="submitAck" value="acknowledgement" name="submit" style="display: none;"></button>
                 </div>
             </form>
 
             <form method="get" action="{{route('application.reportprint')}}">
                 <div class="row">
-                @if(isset($org_idclick))
-                    <input type="hidden" value="{{ implode(',', $org_idclick) }}" name="organization" >
-                @endif
+                    @if(isset($org_idclick))
+                        <input type="hidden" value="{{ implode(',', $org_idclick) }}" name="organization" >
+                    @endif
                     <input type="hidden" value="toPrintStatus" name="dashboard" >
-                <div class="col col-md-4" style="padding: 2%; ">
-                    <a href="#" onclick="submitFwd('mailed')">
-                        <div class="card bg-light mb-3" style="max-width: 18rem;">
-                            <div class="card-header">Fwd. mailed</div>
-                            <div class="card-body">
-                                <h5 class="card-title"style="font-size: xx-large">{{$fwdMailSent}}</h5>
+                    <div class="col col-md-4" style="padding: 2%; ">
+                        <a href="#" onclick="submitFwd('mailed')">
+                            <div class="card shadow bg-light mb-3" style="max-width: 18rem;">
+                                <div class="card-header">Fwd. mailed</div>
+                                <div class="card-body">
+                                    <h5 class="card-title"style="font-size: xx-large">{{$fwdMailSent}}</h5>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                </div>
-                <div class="col col-md-4" style="padding: 2%; ">
-                    <a href="#" onclick="submitFwd('Pending')">
-                        <div class="card bg-warning mb-3" style="max-width: 18rem;">
-                            <div class="card-header">Fwd. pending</div>
-                            <div class="card-body">
-                                <h5 class="card-title"style="font-size: xx-large">{{$fwdPending}}</h5>
+                        </a>
+                    </div>
+                    <div class="col col-md-4" style="padding: 2%; ">
+                        <a href="#" onclick="submitFwd('Pending')">
+                            <div class="card shadow bg-warning mb-3" style="max-width: 18rem;">
+                                <div class="card-header">Fwd. pending</div>
+                                <div class="card-body">
+                                    <h5 class="card-title"style="font-size: xx-large">{{$fwdPending}}</h5>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                </div>
-                <div class="col col-md-4" style="padding: 2%; ">
-                    <a href="#" onclick="submitFwd('Offline')">
-                        <div class="card text-white bg-success  mb-3" style="max-width: 18rem;">
-                            <div class="card-header">Fwd. dispatched</div>
-                            <div class="card-body">
-                                <h5 class="card-title"style="font-size: xx-large">{{$fwdDispatched}}</h5>
+                        </a>
+                    </div>
+                    <div class="col col-md-4" style="padding: 2%; ">
+                        <a href="#" onclick="submitFwd('Offline')">
+                            <div class="card shadow text-white bg-success  mb-3" style="max-width: 18rem;">
+                                <div class="card-header">Fwd. dispatched</div>
+                                <div class="card-body">
+                                    <h5 class="card-title"style="font-size: xx-large">{{$fwdDispatched}}</h5>
+                                </div>
                             </div>
-                        </div>
-                    </a>
-                </div>
+                        </a>
+                    </div>
 
-                <input type="hidden" name="mail" id="printInputFwd">
+                    <input type="hidden" name="mail" id="printInputFwd">
                     <button type="submit" id="submitFwd" value="Forward" name="submit" style="display: none;"></button></div>
             </form>
         </div>
     </div>
+
+
+
     <script>
 
         $(document).ready(function () {
@@ -221,6 +284,12 @@
         function submitFwd(printstatusFwd) {
             document.getElementById('printInputFwd').value = printstatusFwd;
             document.getElementById('submitFwd').click();
+        }
+
+        function submitindvidual(userId,countDetail){
+            document.getElementById('userId').value = userId;
+            document.getElementById('countDetail').value = countDetail;
+            document.getElementById('submitInd').click();
         }
     </script>
 

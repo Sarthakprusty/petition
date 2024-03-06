@@ -1338,7 +1338,10 @@ class ApplicationController extends Controller
             $org_id[]=$request->organization;
             $org_idclick[]=$request->organization;
         }
-
+        if(in_array(174, $org_id))
+        $userDetails = User::getUsersWithCountsForOrg174();
+        if(in_array(175, $org_id))
+        $userDetails = User::getUsersWithCountsForOrg175();
 
         $applicationStatusCounts = Application::where('applications.active', 1)
             ->whereIn('applications.created_by', function ($query) use ($org_id) {
@@ -1387,7 +1390,6 @@ class ApplicationController extends Controller
                 ')
             ->get();
 
-
         $pending_with_dh = $applicationStatusCounts->sum('pending_with_dh');
         $pending_with_so = $applicationStatusCounts->sum('pending_with_so');
         $pending_with_us = $applicationStatusCounts->sum('pending_with_us');
@@ -1412,8 +1414,48 @@ class ApplicationController extends Controller
         else{
             $allowfilter = false;
         }
-        return view('dashboard', compact('ackMailSent','ackPending','ackDispatched','fwdMailSent','fwdPending','fwdDispatched','in_draft', 'pending_with_dh', 'pending_with_so', 'pending_with_us', 'approved', 'submitted','org','allowfilter','organizations','org_id','org_idclick'));
+
+        return view('dashboard', compact('ackMailSent','ackPending','ackDispatched','fwdMailSent','fwdPending','fwdDispatched','in_draft', 'pending_with_dh', 'pending_with_so', 'pending_with_us', 'approved', 'submitted','org','allowfilter','organizations','org_id','org_idclick','userDetails'));
     }
+
+    public function indDetails(Request $request)
+    {
+        $organizations = Organization::all();
+        $states = State::all();
+
+        $query = Application::with('state')
+            ->where('created_by', $request->userId)
+            ->where('active', 1);
+
+        switch ($request->countDetail) {
+            case 'today_count':
+                $query->where('created_at', '>=', now()->startOfDay());
+                break;
+
+            case 'weekly_count':
+                $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                break;
+
+            case 'draft':
+                $query->whereHas('statuses', function ($query) {
+                    $query->whereIn('status_id', [0])->where('application_status.active', 1);
+                });
+                break;
+
+            case 'pending_dh':
+                $query->whereHas('statuses', function ($query) {
+                    $query->whereIn('status_id', [1])->where('application_status.active', 1);
+                });
+                break;
+
+        }
+
+        $applications = $query->paginate(18);
+        $this->applicationlistRequirements($applications);
+        return view('application_list', compact('applications', 'states', 'organizations'));
+
+    }
+
 
     /**
      * file of application

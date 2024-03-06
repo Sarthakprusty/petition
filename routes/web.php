@@ -26,6 +26,7 @@ Route::post('applications',[App\Http\Controllers\ApplicationController::class,'s
 */
 Route::group(['middleware' => ['web']], function () {
     Route::get('applications/search', [ApplicationController::class, 'search'])->name('application.search')->middleware('auth');
+    Route::get('applications/indDetails', [ApplicationController::class, 'indDetails'])->name('application.indDetails')->middleware('auth');
     Route::get('applications/reportprint', [ApplicationController::class, 'reportprint'])->name('application.reportprint')->middleware('auth');
     Route::get('applications/dashboard', [ApplicationController::class, 'dashboard'])->name('applications.dashboard')->middleware('auth');
 

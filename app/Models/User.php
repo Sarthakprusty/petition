@@ -64,6 +64,66 @@ class User extends Authenticatable
     {
         return $this->hasone(SignAuthority::class, 'id', 'sign_id');
     }
+
+    public static function getUsersWithCountsForOrg174(): array
+    {
+        return self::with('organizations', 'applications')
+            ->where('id', '!=', 2)
+            ->where('id', '!=', 3)
+            ->whereHas('organizations', function ($query) {
+                $query->where('org_id', 174);
+            })
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id'=> $user->id,
+                    'name' => $user->username,
+                    'today_count' => $user->applications->where('created_at', '>=', now()->startOfDay())->count(),
+                    'weekly_count' => $user->applications->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+                    'lifetime_count' => $user->applications->count(),
+                    'draft' => $user->applications()->whereHas('statuses', function ($query) {
+                        $query->where('status_id', 0)
+                            ->where('application_status.active', 1);
+                    })->count(),
+                    'pending_dh' => $user->applications()->whereHas('statuses', function ($query) {
+                        $query->where('status_id', 1)
+                            ->where('application_status.active', 1);
+                    })->count(),
+                ];
+            })
+            ->toArray();
+    }
+
+
+
+    public static function getUsersWithCountsForOrg175(): array
+    {
+        return self::with('organizations', 'applications')
+            ->where('id', '!=', 16)
+            ->where('id', '!=', 3)
+            ->whereHas('organizations', function ($query) {
+                $query->where('org_id', 175);
+            })
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id'=> $user->id,
+                    'name' => $user->username,
+                    'today_count' => $user->applications->where('created_at', '>=', now()->startOfDay())->count(),
+                    'weekly_count' => $user->applications->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+                    'lifetime_count' => $user->applications->count(),
+                    'draft' => $user->applications()->whereHas('statuses', function ($query) {
+                        $query->where('status_id', 0)
+                            ->where('application_status.active', 1);
+                    })->count(),
+                    'pending_dh' => $user->applications()->whereHas('statuses', function ($query) {
+                        $query->where('status_id', 1)
+                            ->where('application_status.active', 1);
+                    })->count(),
+                ];
+            })
+            ->toArray();
+    }
 }
 
 
