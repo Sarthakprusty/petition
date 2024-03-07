@@ -126,7 +126,7 @@
 
 
             <strong>
-                <p style="text-align: right">(चिराब्राता सरकार {{Auth::user()->authority->name}})</p>
+                <p style="text-align: right">({{Auth::user()->authority->name_hin}} {{Auth::user()->authority->name}})</p>
                 <p style="text-align: right">अवर सचिव Under Secretary</p>
             </strong>
             <br><br>
