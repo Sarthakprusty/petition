@@ -7,7 +7,12 @@
             <div class="row">
                 <div style="text-align: center">
                     <button type="submit" class="btn btn-outline-success" name="action" value="open" style="margin-left: 3%" onclick="return confirm('Are you sure? Opening selected items will be treated as a petition sent by post.')">UPDATE/OPEN</button>
-                    <button type="submit" class="btn btn-outline-success" name="action" value="update" style="margin-left: 3%" onclick="return confirm('Are you sure? Updating selected items will be treated as a petition was already sent by post.')">UPDATE</button>
+                    @if($button!='mailable')
+                        <button type="submit" class="btn btn-outline-success" name="action" value="update" style="margin-left: 3%" onclick="return confirm('Are you sure? Updating selected items will be treated as a petition was already sent by post.')">UPDATE</button>
+                    @endif
+                    @if($button=='mailable')
+                        <button type="submit" class="btn btn-outline-primary" name="action" value="mail" style="margin-left: 3%" >Send Mail</button>
+                    @endif
                     <input type="hidden" value="{{$letter}}" name="letter" >
                 </div>
             </div>

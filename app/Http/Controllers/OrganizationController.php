@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Organization;
+use App\Models\State;
 use App\Rules\Orgtype;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -23,29 +24,50 @@ class OrganizationController extends Controller
      */
     public function store(Request $request)
     {
+
         $request->validate([
-            'org_desc'=>'nullable',
-            'org_type'=>['nullable', new Orgtype],
-            'org_head'=>'nullable',
-            'org_head_hi'=>'nullable',
-            'org_address'=>'nullable',
+            'org_desc'=>'required',
+            'org_type'=>['required', new Orgtype],
+            'org_head'=>'required',
+            'org_head_hi'=>'required',
+            'org_address'=>'required',
             'mail' => 'nullable',
+            'org_desc_hin'=>'required',
+            'v_code'=>'nullable',
+            'org_address_hin'=>'required',
+            'state_id'=>'nullable',
+            'pincode'=>'nullable',
+            'phone_no' => 'nullable',
         ]);
+
         $organization = new Organization;
+        if(isset($request->id) && $request->id){
+            $organization = Organization::find($request->id);
+            $organization->updated_at = Carbon::now()->toDateTimeLocalString();
+        }
+
         $organization->org_desc = $request->org_desc;
         $organization->org_type = $request->org_type;
         $organization->org_head = $request->org_head;
         $organization->org_head_hi = $request->org_head_hi;
         $organization->org_address = $request->org_address;
         $organization->mail = $request->mail;
+        $organization->org_desc_hin = $request->org_desc_hin;
+        $organization->v_code = $request->v_code;
+        $organization->org_address_hin = $request->org_address_hin;
+        $organization->state_id = $request->state_id;
+        $organization->pincode = $request->pincode;
+        $organization->phone_no = $request->phone_no;
 
-        $organization->created_at = Carbon::now()->toDateTimeLocalString();
-        $organization->last_updated_by = Auth::user()->user_id;
+        if(!isset($request->id) && !$request->id) {
+            $organization->created_at = Carbon::now()->toDateTimeLocalString();
+        }
+        $organization->last_updated_by = Auth::user()->id;
         $organization->last_updated_from = $request->ip();
 
 
         if ($organization->save())
-            return response($organization, 201);
+            return redirect(route('applications.dashboard'));
         else
             return response(array("code" => 400, "msg" => "Bad request"), 400);
     }
@@ -70,6 +92,7 @@ class OrganizationController extends Controller
 
 
     public function changeorganization(Request $request){
+        $states= State::all();
         if ($request->orgvalue && $request->orgvalue != '') {
             if ($request->orgvalue == 'names' && $request->orgDescMin && $request->orgDescMin != '') {
                 $organizations = Organization::where('id', $request->orgDescMin)->first();
@@ -80,7 +103,7 @@ class OrganizationController extends Controller
         } else
                 return response(array("code" => 400, "msg" => "Bad request"), 400);
 
-        return view('orglist', compact(  'organizations'));
+        return view('orglist', compact(  'organizations','states'));
     }
 
 
