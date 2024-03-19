@@ -69,6 +69,21 @@ class OrganizationController extends Controller
     }
 
 
+    public function changeorganization(Request $request){
+        if ($request->orgvalue && $request->orgvalue != '') {
+            if ($request->orgvalue == 'names' && $request->orgDescMin && $request->orgDescMin != '') {
+                $organizations = Organization::where('id', $request->orgDescMin)->first();
+            } elseif ($request->orgvalue == 'types' && $request->orgDescStat && $request->orgDescStat != '') {
+                $organizations = Organization::where('id', $request->orgDescStat)->first();
+            }else
+                return response(array("code" => 400, "msg" => "Bad request"), 400);
+        } else
+                return response(array("code" => 400, "msg" => "Bad request"), 400);
+
+        return view('orglist', compact(  'organizations'));
+    }
+
+
     /**
      * Remove the specified resource from storage.
      */

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\SignAuthorityController;
 
 use Illuminate\Support\Facades\Route;
@@ -46,5 +47,8 @@ Route::group(['middleware' => ['web']], function () {
     Route::post('authority/remove', [SignAuthorityController::class, 'removeOnly'])->name('authority.remove')->middleware('auth');
 
     Route::get('/error', function () {return view('error');});
+
+    Route::resource('organizations', App\Http\Controllers\OrganizationController::class);
+    Route::post('org/change', [OrganizationController::class, 'changeorganization'])->name('organizations.change')->middleware('auth');
 
 });
