@@ -63,22 +63,31 @@
                             </a>
                         </li>
                         @if (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) && auth()->user()->sign_id != null && Auth::user()->authority && Auth::user()->authority->Sign_path && Auth::user()->authority->Sign_path!=null)
-
-                                <br>
-                                <li>
-                                    <a href="{{route('authority.index')}}" >
-                                        <i class="fs-4 bi-file-earmark-person"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Authority</span>
-                                    </a>
-                                </li>
-                            @endif
+                            <br>
+                            <li>
+                                <a href="{{route('authority.index')}}" >
+                                    <i class="fs-4 bi-file-earmark-person"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Authority</span>
+                                </a>
+                            </li>
+                        @endif
                         @if (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) && auth()->user()->sign_id == null && (!Auth::user()->authority || !Auth::user()->authority->Sign_path || Auth::user()->authority->Sign_path==null))
-                                <br>
-                                <li>
-                                    <a href="{{route('authority.create')}}" >
-                                        <i class="fs-4 bi-file-earmark-person"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Authority</span>
-                                    </a>
-                                </li>
-                            @endif
+                            <br>
+                            <li>
+                                <a href="{{route('authority.create')}}" >
+                                    <i class="fs-4 bi-file-earmark-person"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Authority</span>
+                                </a>
+                            </li>
+
+                        @endif
+
+                        @if (auth()->check() && auth()->user()->roles->pluck('id')->contains(3))
+                            <br>
+                            <li>
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#orgchange">
+                                    <i class="fs-4 bi bi-building"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Organizations</span>
+                                </a>
+                            </li>
+                        @endif
 
 
                         @if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1))
@@ -246,17 +255,95 @@
         </div>
     </div>
 </div>
-<li>
-    <a href="#"data-bs-toggle="modal" data-bs-target="#Report">
-        <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Report</span>
-    </a>
-</li>
-<br>
-<li>
-    <a href="#" data-bs-toggle="modal" data-bs-target="#letter">
-        <i class="fs-4 bi-printer"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Print Letter</span>
-    </a>
-</li>
+
+{{--<li>--}}
+{{--    <a href="#"data-bs-toggle="modal" data-bs-target="#orgchange">--}}
+{{--        <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Organizations</span>--}}
+{{--    </a>--}}
+{{--</li>--}}
+
+{{--<li>--}}
+{{--    <a href="#"data-bs-toggle="modal" data-bs-target="#Report">--}}
+{{--        <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Report</span>--}}
+{{--    </a>--}}
+{{--</li>--}}
+{{--<br>--}}
+{{--<li>--}}
+{{--    <a href="#" data-bs-toggle="modal" data-bs-target="#letter">--}}
+{{--        <i class="fs-4 bi-printer"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Print Letter</span>--}}
+{{--    </a>--}}
+{{--</li>--}}
+
+
+<div>
+    <div class="modal fade" id="orgchange" style="z-index: 1051" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" data-bs-backdrop="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="post" action="{{route('organizations.change') }}"  method="post">@csrf
+                <div class="modal-content">
+                    <div class="modal-body">
+
+                        <div class="row">
+                            <div class="mb-3">
+                                <label class="form-label" for="organizationType">Organization:</label>
+                                <select class="form-control" name="orgvalue">
+                                    <option value="">Select an option</option>
+                                    <option id="typeOrganizationType" value="types" >State GOV.</option>
+                                    <option id="typeOrganizationName" value="names">Center GOV.</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        @php
+                            $organizationStates = \App\Models\Organization::where('org_type','S')->get();
+                            $organizationM = \App\Models\Organization::where('org_type','M')->get();
+                        @endphp
+
+                        <div class="mb-3" id="organizationTypeDropdown" style="display: none;">
+                            <select class="form-control" id="orgDesc" name="orgDescStat">
+                                <option value="">Select an State</option>
+                                @foreach($organizationStates as $organizationStat)
+                                    <option value="{{ $organizationStat->id }}">{{ $organizationStat->org_desc }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="organizationNameDropdown" style="display: none;">
+                            <select class="form-control" id="orgDesc" name="orgDescMin">
+                                <option value="">Select an Organization</option>
+                                @foreach($organizationM as $organizationMin)
+                                    <option value="{{ $organizationMin->id }}">{{ $organizationMin->org_desc }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <script>
+                            $(document).ready(function() {
+                                $('select[name="orgvalue"]').change(function() {
+                                    var selectedType = $(this).val();
+                                    if (selectedType === "types") {
+                                        $('#organizationTypeDropdown').show();
+                                        $('#organizationNameDropdown').hide();
+                                    } else if (selectedType === "names") {
+                                        $('#organizationTypeDropdown').hide();
+                                        $('#organizationNameDropdown').show();
+                                    }else{
+                                        $('#organizationTypeDropdown').hide();
+                                        $('#organizationNameDropdown').hide();
+                                    }
+                                });
+                            });
+                        </script>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-outline-primary" name="submit" value="Update">Update</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div>
     <div class="modal fade" id="letter" style="z-index: 1051" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" data-bs-backdrop="false">
         <div class="modal-dialog modal-dialog-centered">

@@ -160,7 +160,7 @@
                 </div>
 
                 <strong>
-                    <p style="text-align: right">(चिराब्राता सरकार {{$application->authority->name}})</p>
+                    <p style="text-align: right">({{$application->authority->name_hin}} {{$application->authority->name}})</p>
                     <p style="text-align: right">अवर सचिव Under Secretary</p>
                 </strong>
                 <br>
