@@ -23,7 +23,7 @@
                 <div class="row"></div>
 
                 <div class="row">
-                    <div class="col-md-3" style="text-align: right"><label class="form-label">Organization Name:<span style="color: red;" class="required">*</span></label></div>
+                    <div class="col-md-3" style="text-align: right" for="org_desc"><label class="form-label">Organization Name:<span style="color: red;" class="required">*</span></label></div>
                     <div class="col">
                         <div class="input-group">
                             <input type="text" class="form-control" id="org_desc" aria-label="org_desc" placeholder="Name" name="org_desc"  required value="{{ old('org_desc') ?: $organizations->org_desc}}">
@@ -33,10 +33,10 @@
 
                 <div class="row" >
                     <div class="col-md-3" style="text-align: right">
-                        <label class="form-label" for="letter_no">हिंदी में नाम:<span style="color: red;" class="required">*</span></label>
+                        <label class="form-label" for="org_desc_hin">हिंदी में नाम:<span style="color: red;" class="required">*</span></label>
                     </div>
                     <div class="col">
-                        <div class="form-group row">
+                        <div class="input-group">
                             <input type="text" class="form-control" id="org_desc_hin" aria-label="org_desc_hin" placeholder="हिंदी में नाम" name="org_desc_hin"  required value="{{ old('org_desc_hin') ?: $organizations->org_desc_hin}}" >
                         </div>
                     </div>
@@ -44,7 +44,7 @@
 
                 <div class="row">
                     <div class="col-md-3" style="text-align: right">
-                        <label class="form-label">Head:<span style="color: red;" class="required">*</span></label>
+                        <label class="form-label" for="org_head">Head:<span style="color: red;" class="required">*</span></label>
                     </div>
                     <div class="col">
                         <div class="input-group">
@@ -56,27 +56,18 @@
 
                 <div class="row" >
                     <div class="col-md-3" style="text-align: right">
-                        <label class="form-label" for="letter_no">प्रमुख हिंदी में:<span style="color: red;" class="required">*</span></label>
+                        <label class="form-label" for="org_head_hi">प्रमुख हिंदी में:<span style="color: red;" class="required">*</span></label>
                     </div>
                     <div class="col">
-                        <div class="form-group row">
+                        <div class="input-group">
                             <input type="text" class="form-control" id="org_head_hi" aria-label="org_head_hi" placeholder="प्रमुख हिंदी में" name="org_head_hi"  required value="{{ old('org_head_hi') ?: $organizations->org_head_hi}}" >
                         </div>
                     </div>
                 </div>
 
                 <div class="row">
-                    <div class="col-md-3" style="text-align: right"><label class="form-label">Address:<span style="color: red;" class="required">*</span></label></div>
-                    <div class="col">
-                        <div class="input-group">
-                            <textarea class="form-control" id="org_address" aria-label="org_address" placeholder="Address" name="org_address"  required value="{{ old('org_address') ?: $organizations->org_address}}"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
                     <div class="col-md-3" style="text-align: right">
-                        <label class="form-label">E mail:<span style="color: red;" class="required">*</span></label>
+                        <label class="form-label" for="mail">E mail:<span style="color: red;" class="required">*</span></label>
                     </div>
                     <div class="col">
                         <div class="input-group">
@@ -87,46 +78,78 @@
 
                 <div class="row" >
                     <div class="col-md-3" style="text-align: right">
-                        <label class="form-label" for="letter_no">From date:<span style="color: red;" class="required">*</span></label>
+                        <label class="form-label" for="v_code">Code:<span style="color: red;" class="required">*</span></label>
                     </div>
-                    <div class="col-md-3">
-                        <div class="form-group row">
-                            <input type="text" class="form-control" id="name_hin" aria-label="name_hin" placeholder="हिंदी में नाम" name="name_hin"  required value="{{ old('v_code') ?: $organizations->v_code}}" >
+                    <div class="col">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="v_code" aria-label="v_code" placeholder="code" name="v_code"  required value="{{ old('v_code') ?: $organizations->v_code}}" >
                         </div>
                     </div>
                 </div>
 
 
-
-                <div class="row" >
+                <div class="row">
                     <div class="col-md-3" style="text-align: right">
-                        <label class="form-label" for="letter_no">From date:<span style="color: red;" class="required">*</span></label>
+                        <label class="form-label" for="org_address">Address:<span style="color: red;" class="required">*</span></label>
                     </div>
-                    <div class="col-md-3">
-                        <div class="form-group row">
-                            <input type="text" class="form-control" id="name_hin" aria-label="name_hin" placeholder="हिंदी में नाम" name="name_hin"  required value="{{ old('v_code') ?: $organizations->org_address_hin}}" >
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row" >
-                    <div class="col-md-3" style="text-align: right">
-                        <label class="form-label" for="letter_no">From date:<span style="color: red;" class="required">*</span></label>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group row">
-                            <input type="text" class="form-control" id="name_hin" aria-label="name_hin" placeholder="हिंदी में नाम" name="name_hin"  required value="{{ old('org_head') ?: $organizations->pincode}}" >
+                    <div class="col">
+                        <div class="input-group">
+                            <textarea class="form-control" id="org_address" aria-label="org_address" placeholder="Address" name="org_address"  required > {{ old('org_address') ?: $organizations->org_address}}</textarea>
                         </div>
                     </div>
                 </div>
 
                 <div class="row" >
                     <div class="col-md-3" style="text-align: right">
-                        <label class="form-label" for="letter_no">From date:<span style="color: red;" class="required">*</span></label>
+                        <label class="form-label" for="org_address_hin">पता:<span style="color: red;" class="required">*</span></label>
+                    </div>
+                    <div class="col">
+                        <div class="input-group">
+                            <textarea class="form-control" id="org_address_hin" aria-label="org_address_hin" placeholder="पता" name="org_address_hin"  required  >{{ old('v_code') ?: $organizations->org_address_hin}}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row" >
+                    <div class="col-md-3" style="text-align: right">
+                        <label class="form-label" for="phone_no">Number:<span style="color: red;" class="required">*</span></label>
                     </div>
                     <div class="col-md-3">
-                        <div class="form-group row">
-                            <input type="text" class="form-control" id="name_hin" aria-label="name_hin" placeholder="हिंदी में नाम" name="name_hin"  required value="{{ old('v_code') ?: $organizations->phone_no}}" >
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="phone_no" aria-label="phone_no" placeholder="phone number" name="phone_no"  required value="{{ old('phone_no') ?: $organizations->phone_no}}" >
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row" >
+                    <div class="col-md-3" style="text-align: right">
+                        <label class="form-label" for="pincode">Pin code:<span style="color: red;" class="required">*</span></label>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="pincode" aria-label="pincode" placeholder="pincode" name="pincode"  required value="{{ old('pincode') ?: $organizations->pincode}}" >
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row" >
+                    <div class="col-md-3" style="text-align: right">
+                        <label class="form-label" for="org_type">Type:<span style="color: red;" class="required">*</span></label>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="org_type" aria-label="org_type" placeholder="type" name="org_type"  required value="{{ old('org_type') ?: $organizations->org_type}}" >
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row" >
+                    <div class="col-md-3" style="text-align: right">
+                        <label class="form-label" for="state_id">State:<span style="color: red;" class="required">*</span></label>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="state_id" aria-label="state_id" placeholder="state" name="state_id"  required value="{{ old('state_id') ?: $organizations->state_id}}" >
                         </div>
                     </div>
                 </div>
