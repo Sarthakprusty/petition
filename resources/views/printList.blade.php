@@ -11,7 +11,7 @@
                         <button type="submit" class="btn btn-outline-success" name="action" value="update" style="margin-left: 3%" onclick="return confirm('Are you sure? Updating selected items will be treated as a petition was already sent by post.')">UPDATE</button>
                     @endif
                     @if($button=='mailable')
-                        <button type="submit" class="btn btn-outline-primary" name="action" value="mail" style="margin-left: 3%" >Send Mail</button>
+                        <button type="submit" class="btn btn-outline-primary" name="action" value="mail" style="margin-left: 3%" >Send email</button>
                     @endif
                     <input type="hidden" value="{{$letter}}" name="letter" >
                 </div>

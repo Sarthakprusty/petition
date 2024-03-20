@@ -211,7 +211,7 @@
                     <div class="col col-md-3" style="padding: 2%; ">
                         <a href="#" onclick="submitAck('Pending_mail')">
                             <div class="card shadow bg-info mb-3" style="max-width: 18rem;">
-                                <div class="card-header">Ack. Pending with DH (for mail)</div>
+                                <div class="card-header">Ack. Pending with DH (for email)</div>
                                 <div class="card-body">
                                     <h5 class="card-title"style="font-size: xx-large">{{$ackPendingWithMail}}</h5>
                                 </div>
@@ -221,7 +221,7 @@
                         <div class="col col-md-3" style="padding: 2%; ">
                             <a href="#" onclick="submitAck('Pending_noMail')">
                                 <div class="card shadow bg-warning mb-3" style="max-width: 18rem;">
-                                    <div class="card-header">Ack. Pending with DH</div>
+                                    <div class="card-header">Ack. Pending with DH (for post)</div>
                                     <div class="card-body">
                                         <h5 class="card-title"style="font-size: xx-large">{{$ackPendingWithoutMail}}</h5>
                                     </div>
@@ -264,7 +264,7 @@
                     <div class="col col-md-3" style="padding: 2%; ">
                         <a href="#" onclick="submitFwd('Pending_mail')">
                             <div class="card shadow bg-info mb-3" style="max-width: 18rem;">
-                                <div class="card-header">Fwd. pending with DH (for mail)</div>
+                                <div class="card-header">Fwd. pending with DH (for email)</div>
                                 <div class="card-body">
                                     <h5 class="card-title"style="font-size: xx-large">{{$fwdPendingWithMail}}</h5>
                                 </div>
@@ -274,7 +274,7 @@
                         <div class="col col-md-3" style="padding: 2%; ">
                             <a href="#" onclick="submitFwd('Pending_noMail')">
                                 <div class="card shadow bg-warning mb-3" style="max-width: 18rem;">
-                                    <div class="card-header">Fwd. pending with DH</div>
+                                    <div class="card-header">Fwd. pending with DH (for post)</div>
                                     <div class="card-body">
                                         <h5 class="card-title"style="font-size: xx-large">{{$fwdPendingWithoutMail}}</h5>
                                     </div>

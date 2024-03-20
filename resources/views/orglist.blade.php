@@ -108,7 +108,7 @@
                     </div>
                     <div class="col-md-3">
                         <div class="input-group">
-                            <input type="text" class="form-control" id="phone_no" aria-label="phone_no" pattern="[0-9]{6}" minlength="6" maxlength="11" placeholder="phone number" name="phone_no" value="{{ old('phone_no') ?: $organizations->phone_no}}" >
+                            <input type="text" class="form-control" id="phone_no" aria-label="phone_no" pattern="[0-9]{3}" minlength="3" maxlength="11" placeholder="phone number" name="phone_no" value="{{ old('phone_no') ?: $organizations->phone_no}}" >
                         </div>
                     </div>
                 </div>
@@ -139,25 +139,25 @@
                     </div>
                 </div>
                 <div class="row" >
+{{--                    <div class="col-md-3" style="text-align: right">--}}
+{{--                        <label class="form-label" for="state_id">State:</label>--}}
+{{--                    </div>--}}
+{{--                    <div class="col-md-3">--}}
+{{--                        <div class="input-group">--}}
+{{--                            <select class="form-control" name="state_id" id="state_id" >--}}
+{{--                                <option value="">-Select State-</option>--}}
+{{--                                @foreach($states as $state)--}}
+{{--                                    @if($state->id == $organizations->state_id)--}}
+{{--                                        <option value="{{ $state->id }}" selected>{{ $state->state_name }}</option>--}}
+{{--                                    @else--}}
+{{--                                        <option value="{{ $state->id }}">{{ $state->state_name }}</option>--}}
+{{--                                    @endif--}}
+{{--                                @endforeach--}}
+{{--                            </select>--}}
+{{--                        </div>--}}
+{{--                    </div>--}}
                     <div class="col-md-3" style="text-align: right">
-                        <label class="form-label" for="state_id">State:<span style="color: red;" class="required">*</span></label>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="input-group">
-                            <select class="form-control" name="state_id" id="state_id" >
-                                <option value="">-Select State-</option>
-                                @foreach($states as $state)
-                                    @if($state->id == $organizations->state_id)
-                                        <option value="{{ $state->id }}" selected>{{ $state->state_name }}</option>
-                                    @else
-                                        <option value="{{ $state->id }}">{{ $state->state_name }}</option>
-                                    @endif
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-3" style="text-align: right">
-                        <label class="form-label" for="pincode">Pin code:<span style="color: red;" class="required">*</span></label>
+                        <label class="form-label" for="pincode">Pin code:</label>
                     </div>
                     <div class="col-md-3">
                         <div class="input-group">
