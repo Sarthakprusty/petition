@@ -725,16 +725,16 @@ class ApplicationController extends Controller
 //                            $to = "us.petitions@rb.nic.in";
 
                             $cc=[];
-                            $cc[]="sayantan.saha@gov.in";
-                            $cc[]="prustysarthak123@gmail.com";
+//                            $cc[]="sayantan.saha@gov.in";
+//                            $cc[]="prustysarthak123@gmail.com";
                             $cc[]="us.petitions@rb.nic.in";
                             if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(174)) {
                                 $cc[] = "so-public1@rb.nic.in";
-                                $cc[] = "suman.kumari55@rb.nic.in";
+//                                $cc[] = "suman.kumari55@rb.nic.in";
                             }
                             if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(175)) {
                                 $cc[] = "so-public2@rb.nic.in";
-                                $cc[] = "rakesh.kumar.rb.@nic.in";
+//                                $cc[] = "rakesh.kumar.rb.@nic.in";
                             }
                             $data = [
                                 "From" => "us.petitions@rb.nic.in",
@@ -922,16 +922,16 @@ class ApplicationController extends Controller
 //                            $to = "us.petitions@rb.nic.in";
 
                             $cc=[];
-                            $cc[]="sayantan.saha@gov.in";
-                            $cc[]="prustysarthak123@gmail.com";
+//                            $cc[]="sayantan.saha@gov.in";
+//                            $cc[]="prustysarthak123@gmail.com";
                             $cc[]="us.petitions@rb.nic.in";
                             if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(174)) {
                                 $cc[] = "so-public1@rb.nic.in";
-                                $cc[] = "suman.kumari55@rb.nic.in";
+//                                $cc[] = "suman.kumari55@rb.nic.in";
                             }
                             if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(175)) {
                                 $cc[] = "so-public2@rb.nic.in";
-                                $cc[] = "rakesh.kumar.rb.@nic.in";
+//                                $cc[] = "rakesh.kumar.rb.@nic.in";
                             }
                               $data = [
                                 "From"=> "us.petitions@rb.nic.in",
@@ -961,6 +961,7 @@ class ApplicationController extends Controller
                                  $decode_curlResponse=json_decode($curlResponse);
                                 if ($decode_curlResponse == "Email sent successfully") {
                                     $application->fwd_mail_sent = "T";
+                                    $application->fwd_email_id=$application->department_org->mail;
                                     $application->fwd_offline_post = "NR";
                                     $application->save();
                                 }
@@ -1115,9 +1116,9 @@ class ApplicationController extends Controller
         if($request->input('action') === 'mail'){
             foreach ($applications as $application){
                 if($request->letter=='Acknowledgement Letter'){
+                    $user=User::findOrFail(3);
                     if ($application->acknowledgement === 'Y' ) {
                         if($application->acknowledgement_path ==null) {
-                            $user=User::findOrFail(3);
                             if($user->authority->Sign_path) {
                                 $imagePath = Storage::disk('upload')->path(base64_decode($user->authority->Sign_path));
                                 $imageData = file_get_contents($imagePath);
@@ -1125,7 +1126,7 @@ class ApplicationController extends Controller
                                 $logoPath = public_path('storage/logo.png');
                                 $logoData = file_get_contents($logoPath);
                                 $logoBase64 = base64_encode($logoData);
-                                $html = view('acknowledgementletter', compact('application', 'imageBase64', 'logoBase64'))->render();
+                                $html = view('acknowledgementletter', compact('application', 'imageBase64', 'logoBase64','user'))->render();
                                 $postParameter = array(
                                     'htmlSource' => $html
                                 );
@@ -1148,6 +1149,7 @@ class ApplicationController extends Controller
                                     Log::error('pdf service down' . $curlResponse);
                                     $application->ack_mail_sent = "F";
                                     $application->save();
+                                    return back()->withErrors(['username' => 'Sorry, pdf service down']);
                                 }
                             }else
                             return back()->withErrors(['username' => 'Sorry, sign not found']);
@@ -1167,16 +1169,16 @@ class ApplicationController extends Controller
 //                              $to = "us.petitions@rb.nic.in";
 
                                 $cc=[];
-                                $cc[]="sayantan.saha@gov.in";
-                                $cc[]="prustysarthak123@gmail.com";
+//                                $cc[]="sayantan.saha@gov.in";
+//                                $cc[]="prustysarthak123@gmail.com";
                                 $cc[]="us.petitions@rb.nic.in";
                                 if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(174)) {
                                     $cc[] = "so-public1@rb.nic.in";
-                                    $cc[] = "suman.kumari55@rb.nic.in";
+//                                    $cc[] = "suman.kumari55@rb.nic.in";
                                 }
                                 if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(175)) {
                                     $cc[] = "so-public2@rb.nic.in";
-                                    $cc[] = "rakesh.kumar.rb.@nic.in";
+//                                    $cc[] = "rakesh.kumar.rb.@nic.in";
                                 }
                                 $data = [
                                     "From" => "us.petitions@rb.nic.in",
@@ -1240,9 +1242,11 @@ class ApplicationController extends Controller
                 }
 
                 elseif ($request->letter=='Forward Letter'){
+                    $user = User::findOrFail(3);
+                    $name =$user->authority->name;
+                    $name_hin = $user->authority->name_hin;
                     if ($application->department_org && $application->department_org->id !== null) {
                         if($application->forwarded_path ==null) {
-                            $user = User::findOrFail(3);
                             if ($user->authority->Sign_path) {
                                 $imagePath = Storage::disk('upload')->path(base64_decode($user->authority->Sign_path));
                                 $imageData = file_get_contents($imagePath);
@@ -1250,18 +1254,12 @@ class ApplicationController extends Controller
                                 $logoPath = public_path('storage/logo.png');
                                 $logoData = file_get_contents($logoPath);
                                 $logoBase64 = base64_encode($logoData);
-                                $html = view('forwardedletter', compact('application', 'imageBase64', 'logoBase64'))->render();;
+                                $html = view('forwardedletter', compact('application', 'imageBase64', 'logoBase64','user'))->render();;
                                 $postParameter = array(
                                     'htmlSource' => $html
                                 );
                                 Log::info('post param:' . json_encode($postParameter));
-                                $name = Auth::user()->authority->name;
-                                $name_hin = Auth::user()->authority->name_hin;
-//                    event(new GeneratePdfEventFwd($postParameter, $application,$name,$name_hin));
-////                    $curlHandle = curl_init('http://localhost:8081/getMLPdf');
                                 $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
-//
-//
                                 curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
                                 curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
                                 $curlResponse = curl_exec($curlHandle);
@@ -1281,11 +1279,12 @@ class ApplicationController extends Controller
                                     Log::error('pdf service down' . $curlResponse);
                                     $application->fwd_mail_sent = "F";
                                     $application->save();
+                                    return back()->withErrors(['username' => 'Sorry, pdf service down']);
                                 }
                             } else
                                 return back()->withErrors(['username' => 'Sorry, sign not found']);
                         }
-                        if (($application->department_org->mail !== null)&&($application->fwd_mail_sent == "F" ) && ($application->forwarded_path !== null) && ($application->file_path)) {
+                        if (($application->department_org->mail !== null)&&($application->fwd_mail_sent == "F" ) && ($application->forwarded_path !== null) && ($application->file_path !==null)) {
                             $content = storage::disk('upload')->get(base64_decode($application->forwarded_path));
                             if($content && $content!= null){
                                 $base64co=base64_encode($content);
@@ -1327,16 +1326,16 @@ class ApplicationController extends Controller
                                 $to = $application->department_org->mail;
 //                            $to = "us.petitions@rb.nic.in";
                                 $cc=[];
-                                $cc[]="sayantan.saha@gov.in";
-                                $cc[]="prustysarthak123@gmail.com";
+//                                $cc[]="sayantan.saha@gov.in";
+//                                $cc[]="prustysarthak123@gmail.com";
                                 $cc[]="us.petitions@rb.nic.in";
                                 if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(174)) {
                                     $cc[] = "so-public1@rb.nic.in";
-                                    $cc[] = "suman.kumari55@rb.nic.in";
+//                                    $cc[] = "suman.kumari55@rb.nic.in";
                                 }
                                 if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(175)) {
                                     $cc[] = "so-public2@rb.nic.in";
-                                    $cc[] = "rakesh.kumar.rb.@nic.in";
+//                                    $cc[] = "rakesh.kumar.rb.@nic.in";
                                 }
                                 $data = [
                                     "From"=> "us.petitions@rb.nic.in",
@@ -1366,6 +1365,7 @@ class ApplicationController extends Controller
                                     $decode_curlResponse=json_decode($curlResponse);
                                     if ($decode_curlResponse == "Email sent successfully") {
                                         $application->fwd_mail_sent = "T";
+                                        $application->fwd_email_id=$application->department_org->mail;
                                         $application->fwd_offline_post = "NR";
                                         $application->save();
                                     }

@@ -160,7 +160,11 @@
             </div>
 
         <strong>
-        <p style="text-align: right">({{Auth::user()->authority->name_hin}} {{Auth::user()->authority->name}})</p>
+            @if(isset($user))
+                <p style="text-align: right">({{$user->authority->name_hin}} {{$user->authority->name}})</p>
+            @else
+                <p style="text-align: right">({{Auth::user()->authority->name_hin}} {{Auth::user()->authority->name}})</p>
+            @endif
         <p style="text-align: right">अवर सचिव Under Secretary</p>
         </strong>
         <br>
