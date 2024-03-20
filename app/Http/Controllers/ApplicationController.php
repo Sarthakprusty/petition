@@ -902,6 +902,7 @@ class ApplicationController extends Controller
                             }
 
 
+
                             $body="महोदय / महोदया,<br>
                                     Sir / Madam,<br><br>
                                     कृपया उपरोक्त विषय पर भारत के राष्ट्रपति जी को संबोधित स्वतः स्पष्ट याचिका उपयुक्त ध्यानाकर्षण के लिए संलग्न है। याचिका पर की गई कार्रवाई की सूचना सीधे याचिकाकर्ता को दे दी जाये।<br>
@@ -919,6 +920,7 @@ class ApplicationController extends Controller
                             $subject = $application->reg_no;
                             $to = $application->department_org->mail;
 //                            $to = "us.petitions@rb.nic.in";
+
                             $cc=[];
                             $cc[]="sayantan.saha@gov.in";
                             $cc[]="prustysarthak123@gmail.com";
@@ -931,7 +933,7 @@ class ApplicationController extends Controller
                                 $cc[] = "so-public2@rb.nic.in";
                                 $cc[] = "rakesh.kumar.rb.@nic.in";
                             }
-                            $data = [
+                              $data = [
                                 "From"=> "us.petitions@rb.nic.in",
                                 "To" => [$to],
                                 "Cc"=>$cc,
@@ -955,8 +957,8 @@ class ApplicationController extends Controller
                                 curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
                                 curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
 
-                                $curlResponse = curl_exec($curl);
-                                $decode_curlResponse=json_decode($curlResponse);
+                                 $curlResponse = curl_exec($curl);
+                                 $decode_curlResponse=json_decode($curlResponse);
                                 if ($decode_curlResponse == "Email sent successfully") {
                                     $application->fwd_mail_sent = "T";
                                     $application->fwd_offline_post = "NR";

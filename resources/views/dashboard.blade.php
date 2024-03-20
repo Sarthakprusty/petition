@@ -106,7 +106,6 @@
                 <button type="submit" id="submitBtn" style="display: none;"></button>
             </form>
 
-
             <form method="get" action="{{route('application.indDetails')}}">
                 <div class="row">
                     <div class="col-md-12">

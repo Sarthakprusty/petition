@@ -415,7 +415,7 @@
                                 <span class="float-end" style="text-align: right">{{$app->remarks}}</span>
                             </div>
                             <div class="list-group-item">
-                                <span class="float-start" style="font-weight: bold"> PetitionFile</span>
+                                <span class="float-start" style="font-weight: bold"> Petition File</span>
                                 @if($app->file_path)
                                     <span class="float-end" style="text-align: right;text-decoration: underline;color: #1d00ff">
                                         <a href="{{url('/api/getFile/'.$app->file_path)}}" target="_blank">
