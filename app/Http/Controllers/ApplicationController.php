@@ -1082,23 +1082,317 @@ class ApplicationController extends Controller
     public function updatePrint(Request $request)
     {
         $applications = Application::find($request->input('selectedId'));
-        foreach ($applications as $application){
-            if($request->letter=='Acknowledgement Letter'){
-                $application->ack_offline_post = 'T';
-                $application->save();
-            }
-            elseif ($request->letter=='Forward Letter'){
-                $application->fwd_offline_post = 'T';
-                $application->save();
-            }
-        }
+
         if($request->input('action') === 'open') {
-            if($request->letter=='Acknowledgement Letter')
-                return view('acknowledgementprint', compact('applications'));
-            elseif($request->letter=='Forward Letter')
-                return view('forwardprint', compact('applications'));
+            foreach ($applications as $application){
+                if($request->letter=='Acknowledgement Letter'){
+                    $application->ack_offline_post = 'T';
+                    $application->save();
+                    return view('acknowledgementprint', compact('applications'));
+                }
+                elseif ($request->letter=='Forward Letter'){
+                    $application->fwd_offline_post = 'T';
+                    $application->save();
+                    return view('forwardprint', compact('applications'));
+                }
+            }
         }
+
         if($request->input('action') === 'update'){
+            foreach ($applications as $application){
+                if($request->letter=='Acknowledgement Letter'){
+                    $application->ack_offline_post = 'T';
+                    $application->save();
+                }
+                elseif ($request->letter=='Forward Letter'){
+                    $application->fwd_offline_post = 'T';
+                    $application->save();
+                }
+            }
+            return redirect()->back()->with('success', 'dispatch Status updated successfully.');
+        }
+
+        if($request->input('action') === 'mail'){
+            foreach ($applications as $application){
+                if($request->letter=='Acknowledgement Letter'){
+                    if ($application->acknowledgement === 'Y' ) {
+                        if($application->acknowledgement_path ==null) {
+                            $user=User::findOrFail(3);
+                            if($user->authority->Sign_path) {
+                                $imagePath = Storage::disk('upload')->path(base64_decode($user->authority->Sign_path));
+                                $imageData = file_get_contents($imagePath);
+                                $imageBase64 = base64_encode($imageData);
+                                $logoPath = public_path('storage/logo.png');
+                                $logoData = file_get_contents($logoPath);
+                                $logoBase64 = base64_encode($logoData);
+                                $html = view('acknowledgementletter', compact('application', 'imageBase64', 'logoBase64'))->render();
+                                $postParameter = array(
+                                    'htmlSource' => $html
+                                );
+                                Log::info('post param:' . json_encode($postParameter));
+                                $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
+                                curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
+                                curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
+                                $curlResponse = curl_exec($curlHandle);
+                                curl_close($curlHandle);
+                                if ($curlResponse && substr($curlResponse, 0, 4) == '%PDF') {
+                                    // Save the PDF to storage
+                                    $fname = str_replace('/', '_', $application->reg_no);
+                                    $fileName = $fname . '_acknowledgement.pdf';
+                                    $path = 'applications/' . $application->id . '/' . $fileName;
+                                    if (Storage::disk('upload')->put($path, $curlResponse)) {
+                                        $application->acknowledgement_path = base64_encode($path);
+                                        $application->save();
+                                    }
+                                } else {
+                                    Log::error('pdf service down' . $curlResponse);
+                                    $application->ack_mail_sent = "F";
+                                    $application->save();
+                                }
+                            }else
+                            return back()->withErrors(['username' => 'Sorry, sign not found']);
+                        }
+
+                        if (($application->email_id != null)&&( $application->ack_mail_sent == "F" )&&($application->acknowledgement_path !==null)){
+                            $content = storage::disk('upload')->get(base64_decode($application->acknowledgement_path));
+                            if($content && $content != null){
+                                $base644data=base64_encode($content);
+                                $fname = str_replace('/', '_', $application->reg_no);
+                                $file_name=$fname."_acknowledgement.pdf";
+                                $body = $application->applicant_title . " " . $application->applicant_name . ",<br><br>
+                                 Your Petition has been received in Rashtrapati Bhavan with ref no " . $application->reg_no . " and forwarded to " . $application->department_org->org_desc . " for further necessary action.<br><br>
+                                    Regards, <br>
+                                President's Secretariat<br>";
+                                $to = $application->email_id;
+//                              $to = "us.petitions@rb.nic.in";
+
+                                $cc=[];
+                                $cc[]="sayantan.saha@gov.in";
+                                $cc[]="prustysarthak123@gmail.com";
+                                $cc[]="us.petitions@rb.nic.in";
+                                if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(174)) {
+                                    $cc[] = "so-public1@rb.nic.in";
+                                    $cc[] = "suman.kumari55@rb.nic.in";
+                                }
+                                if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(175)) {
+                                    $cc[] = "so-public2@rb.nic.in";
+                                    $cc[] = "rakesh.kumar.rb.@nic.in";
+                                }
+                                $data = [
+                                    "From" => "us.petitions@rb.nic.in",
+                                    "To" => [$to],
+                                    "Cc"=>$cc,
+                                    "Subject" => "Reply From Rashtrapati Bhavan",
+                                    "Body" =>  $body,
+                                    "Attachments"=> [
+                                        [
+                                            "AttachmentName"=>$file_name,
+                                            "AttachmentFile"=>$base644data
+                                        ],
+                                    ]
+                                ];
+                                if($base644data && $base644data != null) {
+                                    $headers = [
+                                        'Authorization: Bearer YourAccessToken',
+                                        'Content-Type: application/json',
+                                        'Custom-Header: Value'
+                                    ];
+                                    $jsonData = json_encode($data);
+
+                                    $apiUrl = 'https://rb.nic.in/emailapi/api/emailsend';
+                                    $curl = curl_init();
+                                    curl_setopt($curl, CURLOPT_URL, $apiUrl);
+                                    curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
+                                    curl_setopt($curl, CURLOPT_POSTFIELDS, $jsonData);
+                                    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+                                    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+                                    curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+
+                                    $curlResponse = curl_exec($curl);
+                                    $decode_curlResponse=json_decode($curlResponse);
+                                    if ($decode_curlResponse == "Email sent successfully") {
+                                        $application->ack_mail_sent = "T";
+                                        $application->ack_offline_post = "NR";
+                                        $application->save();
+                                    }
+                                    else {
+                                        $application->ack_mail_sent = "F";
+                                        $application->save();
+                                        Log::error('Failed to send ack email: ' . $curlResponse);
+                                    }
+                                    curl_close($curl);
+                                }
+                                else{
+                                    $application->ack_mail_sent = "F";
+                                    $application->save();
+                                }
+                            }
+                            else{
+                                $application->ack_mail_sent = "F";
+                                $application->save();
+                            }
+                        }
+                        if ($application->email_id == null){
+                            $application->ack_mail_sent = "F";
+                            $application->save();
+                        }
+                    }
+                }
+
+                elseif ($request->letter=='Forward Letter'){
+                    if ($application->department_org && $application->department_org->id !== null) {
+                        if($application->forwarded_path ==null) {
+                            $user = User::findOrFail(3);
+                            if ($user->authority->Sign_path) {
+                                $imagePath = Storage::disk('upload')->path(base64_decode($user->authority->Sign_path));
+                                $imageData = file_get_contents($imagePath);
+                                $imageBase64 = base64_encode($imageData);
+                                $logoPath = public_path('storage/logo.png');
+                                $logoData = file_get_contents($logoPath);
+                                $logoBase64 = base64_encode($logoData);
+                                $html = view('forwardedletter', compact('application', 'imageBase64', 'logoBase64'))->render();;
+                                $postParameter = array(
+                                    'htmlSource' => $html
+                                );
+                                Log::info('post param:' . json_encode($postParameter));
+                                $name = Auth::user()->authority->name;
+                                $name_hin = Auth::user()->authority->name_hin;
+//                    event(new GeneratePdfEventFwd($postParameter, $application,$name,$name_hin));
+////                    $curlHandle = curl_init('http://localhost:8081/getMLPdf');
+                                $curlHandle = curl_init('http://10.197.148.102:8081/getMLPdf');
+//
+//
+                                curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $postParameter);
+                                curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
+                                $curlResponse = curl_exec($curlHandle);
+                                if (!$curlResponse) {
+                                    Log::error('curl error' . curl_error($curlHandle));
+                                }
+                                curl_close($curlHandle);
+                                if ($curlResponse && substr($curlResponse, 0, 4) == '%PDF') {
+                                    $fname = str_replace('/', '_', $application->reg_no);
+                                    $fileName = $fname . '_forward.pdf';
+                                    $path = 'applications/' . $application->id . '/' . $fileName;
+                                    if (Storage::disk('upload')->put($path, $curlResponse)) {
+                                        $application->forwarded_path = base64_encode($path);
+                                        $application->save();
+                                    }
+                                } else {
+                                    Log::error('pdf service down' . $curlResponse);
+                                    $application->fwd_mail_sent = "F";
+                                    $application->save();
+                                }
+                            } else
+                                return back()->withErrors(['username' => 'Sorry, sign not found']);
+                        }
+                        if (($application->department_org->mail !== null)&&($application->fwd_mail_sent == "F" ) && ($application->forwarded_path !== null) && ($application->file_path)) {
+                            $content = storage::disk('upload')->get(base64_decode($application->forwarded_path));
+                            if($content && $content!= null){
+                                $base64co=base64_encode($content);
+                                $fname = str_replace('/', '_', $application->reg_no);
+                                $attachments = [
+                                    [
+                                        "AttachmentName" => $fname . "_forward letter.pdf",
+                                        "AttachmentFile" => $base64co,
+                                    ],
+                                ];
+
+                                if($application->file_path){
+                                    $file = storage::disk('upload')->get(base64_decode($application->file_path));
+                                    if($file && $file!= null) {
+                                        $bas64file = base64_encode($file);
+                                        $attachments[] = [
+                                            "AttachmentName" => $fname . "_file.pdf",
+                                            "AttachmentFile" => $bas64file,
+                                        ];
+                                    }
+                                }
+
+
+                                $body="महोदय / महोदया,<br>
+                                    Sir / Madam,<br><br>
+                                    कृपया उपरोक्त विषय पर भारत के राष्ट्रपति जी को संबोधित स्वतः स्पष्ट याचिका उपयुक्त ध्यानाकर्षण के लिए संलग्न है। याचिका पर की गई कार्रवाई की सूचना सीधे याचिकाकर्ता को दे दी जाये।<br>
+                                    Attached please find for appropriate attention a petition addressed to the President of India which is self-explanatory. Action taken on the petition may please be communicated to the petitioner directly.<br>
+                                    सादर,<br>
+                                    regards,<br><br>
+                                    ($name)<br>
+                                    ($name_hin)<br>
+                                    अवर सचिव<br>
+                                    Under Secretary<br>
+                                    राष्ट्रपति सचिवालय<br>
+                                    President's Secretariat<br>
+                                    राष्ट्रपति भवन, नई दिल्ली<br>
+                                    Rashtrapati Bhavan, New Delhi";
+                                $subject = $application->reg_no;
+                                $to = $application->department_org->mail;
+//                            $to = "us.petitions@rb.nic.in";
+                                $cc=[];
+                                $cc[]="sayantan.saha@gov.in";
+                                $cc[]="prustysarthak123@gmail.com";
+                                $cc[]="us.petitions@rb.nic.in";
+                                if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(174)) {
+                                    $cc[] = "so-public1@rb.nic.in";
+                                    $cc[] = "suman.kumari55@rb.nic.in";
+                                }
+                                if($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(175)) {
+                                    $cc[] = "so-public2@rb.nic.in";
+                                    $cc[] = "rakesh.kumar.rb.@nic.in";
+                                }
+                                $data = [
+                                    "From"=> "us.petitions@rb.nic.in",
+                                    "To" => [$to],
+                                    "Cc"=>$cc,
+                                    "Subject" => $subject,
+                                    "Body" =>  $body,
+                                    "Attachments"=> $attachments,
+                                ];
+                                if($base64co && $base64co != null) {
+                                    $headers = [
+                                        'Authorization: Bearer YourAccessToken',
+                                        'Content-Type: application/json',
+                                        'Custom-Header: Value'
+                                    ];
+                                    $jsonData = json_encode($data);
+                                    $apiUrl = 'https://rb.nic.in/emailapi/api/emailsend';
+                                    $curl = curl_init();
+                                    curl_setopt($curl, CURLOPT_URL, $apiUrl);
+                                    curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
+                                    curl_setopt($curl, CURLOPT_POSTFIELDS, $jsonData);
+                                    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+                                    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+                                    curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+
+                                    $curlResponse = curl_exec($curl);
+                                    $decode_curlResponse=json_decode($curlResponse);
+                                    if ($decode_curlResponse == "Email sent successfully") {
+                                        $application->fwd_mail_sent = "T";
+                                        $application->fwd_offline_post = "NR";
+                                        $application->save();
+                                    }
+                                    else {
+                                        $application->fwd_mail_sent = "F";
+                                        $application->save();
+                                        Log::error('Failed to send forward email: ' . $curlResponse);
+                                    }
+                                    curl_close($curl);
+                                }
+                                else{
+                                    $application->fwd_mail_sent = "F";
+                                    $application->save();
+                                }
+                            }
+                            else{
+                                $application->fwd_mail_sent = "F";
+                                $application->save();
+                            }
+                        }
+                        if ($application->department_org->mail == null){
+                            $application->fwd_mail_sent = "F";
+                            $application->save();
+                        }
+                    }
+                }
+            }
             return redirect()->back()->with('success', 'dispatch Status updated successfully.');
         }
 
@@ -1204,6 +1498,18 @@ class ApplicationController extends Controller
                             return $query->where('ack_mail_sent', "F")
                                 ->where('ack_offline_post', "R");
                         })
+                        ->when($request->filled('mail') && $request->mail == 'Pending_mail', function ($query) {
+                            return $query->where('ack_mail_sent', "F")
+                                ->where('ack_offline_post', "R")
+                                ->where('acknowledgement','Y')
+                                ->whereNotNull('email_id');
+                        })
+                        ->when($request->filled('mail') && $request->mail == 'Pending_noMail', function ($query) {
+                            return $query->where('ack_mail_sent', "F")
+                                ->where('ack_offline_post', "R")
+                                ->where('acknowledgement','Y')
+                                ->whereNull('email_id');
+                        })
                         ->when($request->filled('mail') && $request->mail == 'Offline', function ($query) {
                             return $query->where('ack_mail_sent', "F")
                                 ->where('ack_offline_post', "T");
@@ -1239,10 +1545,17 @@ class ApplicationController extends Controller
 //                    } else {
 //                        return view('acknowledgementprint', compact('applications'));
 //                    }
-                    if ($request->dashboard && $request->dashboard=="toPrintStatus" && $request->mail == 'Pending') {
+                    if ($request->dashboard && $request->dashboard=="toPrintStatus" && $request->mail == 'Pending_mail') {
                         $letter = 'Acknowledgement Letter';
-                        return view('printList', compact('applications', 'letter'));
-                    } else {
+                        $button='mailable';
+                        return view('printList', compact('applications', 'letter','button'));
+                    }
+                    if ($request->dashboard && $request->dashboard=="toPrintStatus" && $request->mail == 'Pending_noMail') {
+                        $letter = 'Acknowledgement Letter';
+                        $button='nomailable';
+                        return view('printList', compact('applications', 'letter','button'));
+                    }
+                    else {
                         return view('acknowledgementprint', compact('applications'));
                     }
 
@@ -1256,6 +1569,26 @@ class ApplicationController extends Controller
                         ->when($request->filled('mail') && $request->mail == 'Pending', function ($query) {
                             return $query->where('fwd_mail_sent', "F")
                                 ->where('fwd_offline_post', "R");
+                        })
+                        ->when($request->filled('mail') && $request->mail == 'Pending_mail', function ($query) {
+                            return $query->where('fwd_mail_sent', "F")
+                                ->where('fwd_offline_post', "R")
+                                ->whereExists(function ($subquery) {
+                                    $subquery->selectRaw(1)
+                                        ->from('organizations')
+                                        ->whereColumn('organizations.id', 'applications.department_org_id')
+                                        ->whereNotNull('organizations.mail');
+                                });
+                        })
+                        ->when($request->filled('mail') && $request->mail == 'Pending_noMail', function ($query) {
+                            return $query->where('fwd_mail_sent', "F")
+                                ->where('fwd_offline_post', "R")
+                                ->whereExists(function ($subquery) {
+                                    $subquery->selectRaw(1)
+                                        ->from('organizations')
+                                        ->whereColumn('organizations.id', 'applications.department_org_id')
+                                        ->whereNull('organizations.mail');
+                                });
                         })
                         ->when($request->filled('mail') && $request->mail == 'Offline', function ($query) {
                             return $query->where('fwd_mail_sent', "F")
@@ -1294,10 +1627,17 @@ class ApplicationController extends Controller
 //                    } else {
 //                        return view('forwardprint', compact('applications'));
 //                    }
-                    if ($request->dashboard && $request->dashboard=="toPrintStatus" && $request->mail == 'Pending') {
+                    if ($request->dashboard && $request->dashboard=="toPrintStatus" && $request->mail == 'Pending_mail') {
                         $letter = 'Forward Letter';
-                        return view('printList', compact('applications', 'letter'));
-                    } else {
+                        $button='mailable';
+                        return view('printList', compact('applications', 'letter','button'));
+                    }
+                    if ($request->dashboard && $request->dashboard=="toPrintStatus" && $request->mail == 'Pending_noMail') {
+                        $letter = 'Forward Letter';
+                        $button='nomailable';
+                        return view('printList', compact('applications', 'letter','button'));
+                    }
+                    else {
                         return view('forwardprint', compact('applications'));
                     }
 
@@ -1387,12 +1727,15 @@ class ApplicationController extends Controller
                     ->where('application_status.active', 1);
             })->selectRaw('
                     SUM(CASE WHEN fwd_mail_sent = "T" AND fwd_offline_post = "NR" THEN 1 ELSE 0 END) as fwdMailSent,
-                    SUM(CASE WHEN fwd_mail_sent = "F" AND fwd_offline_post = "R" THEN 1 ELSE 0 END) as fwdPending,
+                    SUM(CASE WHEN organizations.mail IS NOT NULL AND fwd_mail_sent = "F" AND fwd_offline_post = "R" THEN 1 ELSE 0 END) as fwdPendingWithMail,
+                    SUM(CASE WHEN organizations.mail IS NULL AND fwd_mail_sent = "F" AND fwd_offline_post = "R" THEN 1 ELSE 0 END) as fwdPendingWithoutMail,
                     SUM(CASE WHEN fwd_mail_sent = "F" AND fwd_offline_post = "T" THEN 1 ELSE 0 END) as fwdPostDispatch,
                     SUM(CASE WHEN ack_mail_sent = "T" AND ack_offline_post = "NR" THEN 1 ELSE 0 END) as ackMailSent,
-                    SUM(CASE WHEN ack_mail_sent = "F" AND ack_offline_post = "R" THEN 1 ELSE 0 END) as ackPending,
+                    SUM(CASE WHEN email_id IS NOT NULL AND acknowledgement="Y" AND ack_mail_sent = "F" AND ack_offline_post = "R" THEN 1 ELSE 0 END) as ackPendingWithMail,
+                    SUM(CASE WHEN email_id IS NULL AND acknowledgement="Y" AND ack_mail_sent = "F" AND ack_offline_post = "R" THEN 1 ELSE 0 END) as ackPendingWithoutMail,
                     SUM(CASE WHEN ack_mail_sent = "F" AND ack_offline_post = "T" THEN 1 ELSE 0 END) as ackPostDispatch
                 ')
+            ->join('organizations', 'organizations.id', '=', 'applications.department_org_id')
             ->get();
 
         $pending_with_dh = $applicationStatusCounts->sum('pending_with_dh');
@@ -1403,10 +1746,12 @@ class ApplicationController extends Controller
         $submitted = $applicationStatusCounts->sum('submitted');
 
         $fwdMailSent = $applicationMailCount->pluck('fwdMailSent')->first();
-        $fwdPending = $applicationMailCount->pluck('fwdPending')->first();
+        $fwdPendingWithMail = $applicationMailCount->pluck('fwdPendingWithMail')->first();
+        $fwdPendingWithoutMail = $applicationMailCount->pluck('fwdPendingWithoutMail')->first();
         $fwdDispatched = $applicationMailCount->pluck('fwdPostDispatch')->first();
         $ackMailSent = $applicationMailCount->pluck('ackMailSent')->first();
-        $ackPending = $applicationMailCount->pluck('ackPending')->first();
+        $ackPendingWithMail = $applicationMailCount->pluck('ackPendingWithMail')->first();
+        $ackPendingWithoutMail = $applicationMailCount->pluck('ackPendingWithoutMail')->first();
         $ackDispatched = $applicationMailCount->pluck('ackPostDispatch')->first();
 
 
@@ -1420,7 +1765,7 @@ class ApplicationController extends Controller
             $allowfilter = false;
         }
 
-        return view('dashboard', compact('ackMailSent','ackPending','ackDispatched','fwdMailSent','fwdPending','fwdDispatched','in_draft', 'pending_with_dh', 'pending_with_so', 'pending_with_us', 'approved', 'submitted','org','allowfilter','organizations','org_id','org_idclick','userDetailsp1','userDetailsp2'));
+        return view('dashboard', compact('ackMailSent','ackPendingWithMail','ackPendingWithoutMail','ackDispatched','fwdMailSent','fwdPendingWithMail','fwdPendingWithoutMail','fwdDispatched','in_draft', 'pending_with_dh', 'pending_with_so', 'pending_with_us', 'approved', 'submitted','org','allowfilter','organizations','org_id','org_idclick','userDetailsp1','userDetailsp2'));
     }
 
     public function indDetails(Request $request)

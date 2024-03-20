@@ -19,6 +19,9 @@
         <div class="card-body">
             <form method="POST" action="{{route('organizations.store')}}" enctype="multipart/form-data">
                 @csrf
+                @if(isset($organizations->id))
+                    <input type="hidden" value="{{$organizations->id}}" name="id" >
+                @endif
                 <div class="row"></div>
                 <div class="row"></div>
 
@@ -33,7 +36,7 @@
 
                 <div class="row" >
                     <div class="col-md-3" style="text-align: right">
-                        <label class="form-label" for="org_desc_hin">हिंदी में नाम:<span style="color: red;" class="required">*</span></label>
+                        <label class="form-label" for="org_desc_hin">संगठन का नाम:<span style="color: red;" class="required">*</span></label>
                     </div>
                     <div class="col">
                         <div class="input-group">
@@ -56,7 +59,7 @@
 
                 <div class="row" >
                     <div class="col-md-3" style="text-align: right">
-                        <label class="form-label" for="org_head_hi">प्रमुख हिंदी में:<span style="color: red;" class="required">*</span></label>
+                        <label class="form-label" for="org_head_hi">प्रमुख:<span style="color: red;" class="required">*</span></label>
                     </div>
                     <div class="col">
                         <div class="input-group">
@@ -65,27 +68,53 @@
                     </div>
                 </div>
 
-                <div class="row">
+                <hr class="row-divider">
+
+                <div class="row" >
                     <div class="col-md-3" style="text-align: right">
-                        <label class="form-label" for="mail">E mail:<span style="color: red;" class="required">*</span></label>
+                        <label class="form-label" for="org_type">Type:<span style="color: red;" class="required">*</span></label>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-check-label">
+                            <input type="radio" name="org_type" value="S" {{ $organizations->org_type == 'S' ? 'checked' : '' }}> State Gov
+                        </label>
+                        <label class="form-check-label">
+                            <input type="radio" name="org_type" value="M" {{ $organizations->org_type == 'M' ? 'checked' : '' }}> Central Ministry
+                        </label>
+                    </div>
+
+                    <div class="col-md-3" style="text-align: right">
+                        <label class="form-label" for="v_code">Code:</label>
                     </div>
                     <div class="col">
                         <div class="input-group">
-                            <input type="email" class="form-control" id="mail" aria-label="mail" placeholder="E mail" name="mail"  required value="{{ old('mail') ?: $organizations->mail}}" >
+                            <input type="text" class="form-control" id="v_code" aria-label="v_code" placeholder="code"  minlength="1" maxlength="10" name="v_code" value="{{ old('v_code') ?: $organizations->v_code}}" >
                         </div>
                     </div>
                 </div>
 
-                <div class="row" >
+                <div class="row">
                     <div class="col-md-3" style="text-align: right">
-                        <label class="form-label" for="v_code">Code:<span style="color: red;" class="required">*</span></label>
+                        <label class="form-label" for="mail">E mail:</label>
                     </div>
                     <div class="col">
                         <div class="input-group">
-                            <input type="text" class="form-control" id="v_code" aria-label="v_code" placeholder="code" name="v_code"  required value="{{ old('v_code') ?: $organizations->v_code}}" >
+                            <input type="email" class="form-control" id="mail" aria-label="mail" placeholder="E mail" name="mail" value="{{ old('mail') ?: $organizations->mail}}" >
+                        </div>
+                    </div>
+
+                    <div class="col-md-3" style="text-align: right">
+                        <label class="form-label" for="phone_no">Number:</label>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="phone_no" aria-label="phone_no" pattern="[0-9]{6}" minlength="6" maxlength="11" placeholder="phone number" name="phone_no" value="{{ old('phone_no') ?: $organizations->phone_no}}" >
                         </div>
                     </div>
                 </div>
+
+
+                <hr class="row-divider">
 
 
                 <div class="row">
@@ -109,75 +138,33 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="row" >
-                    <div class="col-md-3" style="text-align: right">
-                        <label class="form-label" for="phone_no">Number:<span style="color: red;" class="required">*</span></label>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="phone_no" aria-label="phone_no" placeholder="phone number" name="phone_no"  required value="{{ old('phone_no') ?: $organizations->phone_no}}" >
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row" >
-                    <div class="col-md-3" style="text-align: right">
-                        <label class="form-label" for="pincode">Pin code:<span style="color: red;" class="required">*</span></label>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="pincode" aria-label="pincode" placeholder="pincode" name="pincode"  required value="{{ old('pincode') ?: $organizations->pincode}}" >
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row" >
-                    <div class="col-md-3" style="text-align: right">
-                        <label class="form-label" for="org_type">Type:<span style="color: red;" class="required">*</span></label>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="org_type" aria-label="org_type" placeholder="type" name="org_type"  required value="{{ old('org_type') ?: $organizations->org_type}}" >
-                        </div>
-                    </div>
-                </div>
-
                 <div class="row" >
                     <div class="col-md-3" style="text-align: right">
                         <label class="form-label" for="state_id">State:<span style="color: red;" class="required">*</span></label>
                     </div>
                     <div class="col-md-3">
                         <div class="input-group">
-                            <input type="text" class="form-control" id="state_id" aria-label="state_id" placeholder="state" name="state_id"  required value="{{ old('state_id') ?: $organizations->state_id}}" >
+                            <select class="form-control" name="state_id" id="state_id" >
+                                <option value="">-Select State-</option>
+                                @foreach($states as $state)
+                                    @if($state->id == $organizations->state_id)
+                                        <option value="{{ $state->id }}" selected>{{ $state->state_name }}</option>
+                                    @else
+                                        <option value="{{ $state->id }}">{{ $state->state_name }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3" style="text-align: right">
+                        <label class="form-label" for="pincode">Pin code:<span style="color: red;" class="required">*</span></label>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" pattern="[0-9]{6}" minlength="6" maxlength="6" id="pincode" aria-label="pincode" placeholder="pincode" name="pincode"  value="{{ old('pincode') ?: $organizations->pincode}}" >
                         </div>
                     </div>
                 </div>
-
-                {{--                @php--}}
-                {{--                    $org_id = auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();--}}
-                {{--                @endphp--}}
-                {{--                <div class="row">--}}
-                {{--                    <div class="col-md-3" style="text-align: right">--}}
-                {{--                        <label class="form-label">Departments:</label>--}}
-                {{--                    </div>--}}
-                {{--                    <div class="col-md-9">--}}
-                {{--                        @foreach($organizations as $organization)--}}
-                {{--                            @if(in_array($organization->id, $org_id))--}}
-                {{--                                <div class="form-check">--}}
-                {{--                                    <input class="form-check-input" type="checkbox" name="org[]" id="org_{{ $organization->id }}" value="{{ $organization->id }}">--}}
-                {{--                                    <label class="form-check-label" for="org_{{ $organization->id }}">{{ $organization->org_desc }}</label>--}}
-                {{--                                </div>--}}
-                {{--                            @endif--}}
-                {{--                        @endforeach--}}
-                {{--                    </div>--}}
-                {{--                </div>--}}
-
-
-
-
-
-
 
                 <hr class="row-divider">
 
@@ -192,6 +179,29 @@
                 </div>
             </form>
         </div>
+
+
+        <script>
+            const pincodeInput = document.getElementById('pincode');
+            pincodeInput.addEventListener('input', function(event) {
+                const numericValue = event.target.value.replace(/\D/g, '');
+                event.target.value = numericValue;
+            });
+
+
+            document.addEventListener('DOMContentLoaded', function() {
+                var phoneNoInput = document.getElementById('phone_no');
+
+                phoneNoInput.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                    if (this.value.length > 11) {
+                        this.value = this.value.slice(0, 11);
+                    }
+                });
+            });
+
+        </script>
+
     </div>
 
 

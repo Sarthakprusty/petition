@@ -198,7 +198,7 @@
                         <input type="hidden" value="{{ implode(',', $org_idclick) }}" name="organization" >
                     @endif
                     <input type="hidden" value="toPrintStatus" name="dashboard" >
-                    <div class="col col-md-4" style="padding: 2%; ">
+                    <div class="col col-md-3" style="padding: 2%; ">
                         <a href="#" onclick="submitAck('mailed')">
                             <div class="card shadow bg-light mb-3" style="max-width: 18rem;">
                                 <div class="card-header">Ack. mailed</div>
@@ -208,18 +208,28 @@
                             </div>
                         </a>
                     </div>
-                    <div class="col col-md-4" style="padding: 2%; ">
-                        <a href="#" onclick="submitAck('Pending')">
-                            <div class="card shadow bg-warning mb-3" style="max-width: 18rem;">
-                                <div class="card-header">Ack. Pending</div>
+                    <div class="col col-md-3" style="padding: 2%; ">
+                        <a href="#" onclick="submitAck('Pending_mail')">
+                            <div class="card shadow bg-info mb-3" style="max-width: 18rem;">
+                                <div class="card-header">Ack. Pending for mail</div>
                                 <div class="card-body">
-                                    <h5 class="card-title"style="font-size: xx-large">{{$ackPending}}</h5>
+                                    <h5 class="card-title"style="font-size: xx-large">{{$ackPendingWithMail}}</h5>
                                 </div>
                             </div>
                         </a>
                     </div>
+                        <div class="col col-md-3" style="padding: 2%; ">
+                            <a href="#" onclick="submitAck('Pending_noMail')">
+                                <div class="card shadow bg-warning mb-3" style="max-width: 18rem;">
+                                    <div class="card-header">Ack. Pending</div>
+                                    <div class="card-body">
+                                        <h5 class="card-title"style="font-size: xx-large">{{$ackPendingWithoutMail}}</h5>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
 
-                    <div class="col col-md-4" style="padding: 2%; ">
+                    <div class="col col-md-3" style="padding: 2%; ">
                         <a href="#" onclick="submitAck('Offline')">
                             <div class="card shadow text-white bg-success mb-3" style="max-width: 18rem;">
                                 <div class="card-header">Ack. dispatched</div>
@@ -241,7 +251,7 @@
                         <input type="hidden" value="{{ implode(',', $org_idclick) }}" name="organization" >
                     @endif
                     <input type="hidden" value="toPrintStatus" name="dashboard" >
-                    <div class="col col-md-4" style="padding: 2%; ">
+                    <div class="col col-md-3" style="padding: 2%; ">
                         <a href="#" onclick="submitFwd('mailed')">
                             <div class="card shadow bg-light mb-3" style="max-width: 18rem;">
                                 <div class="card-header">Fwd. mailed</div>
@@ -251,17 +261,27 @@
                             </div>
                         </a>
                     </div>
-                    <div class="col col-md-4" style="padding: 2%; ">
-                        <a href="#" onclick="submitFwd('Pending')">
-                            <div class="card shadow bg-warning mb-3" style="max-width: 18rem;">
-                                <div class="card-header">Fwd. pending</div>
+                    <div class="col col-md-3" style="padding: 2%; ">
+                        <a href="#" onclick="submitFwd('Pending_mail')">
+                            <div class="card shadow bg-info mb-3" style="max-width: 18rem;">
+                                <div class="card-header">Fwd. pending for mail</div>
                                 <div class="card-body">
-                                    <h5 class="card-title"style="font-size: xx-large">{{$fwdPending}}</h5>
+                                    <h5 class="card-title"style="font-size: xx-large">{{$fwdPendingWithMail}}</h5>
                                 </div>
                             </div>
                         </a>
                     </div>
-                    <div class="col col-md-4" style="padding: 2%; ">
+                        <div class="col col-md-3" style="padding: 2%; ">
+                            <a href="#" onclick="submitFwd('Pending_noMail')">
+                                <div class="card shadow bg-warning mb-3" style="max-width: 18rem;">
+                                    <div class="card-header">Fwd. pending</div>
+                                    <div class="card-body">
+                                        <h5 class="card-title"style="font-size: xx-large">{{$fwdPendingWithoutMail}}</h5>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    <div class="col col-md-3" style="padding: 2%; ">
                         <a href="#" onclick="submitFwd('Offline')">
                             <div class="card shadow text-white bg-success  mb-3" style="max-width: 18rem;">
                                 <div class="card-header">Fwd. dispatched</div>
