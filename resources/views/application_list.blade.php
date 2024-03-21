@@ -131,7 +131,7 @@
         @endforeach
         {{--            {{ $applications->links() }}--}}
 
-
+            @if (!isset($notpaginate))
         <div class="row">
             <nav role="navigation" aria-label="Pagination Navigation" class="flex items-center justify-between" style="margin-left: 1.5%">
                 <span class="relative z-0 inline-flex shadow-sm rounded-md" style="margin-left: 43%">
@@ -167,6 +167,7 @@
                 </span>
             </nav>
         </div>
+            @endif
     </div>
 @endsection
 

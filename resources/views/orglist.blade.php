@@ -108,7 +108,7 @@
                     </div>
                     <div class="col-md-3">
                         <div class="input-group">
-                            <input type="text" class="form-control" id="phone_no" aria-label="phone_no" pattern="[0-9]{3}" minlength="3" maxlength="11" placeholder="phone number" name="phone_no" value="{{ old('phone_no') ?: $organizations->phone_no}}" >
+                            <input type="text" class="form-control" id="phone_no" aria-label="phone_no" placeholder="phone number" name="phone_no" value="{{ old('phone_no') ?: $organizations->phone_no}}" >
                         </div>
                     </div>
                 </div>

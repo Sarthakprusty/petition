@@ -245,7 +245,7 @@ class ApplicationController extends Controller
                 $request->validate([
                     'reg_no'=>'nullable',
                     'applicant_title'=>'nullable',
-                    'applicant_name'=>'required|regex:/^[a-zA-Z .]+$/',
+                    'applicant_name'=>'required|regex:/^[a-zA-Z .&]+$/',
                     'address'=>'required',
                     'pincode'=>['nullable', 'digits:6'],
                     'state_id'=>'nullable|numeric',
@@ -1797,12 +1797,33 @@ class ApplicationController extends Controller
                     $query->whereIn('status_id', [1])->where('application_status.active', 1);
                 });
                 break;
-
         }
 
-        $applications = $query->paginate(18);
-        $this->applicationlistRequirements($applications);
-        return view('application_list', compact('applications', 'states', 'organizations'));
+        $applications = $query->get();
+        foreach ($applications as $application) {
+            if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && ($application->created_by == auth()->user()->id) && ($application->statuses->isEmpty() || $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(1) || $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0))) {
+                $application->allowEdit = true;
+            } else {
+                $application->allowEdit = false;
+            }
+
+            if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $application->statuses->first() && $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(4) && $application->reply == '') {
+                $application->allowFinalReply = true;
+            } else {
+                $application->allowFinalReply = false;
+            }
+
+            if($application->department_org && $application->department_org->org_desc) {
+                $remark = $application->department_org->org_desc;
+                $application->trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
+            }
+            elseif($application->reason && $application->reason->reason_desc){
+                $remark = $application->reason->reason_desc;
+                $application->trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
+            }
+        }
+        $notpaginate=true;
+        return view('application_list', compact('applications', 'states', 'organizations','notpaginate'));
 
     }
 
