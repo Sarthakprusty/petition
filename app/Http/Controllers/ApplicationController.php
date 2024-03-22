@@ -245,7 +245,7 @@ class ApplicationController extends Controller
                 $request->validate([
                     'reg_no'=>'nullable',
                     'applicant_title'=>'nullable',
-                    'applicant_name'=>'required|regex:/^[a-zA-Z .&]+$/',
+                    'applicant_name'=>'required|regex:/^[a-zA-Z .\'&]+$/',
                     'address'=>'required',
                     'pincode'=>['nullable', 'digits:6'],
                     'state_id'=>'nullable|numeric',
