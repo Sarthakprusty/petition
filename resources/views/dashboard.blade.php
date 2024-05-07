@@ -117,6 +117,7 @@
                                         <th>User</th>
                                         <th>Today's entry</th>
                                         <th>Weekly entry</th>
+                                        <th>Monthly entry</th>
                                         <th>Drafts</th>
                                         <th>Pending with DH</th>
                                         <th>Lifetime entry</th>
@@ -135,6 +136,11 @@
                                             <td style="text-decoration: underline;color:red">
                                                 <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'weekly_count')">
                                                     {{ $userDetail['weekly_count'] }}
+                                                </a>
+                                            </td>
+                                            <td style="text-decoration: underline;color:red">
+                                                <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'monthly_count')">
+                                                    {{ $userDetail['monthly_count'] }}
                                                 </a>
                                             </td>
                                             <td style="text-decoration: underline;color:red">
@@ -162,6 +168,11 @@
                                             <td style="text-decoration: underline;color:red">
                                                 <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'weekly_count')">
                                                     {{ $userDetail['weekly_count'] }}
+                                                </a>
+                                            </td>
+                                            <td style="text-decoration: underline;color:red">
+                                                <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'monthly_count')">
+                                                    {{ $userDetail['monthly_count'] }}
                                                 </a>
                                             </td>
                                             <td style="text-decoration: underline;color:red">

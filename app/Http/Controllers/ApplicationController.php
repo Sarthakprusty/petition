@@ -153,11 +153,31 @@ class ApplicationController extends Controller
                 $query->wherein('status_id', $qr)
                     ->where('application_status.active', 1);
             })
-            ->paginate(18);
+            ->get();
+        foreach ($applications as $application) {
+            if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && ($application->created_by == auth()->user()->id) && ($application->statuses->isEmpty() || $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(1) || $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0))) {
+                $application->allowEdit = true;
+            } else {
+                $application->allowEdit = false;
+            }
 
+            if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $application->statuses->first() && $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(4) && $application->reply == '') {
+                $application->allowFinalReply = true;
+            } else {
+                $application->allowFinalReply = false;
+            }
 
-        $this->applicationlistRequirements($applications);
-        return view('application_list', compact('applications','states','organizations'));
+            if($application->department_org && $application->department_org->org_desc) {
+                $remark = $application->department_org->org_desc;
+                $application->trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
+            }
+            elseif($application->reason && $application->reason->reason_desc){
+                $remark = $application->reason->reason_desc;
+                $application->trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
+            }
+        }
+        $notpaginate=true;
+        return view('application_list', compact('applications','states','organizations','notpaginate'));
 
     }
 
@@ -272,7 +292,8 @@ class ApplicationController extends Controller
                 ]);
 //                if(!$validatedData)
 //                    return back()->with('error',$validatedData);
-            }}
+            }
+        }
 
 
         $app->applicant_title = $request->applicant_title;
@@ -1683,10 +1704,64 @@ class ApplicationController extends Controller
             $org_idclick[]=$request->organization;
         }
 
-        if(in_array(174, $org_id))
-        $userDetailsp1 = User::getUsersWithCountsForOrg174();
-        if(in_array(175, $org_id))
-        $userDetailsp2 = User::getUsersWithCountsForOrg175();
+//        $applicationCounts = Application::
+//        where('applications.active', 1)
+//            ->whereIn('applications.created_by', function ($query) use ($org_id) {
+//                $query->select('user_organization.user_id')
+//                    ->from('user_organization')
+//                    ->wherein('user_organization.org_id', $org_id);
+//            })
+//            ->whereHas('statuses', function ($query) {
+//                $query
+////                    ->wherein('status_id', [4,5])
+//                    ->where('application_status.active', 1);
+//            })
+//            -> selectRaw("
+//
+//        SUM(CASE WHEN application_status.status_id IN (4, 5) AND applications.ack_mail_sent = 'T' AND applications.ack_offline_post = 'NR' THEN 1 ELSE 0 END) as ackMailSent,
+//        SUM(CASE WHEN application_status.status_id IN (4, 5) AND applications.email_id IS NOT NULL AND applications.acknowledgement = 'Y' AND applications.ack_mail_sent = 'F' AND applications.ack_offline_post = 'R' THEN 1 ELSE 0 END) as ackPendingWithMail,
+//        SUM(CASE WHEN application_status.status_id IN (4, 5) AND applications.email_id IS NULL AND applications.acknowledgement = 'Y' AND applications.ack_mail_sent = 'F' AND applications.ack_offline_post = 'R' THEN 1 ELSE 0 END) as ackPendingWithoutMail,
+//        SUM(CASE WHEN application_status.status_id IN (4, 5) AND applications.ack_mail_sent = 'F' AND applications.ack_offline_post = 'T' THEN 1 ELSE 0 END) as ackPostDispatch,
+//
+//        SUM(CASE WHEN application_status.status_id IN (4, 5) AND applications.fwd_mail_sent = 'T' AND applications.fwd_offline_post = 'NR' THEN 1 ELSE 0 END) as fwdMailSent,
+//        SUM(CASE WHEN application_status.status_id IN (4, 5) AND organizations.mail IS NOT NULL AND applications.fwd_mail_sent = 'F' AND applications.fwd_offline_post = 'R' THEN 1 ELSE 0 END) as fwdPendingWithMail,
+//        SUM(CASE WHEN application_status.status_id IN (4, 5) AND organizations.mail IS NULL AND applications.fwd_mail_sent = 'F' AND applications.fwd_offline_post = 'R' THEN 1 ELSE 0 END) as fwdPendingWithoutMail,
+//        SUM(CASE WHEN application_status.status_id IN (4, 5) AND applications.fwd_mail_sent = 'F' AND applications.fwd_offline_post = 'T' THEN 1 ELSE 0 END) as fwdPostDispatch,
+//
+//        SUM(CASE WHEN application_status.status_id = 0 AND application_status.active = 1 THEN 1 ELSE 0 END) as in_draft,
+//        SUM(CASE WHEN application_status.status_id = 1 AND application_status.active = 1 THEN 1 ELSE 0 END) as pending_with_dh,
+//        SUM(CASE WHEN application_status.status_id = 2 AND application_status.active = 1 THEN 1 ELSE 0 END) as pending_with_so,
+//        SUM(CASE WHEN application_status.status_id = 3 AND application_status.active = 1 THEN 1 ELSE 0 END) as pending_with_us,
+//        SUM(CASE WHEN application_status.status_id = 4 AND application_status.active = 1 THEN 1 ELSE 0 END) as approved,
+//        SUM(CASE WHEN application_status.status_id = 5 AND application_status.active = 1 THEN 1 ELSE 0 END) as submitted
+//        ")
+//
+//            ->join('organizations', 'organizations.id', '=', 'applications.department_org_id')
+//            ->get();
+
+
+//        $pending_with_dh = $applicationCounts[0]->pending_with_dh;
+//        $pending_with_so = $applicationCounts[0]->pending_with_so;
+//        $pending_with_us = $applicationCounts[0]->pending_with_us;
+//        $in_draft = $applicationCounts[0]->in_draft;
+//        $approved = $applicationCounts[0]->approved;
+//        $submitted = $applicationCounts[0]->submitted;
+//
+//        $fwdMailSent = $applicationCounts[0]->fwdMailSent;
+//        $fwdPendingWithMail = $applicationCounts[0]->fwdPendingWithMail;
+//        $fwdPendingWithoutMail = $applicationCounts[0]->fwdPendingWithoutMail;
+//        $fwdDispatched = $applicationCounts[0]->fwdPostDispatch;
+//        $ackMailSent = $applicationCounts[0]->ackMailSent;
+//        $ackPendingWithMail = $applicationCounts[0]->ackPendingWithMail;
+//        $ackPendingWithoutMail = $applicationCounts[0]->ackPendingWithoutMail;
+//        $ackDispatched = $applicationCounts[0]->ackPostDispatch;
+
+//        if(in_array(174, $org_id))
+//        $userDetailsp1 = User::getUsersWithCountsForOrg174();
+//        if(in_array(175, $org_id))
+//        $userDetailsp2 = User::getUsersWithCountsForOrg175();
+
+
 
         $applicationStatusCounts = Application::where('applications.active', 1)
             ->whereIn('applications.created_by', function ($query) use ($org_id) {
@@ -1738,6 +1813,8 @@ class ApplicationController extends Controller
             ->join('organizations', 'organizations.id', '=', 'applications.department_org_id')
             ->get();
 
+
+
         $pending_with_dh = $applicationStatusCounts->sum('pending_with_dh');
         $pending_with_so = $applicationStatusCounts->sum('pending_with_so');
         $pending_with_us = $applicationStatusCounts->sum('pending_with_us');
@@ -1754,6 +1831,31 @@ class ApplicationController extends Controller
         $ackPendingWithoutMail = $applicationMailCount->pluck('ackPendingWithoutMail')->first();
         $ackDispatched = $applicationMailCount->pluck('ackPostDispatch')->first();
 
+//        return [
+//            'ackMailSent' => $ackMailSent,
+//            'ackPendingWithMail' => $ackPendingWithMail,
+//            'ackPendingWithoutMail' => $ackPendingWithoutMail,
+//            'ackDispatched' => $ackDispatched,
+//            'fwdMailSent' => $fwdMailSent,
+//            'fwdPendingWithMail' => $fwdPendingWithMail,
+//            'fwdPendingWithoutMail' => $fwdPendingWithoutMail,
+//            'fwdDispatched' => $fwdDispatched,
+//            'in_draft' => $in_draft,
+//            'pending_with_dh' => $pending_with_dh,
+//            'pending_with_so' => $pending_with_so,
+//            'pending_with_us' => $pending_with_us,
+//            'approved' => $approved,
+//            'submitted' => $submitted,
+//            'applicationCounts'=> $applicationCounts,
+//
+////            'org' => $org,
+////            'allowfilter' => $allowfilter,
+////            'organizations' => $organizations,
+////            'org_id' => $org_id,
+////            'org_idclick' => $org_idclick,
+////            'userDetailsp1' => $userDetailsp1,
+////            'userDetailsp2' => $userDetailsp2,
+//        ];
 
         $organizations = Organization::all();
         $org_id = auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray();
@@ -1764,6 +1866,8 @@ class ApplicationController extends Controller
         else{
             $allowfilter = false;
         }
+
+
 
         return view('dashboard', compact('ackMailSent','ackPendingWithMail','ackPendingWithoutMail','ackDispatched','fwdMailSent','fwdPendingWithMail','fwdPendingWithoutMail','fwdDispatched','in_draft', 'pending_with_dh', 'pending_with_so', 'pending_with_us', 'approved', 'submitted','org','allowfilter','organizations','org_id','org_idclick','userDetailsp1','userDetailsp2'));
     }
@@ -1784,6 +1888,10 @@ class ApplicationController extends Controller
 
             case 'weekly_count':
                 $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                break;
+
+            case 'monthly_count':
+                $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
                 break;
 
             case 'draft':
