@@ -70,6 +70,7 @@ class User extends Authenticatable
         return self::with('organizations', 'applications')
             ->where('id', '!=', 2)
             ->where('id', '!=', 3)
+            ->where('active', '!=', 0)
             ->whereHas('organizations', function ($query) {
                 $query->where('org_id', 174);
             })
@@ -82,6 +83,7 @@ class User extends Authenticatable
                     'today_count' => $user->applications->where('created_at', '>=', now()->startOfDay())->count(),
                     'weekly_count' => $user->applications->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
                     'monthly_count' => $user->applications->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count(),
+                    'previous_month_count' => $user->applications->whereBetween('created_at', [now()->subMonth()->startOfMonth(),now()->subMonth()->endOfMonth()])->count(),
                     'lifetime_count' => $user->applications->count(),
                     'draft' => $user->applications()->whereHas('statuses', function ($query) {
                         $query->where('status_id', 0)
@@ -103,6 +105,7 @@ class User extends Authenticatable
         return self::with('organizations', 'applications')
             ->where('id', '!=', 16)
             ->where('id', '!=', 3)
+            ->where('active', '!=', 0)
             ->whereHas('organizations', function ($query) {
                 $query->where('org_id', 175);
             })
@@ -115,6 +118,7 @@ class User extends Authenticatable
                     'today_count' => $user->applications->where('created_at', '>=', now()->startOfDay())->count(),
                     'weekly_count' => $user->applications->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
                     'monthly_count' => $user->applications->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count(),
+                    'previous_month_count' => $user->applications->whereBetween('created_at', [now()->subMonth()->startOfMonth(),now()->subMonth()->endOfMonth()])->count(),
                     'lifetime_count' => $user->applications->count(),
                     'draft' => $user->applications()->whereHas('statuses', function ($query) {
                         $query->where('status_id', 0)

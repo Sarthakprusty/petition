@@ -198,6 +198,7 @@ class ApplicationController extends Controller
         $reasonM = Reason::where('action_code',99)->get();
         $reasonN = Reason::where('action_code',10)->get();
         $states=State::all();
+        
 
 
         $app = new Application();
@@ -621,6 +622,10 @@ class ApplicationController extends Controller
                 return redirect(url(route('applications.index')))->with('success', 'Status created successfully.');
             }
             elseif ($action == 'Return')   {
+                $request->validate([
+                    'remarks' => 'required',
+                ]);
+
                 $status = $application->statuses()->wherePivot('active', 1)->get();
                 $application->statuses()->updateExistingPivot(
                     $status,
@@ -1069,6 +1074,10 @@ class ApplicationController extends Controller
             }
 
             elseif ($action == 'Return') {
+                $request->validate([
+                    'remarks' => 'required',
+                ]);
+
                 $status = $application->statuses()->wherePivot('active', 1)->get();
                 $application->statuses()->updateExistingPivot(
                     $status,
@@ -1893,6 +1902,10 @@ class ApplicationController extends Controller
                 $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
                 break;
 
+            case 'previous_month_count':
+                $query->whereBetween('created_at', [now()->subMonth()->startOfMonth(),now()->subMonth()->endOfMonth()]);
+                break;    
+
             case 'draft':
                 $query->whereHas('statuses', function ($query) {
                     $query->whereIn('status_id', [0])->where('application_status.active', 1);
@@ -2014,6 +2027,7 @@ class ApplicationController extends Controller
             ->whereIn('application_status.active', [0, 1])
             // ->whereNotNull('remarks')
             ->get();
+            // echo '<pre>';print_r($statuses);die;
         foreach ($statuses as $status)
             $status->user = User::findorfail($status->pivot->created_by);
         return view('application_view', compact('app', 'noteblock', 'signbutton','finalreplyblock', 'notecheck', 'statuses', 'hasActiveStatusFive'));

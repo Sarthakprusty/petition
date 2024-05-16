@@ -202,8 +202,8 @@
                             </div>
                         </div>
                         @php
-                            $organizationStates = \App\Models\Organization::where('org_type','S')->get();
-                            $organizationM = \App\Models\Organization::where('org_type','M')->get();
+                            $organizationStates = \App\Models\Organization::where('org_type','S')->orderBy('org_desc','asc')->get();
+                            $organizationM = \App\Models\Organization::where('org_type','M')->orderBy('org_desc','asc')->get();
                         @endphp
                         <div class="mb-3" id="organizationSt" style="display: none;">
                             <select class="form-control" id="orgS" name="orgDescSt">

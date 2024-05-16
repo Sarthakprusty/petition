@@ -201,21 +201,6 @@
             @if ((isset($_GET['submit']) && $_GET['submit'] === 'Details' && $noteblock) || (isset($_GET['submit']) && $_GET['submit'] === 'final reply' && $finalreplyblock) || (isset($_GET['submit']) && $_GET['submit'] === 'Details' && $signbutton))
                 <div class="col-md-9">
                     @endif
-
-                @if($notecheck)
-                   @if (isset($statuses) && $statuses->isNotEmpty())
-                        <div class="card text-white bg-info mb-3">
-                            <div class="card-header">Note:</div>
-                            <div class="card-body">
-                                @foreach ($statuses as $status)
-                                    <p class="card-text">
-                                        {{ $status->user ? $status->user->username : 'N/A' }} - {{ $status->pivot->remarks }}
-                                    </p>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-                @endif
                     @if($hasActiveStatusFive && $app->reply)
                         <div class="card text-white bg-warning mb-3">
                             <div class="card-header">Final Reply:</div>
@@ -447,7 +432,54 @@
                         </div>
                     </div>
                 </div>
-                    </div>
+            </div>
+            <br>
+
+            @if($notecheck)
+                   @if (isset($statuses) && $statuses->isNotEmpty())
+                        @for ($i = 0; $i < count($statuses); $i++)
+                            <div class="card text-white bg-info mb-3">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-3">
+                                            Note: {{ $i + 1 }}
+                                        </div>
+                                        <div class="col-9" style="text-align:right">
+                                        @if($i == 0)
+                                        Forwarded
+                                        @elseif($i > 0)
+                                            @if($statuses[$i]->pivot->status_id > $statuses[$i-1]->pivot->status_id)
+                                                Forwarded
+                                            @elseif($statuses[$i]->pivot->status_id < $statuses[$i-1]->pivot->status_id)
+                                                Returned
+                                            @endif
+                                        @endif
+                                        </div>   
+                                    </div>   
+                                </div>
+                                <div class="card-body">
+                                    <p>
+                                        {{$statuses[$i]->pivot->remarks ? $statuses[$i]->pivot->remarks :'N/A' }}
+                                    </p>
+                                </div>
+                                <div class="card-footer" >
+                                    <div class="row">
+                                        <div class="col-3">
+                                            {{ $statuses[$i]->user ? $statuses[$i]->user->employee_name : 'N/A' }}
+                                        </div>
+                                        <div class="col-9" style="text-align: right;">
+                                            {{ $statuses[$i]->user ? $statuses[$i]->user->username : 'N/A' }} <br>
+                                            {{ $statuses[$i]->pivot->created_at }}
+
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+
+                            </div>
+                        @endfor
+                    @endif
+                @endif
             @if (isset($_GET['submit']) && $_GET['submit'] === 'Details' && $noteblock)
                 </div>
                 <div class="col-md-3">
@@ -466,7 +498,7 @@
                                     <button type="submit" class="button" name="submit" value="Approve" onclick="return confirm('Are you sure, You want to Approve this petition?')">Approve</button>
                                 </div>
                                 <div class="col-6" style="text-align: left">
-                                    <button type="submit" class="buttonRed" name="submit" value="Return" onclick="return confirm('Are you sure, You want to Reject this petition?')">Return</button>
+                                    <button type="submit" class="buttonRed" name="submit" value="Return" onclick="return confirm('Are you sure, You want to Return this petition?(While Returning Note is Mandatory)')">Return</button>
                                 </div>
                             </div>
                         </div>

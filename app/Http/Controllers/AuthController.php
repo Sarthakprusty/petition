@@ -26,7 +26,12 @@ class AuthController extends Controller
         $credentials = $request->only('username', 'password');
 
         if(Auth::attempt($credentials)){
+            if( Auth::user()->active==1)
             return redirect(route('applications.dashboard'));
+            else{
+                Auth::logout();
+            return Redirect::to(route('login'));
+            }
 
 //            $request->session()->regenerate();
 //            Log::debug('User logged in');
