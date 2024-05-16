@@ -86,5 +86,47 @@ class AuthController extends Controller
         });
     }
 
+    public function employees(){
+        // $states=State::all();
+        // $organizations=Organization::all();
+    
+        
+        $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+       
+        if (in_array(174, $org_id)) {
+            $employees=User::whereHas('organizations', function ($query)  {
+                $query->where('org_id', 174)
+                    ->where('user_organization.active', 1);
+            })->get();
+        }
+    
+        if (in_array(175, $org_id)) {
+            $employees=User::whereHas('organizations', function ($query)  {
+                $query->where('org_id', 175)
+                    ->where('user_organization.active', 1);
+            })->get();
+        }
+            // echo '<pre>';print_r($employees);die;
+    
+            return view('employeedt', compact('employees'));
+        }
 
+        public function save_employee(Request $request){
+            
+            $user = User::find($request->user_id);
+            if($user && $user != NULL){
+                $user->employee_name = $request->employee_name;
+                $user->active = $request->active;
+                if($request->password && $request->password !== null)
+                    $user->password = Hash::make($request->password);
+                $user->updated_at = Carbon::now()->toDateTimeLocalString();
+                $user->last_updated_by = Auth::user()->id;
+                $user->last_updated_from = $request->ip();
+                if ($user->save())
+                return redirect(route('applications.dashboard'));
+            }           
+            else
+                return response(array("code" => 400, "msg" => "Bad request"), 400);
+            }
 }
+    

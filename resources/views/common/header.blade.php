@@ -19,7 +19,7 @@
             <div class="d-flex float-end" style="margin-right: 4%; color: #9E633E;text-decoration: underline;">
 
                 @if(Auth::check())
-                    {{Auth::user()->username}}
+                    {{Auth::user()->username}} / {{Auth::user()->employee_name}}
                 @else
                     N/A
                 @endif

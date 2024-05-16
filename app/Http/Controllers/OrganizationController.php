@@ -93,15 +93,16 @@ class OrganizationController extends Controller
 
     public function changeorganization(Request $request){
         $states= State::all();
-        if ($request->orgvalue && $request->orgvalue != '') {
-            if ($request->orgvalue == 'names' && $request->orgDescMin && $request->orgDescMin != '') {
-                $organizations = Organization::where('id', $request->orgDescMin)->first();
-            } elseif ($request->orgvalue == 'types' && $request->orgDescStat && $request->orgDescStat != '') {
-                $organizations = Organization::where('id', $request->orgDescStat)->first();
-            }else
-                return response(array("code" => 400, "msg" => "Bad request"), 400);
-        } else
-                return response(array("code" => 400, "msg" => "Bad request"), 400);
+        $organizations= Organization::find($request->org_id);
+        // if ($request->orgvalue && $request->orgvalue != '') {
+        //     if ($request->orgvalue == 'names' && $request->orgDescMin && $request->orgDescMin != '') {
+        //         $organizations = Organization::where('id', $request->orgDescMin)->first();
+        //     } elseif ($request->orgvalue == 'types' && $request->orgDescStat && $request->orgDescStat != '') {
+        //         $organizations = Organization::where('id', $request->orgDescStat)->first();
+        //     }else
+        //         return response(array("code" => 400, "msg" => "Bad request"), 400);
+        // } else
+        //         return response(array("code" => 400, "msg" => "Bad request"), 400);
 
         return view('orglist', compact(  'organizations','states'));
     }
@@ -136,5 +137,13 @@ class OrganizationController extends Controller
         else
             return response(array("code" => 400, "msg" => "org not found"), 400);
 
+    }
+
+    public function ministries(Request $request){
+        // $states=State::orderBy('state_name','asc')->get();
+        $organization_ministry = Organization::orderBy('org_desc','asc')->where('org_type','M')->get();
+        $organizations_state = Organization::orderBy('org_desc','asc')->where('org_type','S')->get();
+    
+        return view('show_organization', compact('organization_ministry','organizations_state'));
     }
 }

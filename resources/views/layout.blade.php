@@ -56,6 +56,14 @@
                             </a>
                         </li>
                         @endif
+                        @if (auth()->check() && auth()->user()->roles->pluck('id')->contains(2))
+                        <br>
+                        <li>
+                            <a href="{{route('users.employees')}}">
+                                <i class="fs-4 bi-person-add"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Employees</span>
+                            </a>
+                        </li>
+                        @endif
                         <br>
                         <li>
                             <a href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">
@@ -83,7 +91,8 @@
                         @if (auth()->check() && auth()->user()->roles->pluck('id')->contains(3))
                             <br>
                             <li>
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#orgchange">
+                                <a href="{{route('organizations.ministries')}}" >
+                                <!-- data-bs-toggle="modal" data-bs-target="#orgchange" -->
                                     <i class="fs-4 bi bi-building"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Organizations</span>
                                 </a>
                             </li>
@@ -275,7 +284,7 @@
 {{--</li>--}}
 
 
-<div>
+<!-- <div>
     <div class="modal fade" id="orgchange" style="z-index: 1051" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" data-bs-backdrop="false">
         <div class="modal-dialog modal-dialog-centered">
             <form method="post" action="{{route('organizations.change') }}"  method="post">@csrf
@@ -342,7 +351,7 @@
             </form>
         </div>
     </div>
-</div>
+</div> -->
 
 <div>
     <div class="modal fade" id="letter" style="z-index: 1051" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" data-bs-backdrop="false">

@@ -115,6 +115,7 @@
                                     <thead class="text-center">
                                     <tr>
                                         <th>User</th>
+                                        <th>Employee Name</th>
                                         <th>Today's entry</th>
                                         <th>Weekly entry</th>
                                         <th>Monthly entry</th>
@@ -126,8 +127,9 @@
                                     <tbody class="text-center">
                                     @foreach ($userDetailsp1 as $userDetail)
                                         <tr>
-                                            <td style="display: none">{{ $userDetail['id'] }}</td>
+                                            <td style="display: none">{{ $userDetail['id'] }} </td>
                                             <td>{{ $userDetail['name'] }}</td>
+                                            <td>{{ $userDetail['employee_name'] }}</td>
                                             <td style="text-decoration: underline;color:red">
                                                 <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'today_count')">
                                                     {{ $userDetail['today_count'] }}
@@ -160,6 +162,7 @@
                                         <tr>
                                             <td style="display: none">{{ $userDetail['id'] }}</td>
                                             <td>{{ $userDetail['name'] }}</td>
+                                            <td>{{ $userDetail['employee_name'] }}</td>
                                             <td style="text-decoration: underline;color:red">
                                                 <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'today_count')">
                                                     {{ $userDetail['today_count'] }}

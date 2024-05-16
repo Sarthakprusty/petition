@@ -3,6 +3,7 @@
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\SignAuthorityController;
+use App\Http\Controllers\AuthController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,10 @@ Route::group(['middleware' => ['web']], function () {
     Route::post('applications/update-print', [ApplicationController::class, 'updatePrint'])->name('applications.updatePrint')->middleware('auth');
 
 
+    Route::get('employees', [AuthController::class, 'employees'])->name('users.employees')->middleware('auth');
+    Route::post('employees_data', [AuthController::class, 'save_employee'])->name('users.employees_save')->middleware('auth');
+
+
     // Route::get('/application/search', 'ApplicationController@search')->name('application.search');
 
 
@@ -48,7 +53,9 @@ Route::group(['middleware' => ['web']], function () {
 
     Route::get('/error', function () {return view('error');});
 
-    Route::resource('organizations', App\Http\Controllers\OrganizationController::class);
+    Route::resource('organizations', OrganizationController::class)->middleware('auth');
     Route::post('org/change', [OrganizationController::class, 'changeorganization'])->name('organizations.change')->middleware('auth');
+    Route::get('organizations', [OrganizationController::class, 'ministries'])->name('organizations.ministries')->middleware('auth');
+
 
 });
