@@ -18,7 +18,7 @@
         .project-people img {
             width: 32px;
             height: 32px;
-        }
+        } 
         .project-title a {
             font-size: 14px;
             color: #676a6c;

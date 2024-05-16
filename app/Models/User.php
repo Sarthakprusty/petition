@@ -78,6 +78,7 @@ class User extends Authenticatable
                 return [
                     'id'=> $user->id,
                     'name' => $user->username,
+                    'employee_name' => $user->employee_name,
                     'today_count' => $user->applications->where('created_at', '>=', now()->startOfDay())->count(),
                     'weekly_count' => $user->applications->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
                     'monthly_count' => $user->applications->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count(),
@@ -110,6 +111,7 @@ class User extends Authenticatable
                 return [
                     'id'=> $user->id,
                     'name' => $user->username,
+                    'employee_name' => $user->employee_name,
                     'today_count' => $user->applications->where('created_at', '>=', now()->startOfDay())->count(),
                     'weekly_count' => $user->applications->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
                     'monthly_count' => $user->applications->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count(),

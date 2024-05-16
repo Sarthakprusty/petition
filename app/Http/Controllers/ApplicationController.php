@@ -265,7 +265,7 @@ class ApplicationController extends Controller
                 $request->validate([
                     'reg_no'=>'nullable',
                     'applicant_title'=>'nullable',
-                    'applicant_name'=>'required|regex:/^[a-zA-Z .\'&]+$/',
+                    'applicant_name'=>'required',
                     'address'=>'required',
                     'pincode'=>['nullable', 'digits:6'],
                     'state_id'=>'nullable|numeric',
@@ -1756,11 +1756,10 @@ class ApplicationController extends Controller
 //        $ackPendingWithoutMail = $applicationCounts[0]->ackPendingWithoutMail;
 //        $ackDispatched = $applicationCounts[0]->ackPostDispatch;
 
-//        if(in_array(174, $org_id))
-//        $userDetailsp1 = User::getUsersWithCountsForOrg174();
-//        if(in_array(175, $org_id))
-//        $userDetailsp2 = User::getUsersWithCountsForOrg175();
-
+       if(in_array(174, $org_id))
+       $userDetailsp1 = User::getUsersWithCountsForOrg174();
+       if(in_array(175, $org_id))
+       $userDetailsp2 = User::getUsersWithCountsForOrg175();
 
 
         $applicationStatusCounts = Application::where('applications.active', 1)
@@ -2013,7 +2012,7 @@ class ApplicationController extends Controller
 
         $statuses = $app->statuses()
             ->whereIn('application_status.active', [0, 1])
-            ->whereNotNull('remarks')
+            // ->whereNotNull('remarks')
             ->get();
         foreach ($statuses as $status)
             $status->user = User::findorfail($status->pivot->created_by);
@@ -2115,4 +2114,7 @@ class ApplicationController extends Controller
 //                            return "Failed to send SMS: " . $e->getMessage();
 //                        }
 //                    }
+
+
+
 }
