@@ -1,10 +1,18 @@
 @extends('layout')
 
 @section('content')
-    {{--    @php--}}
-    {{--        print_r( session()->all());--}}
-    {{--    @endphp--}}
-    {{--@if ($errors->any())--}}
+
+@if($message = session()->get('error'))
+    <div class="alert alert-danger alert-block">
+        <button type="button" class="btn btn-outline-secondary" id="session" data-dismiss="alert">x</button>
+        <strong>{{ $message }}</strong>
+    </div>
+@endif
+    
+   <!--@php
+         print_r( session()->all());
+    @endphp  -->
+    <!-- {{--@if ($errors->any())--}}
     {{--    <div class="alert alert-danger">--}}
     {{--        <strong>Whoops!</strong> There were some problems with your input.<br><br>--}}
     {{--        <ul>--}}
@@ -18,7 +26,7 @@
     {{--    <script>--}}
     {{--        alert("{{ session('error') }}");--}}
     {{--    </script>--}}
-    {{--@endif--}}
+    {{--@endif--}} -->
 
 
     @if (isset($statuses) && $statuses->isNotEmpty())
@@ -34,31 +42,13 @@
         </div>
     @endif
 
-
-
-
-
-
-
-
-    {{--    @if($appStatusRemark->isNotEmpty())--}}
-    {{--        <div class="card text-white bg-info mb-3">--}}
-    {{--            <div class="card-header">Note:</div>--}}
-    {{--            <div class="card-body">--}}
-    {{--                @foreach($appStatusRemark as $remark)--}}
-    {{--                    <p class="card-text">Created by: {{ $remark->created_by }}</p>--}}
-    {{--                    <p class="card-text">{{ $remark }}</p>--}}
-    {{--                @endforeach--}}
-    {{--            </div>--}}
-    {{--        </div>--}}
-    {{--    @else--}}
-    {{--    @endif--}}
-
+ 
     <div class="row"></div>
     <div class="card shadow" xmlns="http://www.w3.org/1999/html">
         <div class="card-body">
             <form method="POST" action="{{route('applications.store')}}" enctype="multipart/form-data" >
                 @csrf
+                   
                 <div>
                     <div>
                         @if(isset($app->id))
@@ -291,7 +281,7 @@
 
                         <div class="row">
                             <div class="col-md-3" style="text-align: right">
-                                <label class="form-label" for="action_org">Action:<span style="color: red;">*</span></label>
+                                <label class="form-label" for="action_org" >Action:<span style="color: red;">*</span></label>
                             </div>
                             <div class="col-md-9">
                                 <select class="form-control" name="action_org" id="action_org" required>
@@ -812,6 +802,42 @@
             //         }
             //     });
             // });
+            
+            $(document).ready(function () {
+                $('#letter_no').blur(function() {
+                    let letter_no = document.getElementById('letter_no').value;
+
+                    var pausecontent = <?php echo json_encode($existed_letter_no); ?>;
+
+                    if (pausecontent.includes(letter_no)) {
+                        alert('Letter no already exists');
+                    }
+                });
+
+                $('#session').click(function(){
+                    // alert(2344);
+                   <?php session()->forget('error'); ?>
+                });
+
+                $('button[name="submit"]').click(function() {
+                    <?php 
+                        if(session()->has('error')) {
+                            session()->forget('error');
+                        }
+                    ?>
+                });
+            });
+
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelector('button[name="submit"]').addEventListener('click', function(event) {
+                    let letter_no = document.getElementById('letter_no').value;
+                    var pausecontent = <?php echo json_encode($existed_letter_no); ?>;
+                    if (pausecontent.includes(letter_no)) {
+                        alert('Letter no already exists');
+                        event.preventDefault();
+                    }
+                });
+            });
         </script>
     </div>
 @endsection

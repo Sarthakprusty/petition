@@ -198,8 +198,12 @@ class ApplicationController extends Controller
         $reasonM = Reason::where('action_code',99)->get();
         $reasonN = Reason::where('action_code',10)->get();
         $states=State::all();
-        
 
+        $application  = Application::where('active','1')->get();
+        $existed_letter_no=[];
+        foreach($application as $appli){
+            $existed_letter_no[] = $appli->letter_no;
+        }
 
         $app = new Application();
         $allowOnlyForward = $this->Forwardbuttoncommon($app);
@@ -210,7 +214,7 @@ class ApplicationController extends Controller
             $allowDraft = false;
         }
         //  $appStatusRemark = $app->statuses()->wherePivot('active', 0)->pluck('pivot.remarks')->with('created by');
-        return view('application', compact('app','organizationStates','states','grievances','reasonM','reasonN','organizationM','allowDraft','allowOnlyForward'));
+        return view('application', compact('app','organizationStates','states','grievances','reasonM','reasonN','organizationM','allowDraft','allowOnlyForward','existed_letter_no'));
     }
 
     /**
@@ -254,12 +258,21 @@ class ApplicationController extends Controller
      */
     public function store(Request $request)
     {
-//        $errors = ['error' => 'Sorry, something went wrong.'];
-//        return back()->withErrors($errors);
         $app = new Application();
         if(isset($request->id) && $request->id){
             $app = Application::find($request->id);
+            if($request->letter_no && $request->letter_no!==null && Application::where('letter_no',$request->letter_no)->where('id','<>',$request->id)->exists()){
+                $letter_no_msg="Letter no already exist!";
+                session()->put('error',$letter_no_msg);
+                return back()->withInput($request->input());
+            }
         }
+        if($request->letter_no && $request->letter_no!==null && (!$request->id || $request->id==null) && Application::where('letter_no',$request->letter_no)->exists()){
+            $letter_no_msg="Letter no already exist!";
+            session()->put('error',$letter_no_msg);
+            return back()->withInput($request->input());
+        }
+
         if($request->language_of_letter!='O'){
             if ($request->input('submit') == 'Forward') {
 //                $validatedData=$request->validate([

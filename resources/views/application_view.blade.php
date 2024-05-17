@@ -498,7 +498,8 @@
                                     <button type="submit" class="button" name="submit" value="Approve" onclick="return confirm('Are you sure, You want to Approve this petition?')">Approve</button>
                                 </div>
                                 <div class="col-6" style="text-align: left">
-                                    <button type="submit" class="buttonRed" name="submit" value="Return" onclick="return confirm('Are you sure, You want to Return this petition?(While Returning Note is Mandatory)')">Return</button>
+                                <button type="submit" class="buttonRed" name="submit" value="Return" id="submit_return">Return</button>   
+                                <!-- <button type="submit" class="buttonRed" name="submit" value="Return" id='submit_return' onclick="return confirm('Are you sure, You want to Return this petition?(While Returning Note is Mandatory)')">Return</button> -->
                                 </div>
                             </div>
                         </div>
@@ -554,7 +555,7 @@
 
 
 
-{{--                    <script>--}}
+                    <script>
 {{--                        $(document).ready(function() {--}}
 {{--                            $('.list-group-item').each(function() {--}}
 {{--                                var fieldValue = $(this).find('.float-end').text().trim(); // Get the value of the field inside each list-group-item--}}
@@ -564,10 +565,25 @@
 {{--                                }--}}
 {{--                            });--}}
 {{--                        });--}}
-{{--                    </script>--}}
+
+                    document.getElementById('submit_return').addEventListener('click', function(event) {
+                            var remarks = document.getElementById('remarks').value;
+                            if (!remarks.trim()) { // Checking if remarks field is empty or contains only whitespace
+                                alert('Remarks are mandatory.'); // Alert if remarks field is empty
+                                event.preventDefault(); // Prevent form submission
+                            } else {
+                                if (!confirm('Are you sure you want to return this petition?')) {
+                                    event.preventDefault(); // Prevent form submission if user cancels
+                                }
+                            }
+                        });
+
+
+                   </script>
         </div>
     </div>
 
+    
 
 @endsection
 
