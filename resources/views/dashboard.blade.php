@@ -116,12 +116,13 @@
                                     <tr>
                                         <th>User</th>
                                         <th>Employee Name</th>
-                                        <th>Today's entry</th>
-                                        <th>Weekly entry</th>
-                                        <th>Monthly entry</th>
+                                        <th>Today's Entry</th>
+                                        <th>Weekly Entry</th>
+                                        <th>Previous Month Entry</th>
+                                        <th>Current Monthly Entry</th>
                                         <th>Drafts</th>
                                         <th>Pending with DH</th>
-                                        <th>Lifetime entry</th>
+                                        <th>Lifetime Entry</th>
                                     </tr>
                                     </thead>
                                     <tbody class="text-center">
@@ -138,6 +139,11 @@
                                             <td style="text-decoration: underline;color:red">
                                                 <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'weekly_count')">
                                                     {{ $userDetail['weekly_count'] }}
+                                                </a>
+                                            </td>
+                                            <td style="text-decoration: underline;color:red">
+                                                <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'previous_month_count')">
+                                                    {{ $userDetail['previous_month_count'] }}
                                                 </a>
                                             </td>
                                             <td style="text-decoration: underline;color:red">
@@ -171,6 +177,11 @@
                                             <td style="text-decoration: underline;color:red">
                                                 <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'weekly_count')">
                                                     {{ $userDetail['weekly_count'] }}
+                                                </a>
+                                            </td>
+                                            <td style="text-decoration: underline;color:red">
+                                                <a href="#" onclick="submitindvidual('{{ $userDetail['id'] }}', 'previous_month_count')">
+                                                    {{ $userDetail['previous_month_count'] }}
                                                 </a>
                                             </td>
                                             <td style="text-decoration: underline;color:red">

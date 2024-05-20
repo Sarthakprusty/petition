@@ -199,6 +199,11 @@ class ApplicationController extends Controller
         $reasonN = Reason::where('action_code',10)->get();
         $states=State::all();
 
+        $application  = Application::where('active','1')->get();
+        $existed_letter_no=[];
+        foreach($application as $appli){
+            $existed_letter_no[] = $appli->letter_no;
+        }
 
         $app = new Application();
         $allowOnlyForward = $this->Forwardbuttoncommon($app);
@@ -209,7 +214,7 @@ class ApplicationController extends Controller
             $allowDraft = false;
         }
         //  $appStatusRemark = $app->statuses()->wherePivot('active', 0)->pluck('pivot.remarks')->with('created by');
-        return view('application', compact('app','organizationStates','states','grievances','reasonM','reasonN','organizationM','allowDraft','allowOnlyForward'));
+        return view('application', compact('app','organizationStates','states','grievances','reasonM','reasonN','organizationM','allowDraft','allowOnlyForward','existed_letter_no'));
     }
 
     /**
@@ -253,12 +258,21 @@ class ApplicationController extends Controller
      */
     public function store(Request $request)
     {
-//        $errors = ['error' => 'Sorry, something went wrong.'];
-//        return back()->withErrors($errors);
         $app = new Application();
         if(isset($request->id) && $request->id){
             $app = Application::find($request->id);
+            if($request->letter_no && $request->letter_no!==null && Application::where('letter_no',$request->letter_no)->where('id','<>',$request->id)->exists()){
+                $letter_no_msg="Letter no already exist!";
+                session()->put('error',$letter_no_msg);
+                return back()->withInput($request->input());
+            }
         }
+        if($request->letter_no && $request->letter_no!==null && (!$request->id || $request->id==null) && Application::where('letter_no',$request->letter_no)->exists()){
+            $letter_no_msg="Letter no already exist!";
+            session()->put('error',$letter_no_msg);
+            return back()->withInput($request->input());
+        }
+
         if($request->language_of_letter!='O'){
             if ($request->input('submit') == 'Forward') {
 //                $validatedData=$request->validate([
@@ -621,6 +635,10 @@ class ApplicationController extends Controller
                 return redirect(url(route('applications.index')))->with('success', 'Status created successfully.');
             }
             elseif ($action == 'Return')   {
+                $request->validate([
+                    'remarks' => 'required',
+                ]);
+
                 $status = $application->statuses()->wherePivot('active', 1)->get();
                 $application->statuses()->updateExistingPivot(
                     $status,
@@ -1069,6 +1087,10 @@ class ApplicationController extends Controller
             }
 
             elseif ($action == 'Return') {
+                $request->validate([
+                    'remarks' => 'required',
+                ]);
+
                 $status = $application->statuses()->wherePivot('active', 1)->get();
                 $application->statuses()->updateExistingPivot(
                     $status,
@@ -1893,6 +1915,10 @@ class ApplicationController extends Controller
                 $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
                 break;
 
+            case 'previous_month_count':
+                $query->whereBetween('created_at', [now()->subMonth()->startOfMonth(),now()->subMonth()->endOfMonth()]);
+                break;    
+
             case 'draft':
                 $query->whereHas('statuses', function ($query) {
                     $query->whereIn('status_id', [0])->where('application_status.active', 1);
@@ -2014,6 +2040,7 @@ class ApplicationController extends Controller
             ->whereIn('application_status.active', [0, 1])
             // ->whereNotNull('remarks')
             ->get();
+            // echo '<pre>';print_r($statuses);die;
         foreach ($statuses as $status)
             $status->user = User::findorfail($status->pivot->created_by);
         return view('application_view', compact('app', 'noteblock', 'signbutton','finalreplyblock', 'notecheck', 'statuses', 'hasActiveStatusFive'));
