@@ -445,7 +445,9 @@
                                             Note: {{ $i + 1 }}
                                         </div>
                                         <div class="col-9" style="text-align:right">
-                                        @if($i == 0)
+                                        @if($statuses[$i]->pivot->status_id ===0)
+                                            <b><div style="font-style: italic">Draft</div></b>
+                                        @elseif($i == 0)
                                         Forwarded
                                         @elseif($i > 0)
                                             @if($statuses[$i]->pivot->status_id ==4)
