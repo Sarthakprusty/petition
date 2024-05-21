@@ -250,6 +250,7 @@ class ApplicationController extends Controller
         else {
             $allowDraft = false;
         }
+      
         return view('application', compact('app','organizationStates','states','grievances','reasonM','reasonN','organizationM','statuses','allowDraft','allowOnlyForward'));
     }
 
@@ -400,7 +401,7 @@ class ApplicationController extends Controller
                     $app->save();
 
                 } else {
-                    $currentYear = Carbon::now()->format('y');
+                    $currentYear = Carbon::now()->format('Y');
                     $currentMonth = Carbon::now()->format('m');
                     $currentDay = Carbon::now()->format('d');
 
@@ -410,15 +411,15 @@ class ApplicationController extends Controller
                     if ($currentMonth >= 4) {
                         // Financial year starts from April of the current year
                         $startYear = $currentYear;
-                        $endYear = Carbon::now()->addYear()->format('y');
+                        $endYear = Carbon::now()->addYear()->format('Y');
                     } else {
                         // Financial year starts from April of the previous year
-                        $startYear = Carbon::now()->subYear()->format('y');
+                        $startYear = Carbon::now()->subYear()->format('Y');
                         $endYear = $currentYear;
                     }
 
-                    $startDate = Carbon::createFromFormat('y-m-d', $startYear . '-04-01')->startOfDay();
-                    $endDate = Carbon::createFromFormat('y-m-d', $endYear . '-03-31')->endOfDay();
+                    $startDate = Carbon::createFromFormat('Y-m-d', $startYear . '-04-01')->startOfDay();
+                    $endDate = Carbon::createFromFormat('Y-m-d', $endYear . '-03-31')->endOfDay();
 
                     $matchingRowCount = Application::whereBetween('created_at', [$startDate, $endDate])
                         ->whereNotNull('reg_no')
@@ -439,7 +440,7 @@ class ApplicationController extends Controller
                     $month = sprintf('%02d', $currentMonth);
                     $day = sprintf('%02d', $currentDay);
 
-                    $app->reg_no = $modifiedString . '/' . $day . $month . $currentYear . $petitionNumber;
+                    $app->reg_no = $modifiedString . '/' . $currentYear . $month . $day . $petitionNumber;
 
                     //if reg no does not exist it means it is a new record that's why create details are here.
                     $app->created_at = Carbon::now()->toDateTimeLocalString();
@@ -1581,6 +1582,7 @@ class ApplicationController extends Controller
 //                        return $query;
 //                    });
                     $applications = $query->get();
+                    // echo '<pre>';print_r($applications);die;
 //                if ((($request->filled('mail') && $request->mail == 'Pending')) || ($offlineAapplications && $offlineAapplications!==null)) {
 //                    if (($request->filled('mail') && $request->mail == 'Pending')) {
 //                        $letter = 'Acknowledgement Letter';
