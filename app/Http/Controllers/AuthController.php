@@ -102,17 +102,25 @@ class AuthController extends Controller
             $employees=User::whereHas('organizations', function ($query)  {
                 $query->where('org_id', 174)
                     ->where('user_organization.active', 1);
-            })->get();
+            })
+            ->whereHas('roles', function ($query) {
+                $query->where('role_id','<>', 3)
+                    ->where('user_roles.active', 1);
+                })
+                    ->get();
         }
     
         if (in_array(175, $org_id)) {
             $employees=User::whereHas('organizations', function ($query)  {
                 $query->where('org_id', 175)
                     ->where('user_organization.active', 1);
-            })->get();
+            })
+            ->whereHas('roles', function ($query) {
+                $query->where('role_id','<>', 3)
+                    ->where('user_roles.active', 1);
+                })->get();
         }
-            // echo '<pre>';print_r($employees);die;
-    
+
             return view('employeedt', compact('employees'));
         }
 

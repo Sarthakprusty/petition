@@ -103,12 +103,12 @@
             <br>
             <div>
                 <span style="font-weight: bold;">Sl.No: {{$application->reg_no}}</span>
-                <span style="float: right">दिनांक/Dated: {{$application->created_at->format('d/m/Y')}}</span>
+                <span style="float: right">दिनांक/Dated: {{ \Carbon\Carbon::now()->format('d/m/Y') }}</span>
             </div>
 
             <br>
 
-            <div>विषय/Subject: REQUEST FOR ATTENTION ON HIS/HER PETITION</div><br>
+            <div>विषय/Subject:{{ $application->letter_subject ? $application->letter_subject : 'REQUEST FOR ATTENTION ON HIS/HER PETITION' }}</div><br>
             <p>कृपया, उपर्युक्त विषय पर, भारत के राष्ट्रपति जी को सम्बोधित दिनांक: {{$application->letter_date?$application->letter_date->format("d/m/Y"): 'रहित'}} की स्वतः स्पष्ट याचिका उपयुक्त ध्यानाकर्षण के लिए संलग्न है |</p>
             <p> Enclosed please find for appropriate attention a petition dated: {{$application->letter_date?$application->letter_date->format("d/m/Y"): null}} addressed to the President of India on the above subject matter, which is self explanatory.</p>
 

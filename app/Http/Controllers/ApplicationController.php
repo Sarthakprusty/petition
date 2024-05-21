@@ -787,7 +787,7 @@ class ApplicationController extends Controller
                             $data = [
                                 "From" => "us.petitions@rb.nic.in",
                                 "To" => [$to],
-                                // "Cc"=>$cc,
+                                "Cc"=>$cc,
                                 "Subject" => "Reply From Rashtrapati Bhavan",
                                 "Body" =>  $body,
                                 "Attachments"=> [
