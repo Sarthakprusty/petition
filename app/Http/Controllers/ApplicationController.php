@@ -235,6 +235,11 @@ class ApplicationController extends Controller
         $organizationM = Organization::where('org_type','M')->get();
         $reasonM = Reason::where('action_code',99)->get();
         $reasonN = Reason::where('action_code',10)->get();
+        $application  = Application::where('active','1')->get();
+        $existed_letter_no=[];
+        foreach($application as $appli){
+            $existed_letter_no[] = $appli->letter_no;
+        }
         $statuses = $app->statuses()
             ->whereIn('application_status.active', [0, 1])
             ->whereNotNull('remarks')
@@ -250,7 +255,7 @@ class ApplicationController extends Controller
         else {
             $allowDraft = false;
         }
-        return view('application', compact('app','organizationStates','states','grievances','reasonM','reasonN','organizationM','statuses','allowDraft','allowOnlyForward'));
+        return view('application', compact('app','organizationStates','states','grievances','reasonM','reasonN','organizationM','statuses','allowDraft','allowOnlyForward','existed_letter_no'));
     }
 
     /**
@@ -1917,7 +1922,7 @@ class ApplicationController extends Controller
 
             case 'previous_month_count':
                 $query->whereBetween('created_at', [now()->subMonth()->startOfMonth(),now()->subMonth()->endOfMonth()]);
-                break;    
+                break;
 
             case 'draft':
                 $query->whereHas('statuses', function ($query) {
