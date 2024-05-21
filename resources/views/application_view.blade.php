@@ -448,7 +448,11 @@
                                         @if($i == 0)
                                         Forwarded
                                         @elseif($i > 0)
-                                            @if($statuses[$i]->pivot->status_id > $statuses[$i-1]->pivot->status_id)
+                                            @if($statuses[$i]->pivot->status_id ==4)
+                                                <div style="color:lawngreen;">Approved</div>
+                                            @elseif($statuses[$i]->pivot->status_id ==5)
+                                                <b><div style="color:#fddd00;"> Final Reply</div></b>
+                                            @elseif($statuses[$i]->pivot->status_id > $statuses[$i-1]->pivot->status_id)
                                                 Forwarded
                                             @elseif($statuses[$i]->pivot->status_id < $statuses[$i-1]->pivot->status_id)
                                               <div style="color:red;">Returned</div>
