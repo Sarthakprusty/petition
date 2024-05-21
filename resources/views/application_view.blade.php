@@ -469,7 +469,7 @@
                                         </div>
                                         <div class="col-9" style="text-align: right;">
                                             {{ $statuses[$i]->user ? $statuses[$i]->user->username : 'N/A' }} <br>
-                                            {{ $statuses[$i]->pivot->created_at->format("d/m/Y") }}
+                                            {{ $statuses[$i]->pivot->created_at->format("d/m/Y h:i:s") }}
 
                                         </div>
                                     </div>
