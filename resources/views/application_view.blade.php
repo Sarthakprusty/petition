@@ -451,7 +451,7 @@
                                             @if($statuses[$i]->pivot->status_id > $statuses[$i-1]->pivot->status_id)
                                                 Forwarded
                                             @elseif($statuses[$i]->pivot->status_id < $statuses[$i-1]->pivot->status_id)
-                                                Returned
+                                              <div style="color:red;">Returned</div>  
                                             @endif
                                         @endif
                                         </div>   
@@ -568,7 +568,7 @@
 
                     document.getElementById('submit_return').addEventListener('click', function(event) {
                             var remarks = document.getElementById('remarks').value;
-                            if (!remarks.trim()) { // Checking if remarks field is empty or contains only whitespace
+                            if (!remarks.trim()) { // Checking if remarks field is empty or contains only whitespace dev@1234
                                 alert('Remarks are mandatory.'); // Alert if remarks field is empty
                                 event.preventDefault(); // Prevent form submission
                             } else {

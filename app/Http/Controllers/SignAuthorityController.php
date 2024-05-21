@@ -86,6 +86,7 @@ class SignAuthorityController extends Controller
                 }
                 $user = Auth::user();
                 $user->sign_id = $signAuthority->id;
+                $user->employee_name = $signAuthority->name;
                 $user->save();
                 return redirect()->route('authority.index')->with('success', 'Authority Assigned successfully.');
             }

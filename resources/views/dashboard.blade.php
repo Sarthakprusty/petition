@@ -39,7 +39,9 @@
                     @if(isset($org_idclick))
                         <input type="hidden" value="{{ implode(',', $org_idclick) }}" name="organization" >
                     @endif
-
+                    @if($allowDH)
+                        <input type="hidden" value="{{auth()->user()->id}}" name="user_id">
+                    @endif
                     <div class="col col-md-2" style="padding: 1%; ">
                         <a href="#" onclick="submitForm(0)">
                             <div class="card shadow bg-light mb-3" style="max-width: 18rem;">
@@ -222,6 +224,7 @@
                     @if(isset($org_idclick))
                         <input type="hidden" value="{{ implode(',', $org_idclick) }}" name="organization" >
                     @endif
+                    <input type="hidden" value="dashboard" name="from">
                     <input type="hidden" value="toPrintStatus" name="dashboard" >
                     <div class="col col-md-3" style="padding: 2%; ">
                         <a href="#" onclick="submitAck('mailed')">

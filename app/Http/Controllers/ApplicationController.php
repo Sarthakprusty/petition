@@ -139,6 +139,10 @@ class ApplicationController extends Controller
             $qr=  [$request->status] ;
         }
 
+        if($request->user_id && $request->user_id != ''){
+            $arr[]=   ['created_by','=',  $request->user_id ];
+        }
+
         $organizations=Organization::all();
         $states=State::all();
 
@@ -405,7 +409,7 @@ class ApplicationController extends Controller
                     $app->save();
 
                 } else {
-                    $currentYear = Carbon::now()->format('y');
+                    $currentYear = Carbon::now()->format('Y');
                     $currentMonth = Carbon::now()->format('m');
                     $currentDay = Carbon::now()->format('d');
 
@@ -415,15 +419,15 @@ class ApplicationController extends Controller
                     if ($currentMonth >= 4) {
                         // Financial year starts from April of the current year
                         $startYear = $currentYear;
-                        $endYear = Carbon::now()->addYear()->format('y');
+                        $endYear = Carbon::now()->addYear()->format('Y');
                     } else {
                         // Financial year starts from April of the previous year
-                        $startYear = Carbon::now()->subYear()->format('y');
+                        $startYear = Carbon::now()->subYear()->format('Y');
                         $endYear = $currentYear;
                     }
 
-                    $startDate = Carbon::createFromFormat('y-m-d', $startYear . '-04-01')->startOfDay();
-                    $endDate = Carbon::createFromFormat('y-m-d', $endYear . '-03-31')->endOfDay();
+                    $startDate = Carbon::createFromFormat('Y-m-d', $startYear . '-04-01')->startOfDay();
+                    $endDate = Carbon::createFromFormat('Y-m-d', $endYear . '-03-31')->endOfDay();
 
                     $matchingRowCount = Application::whereBetween('created_at', [$startDate, $endDate])
                         ->whereNotNull('reg_no')
@@ -444,7 +448,7 @@ class ApplicationController extends Controller
                     $month = sprintf('%02d', $currentMonth);
                     $day = sprintf('%02d', $currentDay);
 
-                    $app->reg_no = $modifiedString . '/' . $day . $month . $currentYear . $petitionNumber;
+                    $app->reg_no = $modifiedString . '/' . $currentYear . $month . $day . $petitionNumber;
 
                     //if reg no does not exist it means it is a new record that's why create details are here.
                     $app->created_at = Carbon::now()->toDateTimeLocalString();
@@ -1510,7 +1514,10 @@ class ApplicationController extends Controller
                 $org_id = [];
                 $org_id[] = $request->organization;
             }
-
+            if ($request->from && $request->from != '') {
+                $arr[]=   ['created_by','=',  auth()->user()->id ];
+            }
+            
             $us = SignAuthority::where('active', 1)->first();
 
 //        if ($request->state && $request->state != '') {
@@ -1519,6 +1526,7 @@ class ApplicationController extends Controller
 //            $organizationIds = Organization::where('state_id',$request->state)->pluck('id')->toArray();
 //            $arr[] = ['department_org_id', $organizationIds];
 //        }
+
 
             $query = Application::where($arr)
                 ->whereIn('created_by', function ($query) use ($org_id) {
@@ -1586,6 +1594,7 @@ class ApplicationController extends Controller
 //                        return $query;
 //                    });
                     $applications = $query->get();
+                    // echo '<pre>';print_r($applications);die;
 //                if ((($request->filled('mail') && $request->mail == 'Pending')) || ($offlineAapplications && $offlineAapplications!==null)) {
 //                    if (($request->filled('mail') && $request->mail == 'Pending')) {
 //                        $letter = 'Acknowledgement Letter';
@@ -1716,7 +1725,6 @@ class ApplicationController extends Controller
      */
     public function dashboard(Request $request)
     {
-
         $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
         $org="All";
         $org_idclick=[];
@@ -1789,7 +1797,63 @@ class ApplicationController extends Controller
        $userDetailsp2 = User::getUsersWithCountsForOrg175();
 
 
-        $applicationStatusCounts = Application::where('applications.active', 1)
+        
+
+        if(auth()->check() && auth()->user()->roles->pluck('id')->contains(1)){
+            $applicationMailCount = Application::where('applications.active', 1)
+            ->where('applications.created_by',auth()->user()->id)
+            ->whereIn('applications.created_by', function ($query) use ($org_id) {
+                $query->select('user_organization.user_id')
+                    ->from('user_organization')
+                    ->wherein('user_organization.org_id', $org_id);
+            })->whereHas('statuses', function ($query) {
+                $query->wherein('status_id', [4,5])
+                    ->where('application_status.active', 1);
+            })->selectRaw('
+                    SUM(CASE WHEN fwd_mail_sent = "T" AND fwd_offline_post = "NR" THEN 1 ELSE 0 END) as fwdMailSent,
+                    SUM(CASE WHEN organizations.mail IS NOT NULL AND fwd_mail_sent = "F" AND fwd_offline_post = "R" THEN 1 ELSE 0 END) as fwdPendingWithMail,
+                    SUM(CASE WHEN organizations.mail IS NULL AND fwd_mail_sent = "F" AND fwd_offline_post = "R" THEN 1 ELSE 0 END) as fwdPendingWithoutMail,
+                    SUM(CASE WHEN fwd_mail_sent = "F" AND fwd_offline_post = "T" THEN 1 ELSE 0 END) as fwdPostDispatch,
+                    SUM(CASE WHEN ack_mail_sent = "T" AND ack_offline_post = "NR" THEN 1 ELSE 0 END) as ackMailSent,
+                    SUM(CASE WHEN email_id IS NOT NULL AND acknowledgement="Y" AND ack_mail_sent = "F" AND ack_offline_post = "R" THEN 1 ELSE 0 END) as ackPendingWithMail,
+                    SUM(CASE WHEN email_id IS NULL AND acknowledgement="Y" AND ack_mail_sent = "F" AND ack_offline_post = "R" THEN 1 ELSE 0 END) as ackPendingWithoutMail,
+                    SUM(CASE WHEN ack_mail_sent = "F" AND ack_offline_post = "T" THEN 1 ELSE 0 END) as ackPostDispatch
+                ')
+            ->join('organizations', 'organizations.id', '=', 'applications.department_org_id')
+            ->get();
+
+            $applicationStatusCounts = Application::where('applications.active', 1)
+            ->where('applications.created_by',auth()->user()->id)
+            ->whereIn('applications.created_by', function ($query) use ($org_id) {
+                $query->select('user_organization.user_id')
+                    ->from('user_organization')
+                    ->wherein('user_organization.org_id', $org_id);
+            })
+            ->withCount([
+                'statuses as pending_with_dh' => function ($query) {
+                    $query->where('application_status.status_id', 1)->where('application_status.active', 1);
+                },
+                'statuses as pending_with_so' => function ($query) {
+                    $query->where('application_status.status_id', 2)->where('application_status.active', 1);
+                },
+                'statuses as pending_with_us' => function ($query) {
+                    $query->where('application_status.status_id', 3)->where('application_status.active', 1);
+                },
+                'statuses as in_draft' => function ($query) {
+                    $query->where('application_status.status_id', 0)->where('application_status.active', 1);
+                },
+                'statuses as approved' => function ($query) {
+                    $query->where('application_status.status_id', 4)->where('application_status.active', 1);
+                },
+                'statuses as submitted' => function ($query) {
+                    $query->where('application_status.status_id', 5)->where('application_status.active', 1);
+                },
+
+            ])
+            ->get();
+        }else{
+            $applicationStatusCounts = Application::where('applications.active', 1)
+        
             ->whereIn('applications.created_by', function ($query) use ($org_id) {
                 $query->select('user_organization.user_id')
                     ->from('user_organization')
@@ -1818,7 +1882,7 @@ class ApplicationController extends Controller
             ])
             ->get();
 
-        $applicationMailCount = Application::where('applications.active', 1)
+            $applicationMailCount = Application::where('applications.active', 1)
             ->whereIn('applications.created_by', function ($query) use ($org_id) {
                 $query->select('user_organization.user_id')
                     ->from('user_organization')
@@ -1838,8 +1902,7 @@ class ApplicationController extends Controller
                 ')
             ->join('organizations', 'organizations.id', '=', 'applications.department_org_id')
             ->get();
-
-
+        }
 
         $pending_with_dh = $applicationStatusCounts->sum('pending_with_dh');
         $pending_with_so = $applicationStatusCounts->sum('pending_with_so');
@@ -1893,9 +1956,13 @@ class ApplicationController extends Controller
             $allowfilter = false;
         }
 
+        if(auth()->check() && auth()->user()->roles->pluck('id')->contains(1)){
+            $allowDH = true;
+        }else{
+            $allowDH = false;
+        }
 
-
-        return view('dashboard', compact('ackMailSent','ackPendingWithMail','ackPendingWithoutMail','ackDispatched','fwdMailSent','fwdPendingWithMail','fwdPendingWithoutMail','fwdDispatched','in_draft', 'pending_with_dh', 'pending_with_so', 'pending_with_us', 'approved', 'submitted','org','allowfilter','organizations','org_id','org_idclick','userDetailsp1','userDetailsp2'));
+        return view('dashboard', compact('ackMailSent','ackPendingWithMail','ackPendingWithoutMail','ackDispatched','fwdMailSent','fwdPendingWithMail','fwdPendingWithoutMail','fwdDispatched','in_draft', 'pending_with_dh', 'pending_with_so', 'pending_with_us', 'approved', 'submitted','org','allowfilter','organizations','org_id','org_idclick','userDetailsp1','userDetailsp2','allowDH'));
     }
 
     public function indDetails(Request $request)
