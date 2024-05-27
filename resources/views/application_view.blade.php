@@ -18,7 +18,7 @@
         .project-people img {
             width: 32px;
             height: 32px;
-        }
+        } 
         .project-title a {
             font-size: 14px;
             color: #676a6c;
@@ -198,7 +198,7 @@
 
     <div class="container" style="width: 90%">
         <div class="row">
-            @if ((isset($_GET['submit']) && $_GET['submit'] === 'Details' && $noteblock) || (isset($_GET['submit']) && $_GET['submit'] === 'final reply' && $finalreplyblock) || (isset($_GET['submit']) && $_GET['submit'] === 'Details' && $signbutton))
+            @if (($noteblock) || (isset($_GET['submit']) && $_GET['submit'] === 'final reply' && $finalreplyblock) || (isset($_GET['submit']) && $_GET['submit'] === 'Details' && $signbutton))
                 <div class="col-md-9">
                     @endif
                     @if($hasActiveStatusFive && $app->reply)
@@ -436,57 +436,51 @@
             <br>
 
             @if($notecheck)
-                   @if (isset($statuses) && $statuses->isNotEmpty())
-                        @for ($i = 0; $i < count($statuses); $i++)
-                            <div class="card text-white bg-info mb-3">
-                                <div class="card-header">
-                                    <div class="row">
-                                        <div class="col-3">
-                                            Note: {{ $i + 1 }}
-                                        </div>
-                                        <div class="col-9" style="text-align:right">
-                                        @if($statuses[$i]->pivot->status_id ===0)
-                                            <b><div style="font-style: italic">Draft</div></b>
-                                        @elseif($i == 0)
-                                        Forwarded
-                                        @elseif($i > 0)
-                                            @if($statuses[$i]->pivot->status_id ==4)
-                                                <div style="color:lawngreen;">Approved</div>
-                                            @elseif($statuses[$i]->pivot->status_id ==5)
-                                                <b><div style="color:#fddd00;"> Final Reply</div></b>
-                                            @elseif($statuses[$i]->pivot->status_id > $statuses[$i-1]->pivot->status_id)
-                                                Forwarded
-                                            @elseif($statuses[$i]->pivot->status_id < $statuses[$i-1]->pivot->status_id)
-                                              <div style="color:red;">Returned</div>
-                                            @endif
+                @if (isset($statuses) && $statuses->isNotEmpty())
+                    @for ($i = 0; $i < count($statuses); $i++)
+                        <div class="card text-white bg-info mb-3">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col-3">
+                                        Note: {{ $i + 1 }}
+                                    </div>
+                                    <div class="col-9" style="text-align:right">
+                                    @if($i == 0)
+                                    Forwarded
+                                    @elseif($i > 0)
+                                        @if($statuses[$i]->pivot->status_id > $statuses[$i-1]->pivot->status_id)
+                                            Forwarded
+                                        @elseif($statuses[$i]->pivot->status_id < $statuses[$i-1]->pivot->status_id)
+                                            <div style="color:red;">Returned</div>  
                                         @endif
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="card-body">
-                                    <p>
-                                        {{$statuses[$i]->pivot->remarks ? $statuses[$i]->pivot->remarks :'N/A' }}
-                                    </p>
-                                </div>
-                                <div class="card-footer" >
-                                    <div class="row">
-                                        <div class="col-3">
-                                            {{ $statuses[$i]->user ? $statuses[$i]->user->employee_name : 'N/A' }}
-                                        </div>
-                                        <div class="col-9" style="text-align: right;">
-                                            {{ $statuses[$i]->user ? $statuses[$i]->user->username : 'N/A' }} <br>
-                                            {{ $statuses[$i]->pivot->created_at->format("d/m/Y h:i:s") }}
-
-                                        </div>
-                                    </div>
-
-                                </div>
-
+                                    @endif
+                                    </div>   
+                                </div>   
                             </div>
-                        @endfor
-                    @endif
+                            <div class="card-body">
+                                <p>
+                                    {{$statuses[$i]->pivot->remarks ? $statuses[$i]->pivot->remarks :'N/A' }}
+                                </p>
+                            </div>
+                            <div class="card-footer" >
+                                <div class="row">
+                                    <div class="col-3">
+                                        {{ $statuses[$i]->user ? $statuses[$i]->user->employee_name : 'N/A' }}
+                                    </div>
+                                    <div class="col-9" style="text-align: right;">
+                                        {{ $statuses[$i]->user ? $statuses[$i]->user->username : 'N/A' }} <br>
+                                        {{ $statuses[$i]->pivot->created_at }}
+
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    @endfor
                 @endif
-            @if (isset($_GET['submit']) && $_GET['submit'] === 'Details' && $noteblock)
+            @endif
+
+            @if ($noteblock)
                 </div>
                 <div class="col-md-3">
                     <form method="post" action="{{ route('applications.updateStatus', ['application_id' => $app->id]) }}" id="submitstatusform">
@@ -504,7 +498,7 @@
                                     <button type="submit" class="button" name="submit" value="Approve" onclick="return confirm('Are you sure, You want to Approve this petition?')">Approve</button>
                                 </div>
                                 <div class="col-6" style="text-align: left">
-                                <button type="submit" class="buttonRed" name="submit" value="Return" id="submit_return">Return</button>
+                                <button type="submit" class="buttonRed" name="submit" value="Return" id="submit_return">Return</button>   
                                 <!-- <button type="submit" class="buttonRed" name="submit" value="Return" id='submit_return' onclick="return confirm('Are you sure, You want to Return this petition?(While Returning Note is Mandatory)')">Return</button> -->
                                 </div>
                             </div>
@@ -512,25 +506,25 @@
                     </form>
                 </div>
 
-                @elseif (isset($_GET['submit']) && $_GET['submit'] === 'Details' && $signbutton)
-                    </div>
-                        <div class="col-md-3">
-                            <div class="wrapper wrapper-content project-manager">
-                                <div class="spacing" style="margin-top: 3%;"></div>
-                                <strong><label style="font-size: 130%" for="remarks">Note:</label></strong>
+            @elseif (isset($_GET['submit']) && $_GET['submit'] === 'Details' && $signbutton)
+                </div>
+                    <div class="col-md-3">
+                        <div class="wrapper wrapper-content project-manager">
+                            <div class="spacing" style="margin-top: 3%;"></div>
+                            <strong><label style="font-size: 130%" for="remarks">Note:</label></strong>
 
-                                <div class="spacing" style="margin-top: 2%;"></div>
-                                <div class="row" style="margin-left: 0%; margin-right: 1.5%;">
-                                    You haven't inserted any signature yet Or System doesn't have your signature, in order to Approve or Reject kindly insert Your Signature and Basic details by clicking this button down below.
-                                </div>
-                                <div class="row">
-                                    <div class="col-2"></div>
-                                    <div class="col-6" style="text-align: right" >
-                                        <a href="{{ route('authority.create') }}" class="button">Sign</a>
-                                    </div>
+                            <div class="spacing" style="margin-top: 2%;"></div>
+                            <div class="row" style="margin-left: 0%; margin-right: 1.5%;">
+                                You haven't inserted any signature yet Or System doesn't have your signature, in order to Approve or Reject kindly insert Your Signature and Basic details by clicking this button down below.
+                            </div>
+                            <div class="row">
+                                <div class="col-2"></div>
+                                <div class="col-6" style="text-align: right" >
+                                    <a href="{{ route('authority.create') }}" class="button">Sign</a>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
             @elseif (isset($_GET['submit']) && $_GET['submit'] === 'final reply' && $finalreplyblock)
                 </div>
@@ -589,7 +583,7 @@
         </div>
     </div>
 
-
+    
 
 @endsection
 

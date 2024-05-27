@@ -187,18 +187,18 @@
                     </div>
 
                     <div class="modal-body">
-                        <input type="hidden" id="app_no" name="app_no" value="">
+                        <input type="hidden" id="app_no" name="app_no">
                         <div class="row">
                             <div>
                                 <label class="form-check-label" id="pullback" >Remarks</label><span class="text-danger">*</span>
-                                    <input type="text" name="text" value="" id="pullback" class="form-control" required>
+                                    <input type="text" name="remark" id="pullback" class="form-control" required>
                                   
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-outline-primary">Pull Back</button>
+                        <button type="submit" class="btn btn-outline-primary" >Pull Back</button>
                     </div>
                 </div>
                 <script>
