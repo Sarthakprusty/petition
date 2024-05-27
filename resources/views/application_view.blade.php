@@ -18,7 +18,7 @@
         .project-people img {
             width: 32px;
             height: 32px;
-        } 
+        }
         .project-title a {
             font-size: 14px;
             color: #676a6c;
@@ -445,17 +445,23 @@
                                             Note: {{ $i + 1 }}
                                         </div>
                                         <div class="col-9" style="text-align:right">
-                                        @if($i == 0)
+                                        @if($statuses[$i]->pivot->status_id ===0)
+                                            <b><div style="font-style: italic">Draft</div></b>
+                                        @elseif($i == 0)
                                         Forwarded
                                         @elseif($i > 0)
-                                            @if($statuses[$i]->pivot->status_id > $statuses[$i-1]->pivot->status_id)
+                                            @if($statuses[$i]->pivot->status_id ==4)
+                                                <div style="color:lawngreen;">Approved</div>
+                                            @elseif($statuses[$i]->pivot->status_id ==5)
+                                                <b><div style="color:#fddd00;"> Final Reply</div></b>
+                                            @elseif($statuses[$i]->pivot->status_id > $statuses[$i-1]->pivot->status_id)
                                                 Forwarded
                                             @elseif($statuses[$i]->pivot->status_id < $statuses[$i-1]->pivot->status_id)
-                                              <div style="color:red;">Returned</div>  
+                                              <div style="color:red;">Returned</div>
                                             @endif
                                         @endif
-                                        </div>   
-                                    </div>   
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="card-body">
                                     <p>
@@ -469,11 +475,11 @@
                                         </div>
                                         <div class="col-9" style="text-align: right;">
                                             {{ $statuses[$i]->user ? $statuses[$i]->user->username : 'N/A' }} <br>
-                                            {{ $statuses[$i]->pivot->created_at }}
+                                            {{ $statuses[$i]->pivot->created_at->format("d/m/Y h:i:s") }}
 
                                         </div>
                                     </div>
-                                    
+
                                 </div>
 
                             </div>
@@ -498,7 +504,7 @@
                                     <button type="submit" class="button" name="submit" value="Approve" onclick="return confirm('Are you sure, You want to Approve this petition?')">Approve</button>
                                 </div>
                                 <div class="col-6" style="text-align: left">
-                                <button type="submit" class="buttonRed" name="submit" value="Return" id="submit_return">Return</button>   
+                                <button type="submit" class="buttonRed" name="submit" value="Return" id="submit_return">Return</button>
                                 <!-- <button type="submit" class="buttonRed" name="submit" value="Return" id='submit_return' onclick="return confirm('Are you sure, You want to Return this petition?(While Returning Note is Mandatory)')">Return</button> -->
                                 </div>
                             </div>
@@ -583,7 +589,7 @@
         </div>
     </div>
 
-    
+
 
 @endsection
 
