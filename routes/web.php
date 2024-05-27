@@ -36,6 +36,7 @@ Route::group(['middleware' => ['web']], function () {
     Route::get('applications/{id}/forwarded', [ApplicationController::class, 'generateForwardLetter'])->name('application.forward')->middleware('auth');
     Route::post('applications/{application_id}/update-status', [ApplicationController::class, 'updateStatus'])->name('applications.updateStatus')->middleware('auth');
     Route::post('applications/update-print', [ApplicationController::class, 'updatePrint'])->name('applications.updatePrint')->middleware('auth');
+    Route::get('applications/pullback', [ApplicationController::class, 'pullback'])->name('applications.pullback')->middleware('auth');
 
 
     Route::get('employees', [AuthController::class, 'employees'])->name('users.employees')->middleware('auth');

@@ -111,6 +111,11 @@
                             </form>
                         </div>
 {{--                            @endif--}}
+                    @if($application->allowPullBack == true)
+                        <div class="float-end">
+                            <button type="button" data-id="{{$application->id}}" class="btn btn-outline-danger pullbck" data-toggle="modal" data-target="#pullback">Pull Back </button>
+                        </div>
+                    @endif
                         @if($application->allowEdit == true)
                             <div class="float-end">
                                 <form action="{{ route('applications.edit', ['application' => $application]) }}" method="GET">
@@ -169,6 +174,44 @@
         </div>
             @endif
     </div>
-@endsection
+    @endsection
+    @section('modal')
+    <div class="modal fade" id="pullback"   tabindex="-1" aria-labelledby="pullbackLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-top ">
+            <form method="GET" action="{{ route('applications.pullback') }}">
+                <div class="modal-content"style="" >
+                    <div class="modal-header">
+                         <h5 class="modal-title" id="pullbackLabel">Pull Back Application</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </div>
 
+                    <div class="modal-body">
+                        <input type="hidden" id="app_no" name="app_no">
+                        <div class="row">
+                            <div>
+                                <label class="form-check-label" id="pullback" >Remarks</label><span class="text-danger">*</span>
+                                    <input type="text" name="remark" id="pullback" class="form-control" required>
+                                  
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-outline-primary" >Pull Back</button>
+                    </div>
+                </div>
+                <script>
+                    $(document).ready(function() {
+                        $(document).on("click", ".pullbck", function () {
+                            var application_no = $(this).data('id'); 
+                            $(".modal-body #app_no").val(application_no);
+                        });
+                    });
+                </script>
+
+            </form>
+        </div>
+    </div>
+@endsection
 

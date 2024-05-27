@@ -88,6 +88,14 @@ class ApplicationController extends Controller
 
     }
 
+    private function arraysAreEqual($array1, $array2)
+    {
+        sort($array1);
+        sort($array2);
+        // dd('Entered arraysAreEqual method', $array1, $array2);
+        return $array1 == $array2;
+    }
+
     /**
      * Searching within resources.
      */
@@ -171,6 +179,15 @@ class ApplicationController extends Controller
                 $application->allowFinalReply = false;
             }
 
+            if(auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)) && 
+            ( $this->arraysAreEqual(auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray(),$application->createdBy->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray()))) {
+                $application->allowPullBack = true;
+            }else if(auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && ($application->created_by == auth()->user()->id) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))){
+                $application->allowPullBack = true;
+            }else{
+                $application->allowPullBack = false;
+            }
+
             if($application->department_org && $application->department_org->org_desc) {
                 $remark = $application->department_org->org_desc;
                 $application->trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
@@ -179,6 +196,7 @@ class ApplicationController extends Controller
                 $remark = $application->reason->reason_desc;
                 $application->trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
             }
+            
         }
         $notpaginate=true;
         return view('application_list', compact('applications','states','organizations','notpaginate'));
@@ -591,6 +609,7 @@ class ApplicationController extends Controller
     public function show(string $id)
     {
         $app = Application::find($id);
+        
         if(!$app)
             abort(404);
         return $this->ReturnapplicationView($app);
@@ -2018,6 +2037,18 @@ class ApplicationController extends Controller
                 $application->allowFinalReply = false;
             }
 
+            if(auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)) && 
+            ( $this->arraysAreEqual(
+                auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray(),
+                $application->createdBy->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray()
+            ))) {
+                $application->allowPullBack = true;
+            }else if(auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && ($application->created_by == auth()->user()->id) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))){
+                $application->allowPullBack = true;
+            }else{
+                $application->allowPullBack = false;
+            }
+
             if($application->department_org && $application->department_org->org_desc) {
                 $remark = $application->department_org->org_desc;
                 $application->trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
@@ -2027,6 +2058,7 @@ class ApplicationController extends Controller
                 $application->trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
             }
         }
+        // echo '<pre>';print_r($application);die;
         $notpaginate=true;
         return view('application_list', compact('applications', 'states', 'organizations','notpaginate'));
 
@@ -2090,11 +2122,13 @@ class ApplicationController extends Controller
             $notecheck = true;}
         else{
             $notecheck = false;}
-
+            
         if ((auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && $app->statuses->first() && ($app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))) || (auth()->check() && auth()->user()->roles->pluck('id')->contains(3)&& Auth::user()->authority && Auth::user()->authority->Sign_path && Auth::user()->authority->Sign_path!=null && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3))){
+            
             $noteblock=true;}
         else{
-            $noteblock=false;}
+            $noteblock=false;
+        }
         if( auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(4) && $app->reply == ''){
             $finalreplyblock=true;}
         else{
@@ -2135,6 +2169,18 @@ class ApplicationController extends Controller
                 $application->allowFinalReply = true;
             } else {
                 $application->allowFinalReply = false;
+            }
+
+            if(auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)) && 
+            ( $this->arraysAreEqual(
+                auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray(),
+                $application->createdBy->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray()
+            ))) {
+                $application->allowPullBack = true;
+            }else if(auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && ($application->created_by == auth()->user()->id) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))){
+                $application->allowPullBack = true;
+            }else{
+                $application->allowPullBack = false;
             }
 
             if($application->department_org && $application->department_org->org_desc) {
@@ -2215,5 +2261,66 @@ class ApplicationController extends Controller
 //                    }
 
 
+    public function pullback(Request $request){
+        $request->validate([
+            'remark' => 'required',
+            'app_no' => 'required'
+        ]);
+      
+        $remarks = $request->remark;
+        $application = Application::findOrFail($request->app_no);
+        if(auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)) && 
+        ( $this->arraysAreEqual(auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray(),$application->createdBy->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray()))){
+            $status = $application->statuses()->wherePivot('active', 1)->get();
+            $application->statuses()->updateExistingPivot(
+                $status,
+                [
+                    'active' => 0,
+                    'updated_at'=> carbon::now()->toDateTimeLocalString()
+                ]
+            );
+            $status_id = 2;
+            $status = Status::findOrFail($status_id);
+            $application->statuses()->attach(
+                $status,
+                [
+                    'remarks' => $remarks,
+                    'created_from' => $request->ip(),
+                    'created_by' => Auth::user()->id,
+                    'created_at'=>carbon::now()->toDateTimeLocalString()
+                ]
+            );
+    
+            return redirect(url(route('applications.show',  ['application' => $application])))->with('success', 'Status created successfully.');
+
+        }
+
+        elseif(auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && ($application->created_by == auth()->user()->id) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))){
+            $status = $application->statuses()->wherePivot('active', 1)->get();
+            $application->statuses()->updateExistingPivot(
+                $status,
+                [
+                    'active' => 0,
+                    'updated_at'=> carbon::now()->toDateTimeLocalString()
+                ]
+            );
+            $status_id = 1;
+            $status = Status::findOrFail($status_id);
+            $application->statuses()->attach(
+                $status,
+                [
+                    'remarks' => $remarks,
+                    'created_from' => $request->ip(),
+                    'created_by' => Auth::user()->id,
+                    'created_at'=>carbon::now()->toDateTimeLocalString()
+                ]
+            );
+            return redirect(url(route('applications.edit',  ['application' => $application])))->with('success', 'Status created successfully.');
+        }
+
+        return back()->with('error', 'unauthorised pullback.');
+
+
+    }
 
 }
