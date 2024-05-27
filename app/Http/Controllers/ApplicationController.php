@@ -88,6 +88,14 @@ class ApplicationController extends Controller
 
     }
 
+    private function arraysAreEqual($array1, $array2)
+    {
+        sort($array1);
+        sort($array2);
+        // dd('Entered arraysAreEqual method', $array1, $array2);
+        return $array1 == $array2;
+    }
+
     /**
      * Searching within resources.
      */
@@ -171,6 +179,18 @@ class ApplicationController extends Controller
                 $application->allowFinalReply = false;
             }
 
+            if(auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)) && 
+            ( $this->arraysAreEqual(
+                auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray(),
+                $application->createdBy->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray()
+            ))) {
+                $application->allowPullBack = true;
+            }else if(auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && ($application->created_by == auth()->user()->id) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))){
+                $application->allowPullBack = true;
+            }else{
+                $application->allowPullBack = false;
+            }
+
             if($application->department_org && $application->department_org->org_desc) {
                 $remark = $application->department_org->org_desc;
                 $application->trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
@@ -179,6 +199,7 @@ class ApplicationController extends Controller
                 $remark = $application->reason->reason_desc;
                 $application->trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
             }
+            
         }
         $notpaginate=true;
         return view('application_list', compact('applications','states','organizations','notpaginate'));
@@ -2018,6 +2039,18 @@ class ApplicationController extends Controller
                 $application->allowFinalReply = false;
             }
 
+            if(auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)) && 
+            ( $this->arraysAreEqual(
+                auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray(),
+                $application->createdBy->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray()
+            ))) {
+                $application->allowPullBack = true;
+            }else if(auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && ($application->created_by == auth()->user()->id) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))){
+                $application->allowPullBack = true;
+            }else{
+                $application->allowPullBack = false;
+            }
+
             if($application->department_org && $application->department_org->org_desc) {
                 $remark = $application->department_org->org_desc;
                 $application->trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
@@ -2027,6 +2060,7 @@ class ApplicationController extends Controller
                 $application->trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
             }
         }
+        // echo '<pre>';print_r($application);die;
         $notpaginate=true;
         return view('application_list', compact('applications', 'states', 'organizations','notpaginate'));
 
@@ -2137,6 +2171,18 @@ class ApplicationController extends Controller
                 $application->allowFinalReply = false;
             }
 
+            if(auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)) && 
+            ( $this->arraysAreEqual(
+                auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray(),
+                $application->createdBy->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray()
+            ))) {
+                $application->allowPullBack = true;
+            }else if(auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && ($application->created_by == auth()->user()->id) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))){
+                $application->allowPullBack = true;
+            }else{
+                $application->allowPullBack = false;
+            }
+
             if($application->department_org && $application->department_org->org_desc) {
                 $remark = $application->department_org->org_desc;
                 $application->trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
@@ -2215,5 +2261,9 @@ class ApplicationController extends Controller
 //                    }
 
 
+    public function pullback(Request $request){
+        return 123;
+
+    }
 
 }

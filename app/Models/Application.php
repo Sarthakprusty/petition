@@ -54,9 +54,9 @@ class Application extends Model
         return $this->hasOne(SignAuthority::class,'id','Authority_id');
     }
 
-    public function createdBy()
+    public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'created_by','id');
     }
 
     public function statuses(): BelongsToMany
