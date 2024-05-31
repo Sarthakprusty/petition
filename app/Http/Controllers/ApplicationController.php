@@ -1540,14 +1540,14 @@ class ApplicationController extends Controller
                             if ($request->org_reason_state && $request->org_reason_state != '') {
                                 $arr[] = ['department_org_id', $request->org_reason_state];
                                 $reason = Organization::findOrFail($request->org_reason_state);
-                                $name = $reason->reason_desc;
+                                $name = $reason->org_desc;
                             }
                         }else if ($request->org_reason_org == 'F'){
                             $arr[] = ['action_org', 'F'];
                             if ($request->org_reason_cabinate && $request->org_reason_cabinate != '') {
                                 $arr[] = ['department_org_id', $request->org_reason_cabinate];
                                 $reason = Organization::findOrFail($request->org_reason_cabinate);
-                                $name = $reason->reason_desc;
+                                $name = $reason->org_desc;
                             }
                         }
                     }
