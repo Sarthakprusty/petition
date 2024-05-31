@@ -1477,6 +1477,7 @@ class ApplicationController extends Controller
      */
     public function reportprint(Request $request)
     {
+        // dd($request);
         if(auth()->check() && auth()->user()->roles->pluck('id')->contains(1)) {
             $org_id = auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
 
@@ -1512,22 +1513,74 @@ class ApplicationController extends Controller
                 }
             }
 
-            if ($request->orgTT && $request->orgTT != '') {
-                if ($request->orgTT == 'name') {
-                    $arr[] = ['action_org', 'F'];
-                    if ($request->orgDescMM && $request->orgDescMM != '') {
-                        $arr[] = ['department_org_id', $request->orgDescMM];
-                        $org = Organization::findOrFail($request->orgDescMM);
-                        $name = $org->org_desc;
-                    }
-                } elseif ($request->orgTT == 'type') {
-                    $arr[] = ['action_org', 'S'];
-                    if ($request->orgDescSS && $request->orgDescSS != '') {
-                        $arr[] = ['department_org_id', $request->orgDescSS];
-                        $org = Organization::findOrFail($request->orgDescSS);
-                        $name = $org->org_desc;
+            if ($request->org_reason && $request->org_reason != '') {
+                if($request->org_reason == 'noaction'){
+                    if($request->org_reason_mn && $request->org_reason_mn != ''){
+                        if($request->org_reason_mn == 'N'){
+                            $arr[] = ['action_org', 'N'];
+                            if ($request->org_reason_N && $request->org_reason_N != '') {
+                                $arr[] = ['reason_id', $request->org_reason_N];
+                                $reason = Reason::findOrFail($request->org_reason_N);
+                                $name = $reason->reason_desc;
+                            }
+                        }else if ($request->org_reason_mn == 'M'){
+                            $arr[] = ['action_org', 'M'];
+                            if ($request->org_reason_M && $request->org_reason_M != '') {
+                                $arr[] = ['reason_id', $request->org_reason_M];
+                                $reason = Reason::findOrFail($request->org_reason_M);
+                                $name = $reason->reason_desc;
+                            }
+                        }
                     }
                 }
+                if($request->org_reason == 'forwarded'){
+                    if($request->org_reason_org && $request->org_reason_org != ''){
+                        if($request->org_reason_org == 'S'){
+                            $arr[] = ['action_org', 'S'];
+                            if ($request->org_reason_state && $request->org_reason_state != '') {
+                                $arr[] = ['department_org_id', $request->org_reason_state];
+                                $reason = Organization::findOrFail($request->org_reason_state);
+                                $name = $reason->reason_desc;
+                            }
+                        }else if ($request->org_reason_org == 'F'){
+                            $arr[] = ['action_org', 'F'];
+                            if ($request->org_reason_cabinate && $request->org_reason_cabinate != '') {
+                                $arr[] = ['department_org_id', $request->org_reason_cabinate];
+                                $reason = Organization::findOrFail($request->org_reason_cabinate);
+                                $name = $reason->reason_desc;
+                            }
+                        }
+                    }
+                }
+                // if ($request->orgTT == 'name') {
+                //     $arr[] = ['action_org', 'F'];
+                //     if ($request->orgDescMM && $request->orgDescMM != '') {
+                //         $arr[] = ['department_org_id', $request->orgDescMM];
+                //         $org = Organization::findOrFail($request->orgDescMM);
+                //         $name = $org->org_desc;
+                //     }
+                // } elseif ($request->orgTT == 'type') {
+                //     $arr[] = ['action_org', 'S'];
+                //     if ($request->orgDescSS && $request->orgDescSS != '') {
+                //         $arr[] = ['department_org_id', $request->orgDescSS];
+                //         $org = Organization::findOrFail($request->orgDescSS);
+                //         $name = $org->org_desc;
+                //     }
+                // }elseif($request->orgTT == 'noaction'){
+                //     $arr[] = ['action_org', 'N'];
+                //     if ($request->reasonN && $request->reasonN != '') {
+                //         $arr[] = ['reason_id', $request->reasonN];
+                //         $reason = Reason::findOrFail($request->reasonN);
+                //         $name = $reason->reason_desc;
+                //     }
+                // }elseif($request->orgTT == 'miscellaneous'){
+                //     $arr[] = ['action_org', 'M'];
+                //     if ($request->reasonM && $request->reasonM != '') {
+                //         $arr[] = ['reason_id', $request->reasonM];
+                //         $reason = Reason::findOrFail($request->reasonM);
+                //         $name = $reason->reason_desc;
+                //     }
+                // }
             }
             if ($request->organization && $request->organization != '') {
                 $org_id = [];
@@ -1720,12 +1773,18 @@ class ApplicationController extends Controller
                 case 'forwardTable':
                     $query->where('department_org_id', '!=', null);
                     $applications = $query->get();
-                    return view('forwardTableReport', compact('applications', 'organizations', 'date_from', 'date_to', 'name', 'us'));
+                    return view('forwardTableReport', compact('applications', 'date_from', 'date_to', 'name', 'us'));
 
                 case 'final_Reply':
                     $query->where('reply', '!=', null);
                     $applications = $query->get();
-                    return view('finalReplyReport', compact('applications', 'organizations', 'date_from', 'date_to', 'name', 'us'));
+                    return view('finalReplyReport', compact('applications', 'date_from', 'date_to', 'name', 'us'));
+
+                case 'reportMN':
+                    $query->where('reason_id','!=',null);
+                    $applications = $query->get();
+                    // echo '<pre>';print_r($applications);die;
+                    return view('Noaction_report', compact('applications', 'date_from', 'date_to', 'name', 'us'));
 
                 default:
                     // Handle the default case if needed

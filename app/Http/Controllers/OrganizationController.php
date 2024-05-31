@@ -8,6 +8,8 @@ use App\Rules\Orgtype;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Application;
+use App\Models\Reason;
 
 class OrganizationController extends Controller
 {
@@ -145,5 +147,12 @@ class OrganizationController extends Controller
         $organizations_state = Organization::orderBy('org_desc','asc')->where('org_type','S')->get();
     
         return view('show_organization', compact('organization_ministry','organizations_state'));
+    }
+
+    public function Noaction(){
+        $No_action_report = Application::orderBy('letter_date','desc')->where('action_org','N') ->join('reasons as reason', 'reason.id', '=', 'applications.reason_id')->get();
+
+        // dd($No_action_report);
+        return view('Noaction_report', compact('No_action_report'));
     }
 }
