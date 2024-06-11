@@ -448,7 +448,7 @@
                                     @if($statuses[$i]->pivot->status_id ===0)
                                         <b><div style="font-style: italic">Draft</div></b>
                                     @elseif($i == 0)
-                                    Forwarded
+                                        Forwarded
                                     @elseif($i > 0)
                                         @if($statuses[$i]->pivot->status_id ==4)
                                             <div style="color:lawngreen;">Approved</div>

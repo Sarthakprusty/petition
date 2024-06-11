@@ -8,6 +8,8 @@ use App\Rules\Orgtype;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Application;
+use App\Models\Reason;
 
 class OrganizationController extends Controller
 {
@@ -146,4 +148,5 @@ class OrganizationController extends Controller
     
         return view('show_organization', compact('organization_ministry','organizations_state'));
     }
+
 }

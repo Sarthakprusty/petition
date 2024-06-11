@@ -14,6 +14,12 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+storage/logs
 storage/logs/query.log
 storage/logs/laravel.log
 .env
+storage/logs/laravel.log.202404231005
+storage/logs/query.log.202404231005
+ml-pdf-service.log
+nohup.out
+.env.bak

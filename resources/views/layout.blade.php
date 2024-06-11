@@ -461,7 +461,7 @@
 
 <div>
     <div class="modal fade" id="Report" style="z-index: 1051" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" data-bs-backdrop="false">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-top">
             <form method="get" action="{{route('application.reportprint')}}">
                 <div class="modal-content">
                     <div class="modal-body">
@@ -479,23 +479,46 @@
                                 </div>
                             </div>
                         </div>
+
+                        @php
+                            $organizationStates = \App\Models\Organization::where('org_type', 'S')->get();
+                            $organizationM = \App\Models\Organization::where('org_type', 'M')->get();
+                            $reasonM = \App\Models\Reason::where('action_code', 99)->get();
+                            $reasonN = \App\Models\Reason::where('action_code', 10)->get();
+                        @endphp
+
                         <div class="row">
                             <div class="mb-3">
-                                <label class="form-label" for="organizationType">Organization:</label>
-                                <select class="form-control" name="orgTT">
-                                    <option value="">Select an option</option>
-                                    <option id="typeOrganizationType" value="type" >State GOV.</option>
-                                    <option id="typeOrganizationName" value="name">Center GOV.</option>
+                                <label class="form-label" for="actionType">Action:</label>
+                                <select class="form-control" name="org_reason" id="org_reason">
+                                    <option value="">Select Action</option>
+                                    <option id="noaction" value="noaction">No Action/Miscellaneous</option>
+                                    <option id="forwarded" value="forwarded">Forward to Central Govt. Ministry/Department/GOV</option>
                                 </select>
                             </div>
                         </div>
-                        @php
-                            $organizationStates = \App\Models\Organization::where('org_type','S')->get();
-                            $organizationM = \App\Models\Organization::where('org_type','M')->get();
-                        @endphp
+
+                        <div class="mb-3" style="display: none;" id="orgTT">
+                            <label class="form-label" for="orgTT">Organization:</label>
+                            <select class="form-control" name="org_reason_org" id="org_reason_org">
+                                <option value="">Select an option</option>
+                                <option id="stateGov" value="S">State GOV.</option>
+                                <option id="centerGov" value="F">Center GOV.</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" style="display: none;" id="reason_mn">
+                            <label class="form-label" for="reason_mn">Reason:</label>
+                            <select class="form-control" name="org_reason_mn" id="org_reason_mn">
+                                <option value="">Select an option</option>
+                                <option id="no_action" value="N">No Action</option>
+                                <option id="miscellaneous" value="M">Miscellaneous</option>
+                            </select>
+                        </div>
+
                         <div class="mb-3" id="organizationS" style="display: none;">
-                            <select class="form-control" id="orgS" name="orgDescSS">
-                                <option value="">Select an State</option>
+                            <select class="form-control" name="org_reason_state" id="org_reason_state">
+                                <option value="">Select a State</option>
                                 @foreach($organizationStates as $organizationSS)
                                     <option value="{{ $organizationSS->id }}">{{ $organizationSS->org_desc }}</option>
                                 @endforeach
@@ -503,40 +526,106 @@
                         </div>
 
                         <div class="mb-3" id="organizationM" style="display: none;">
-                            <select class="form-control" id="orgM" name="orgDescMM">
+                            <select class="form-control" name="org_reason_cabinate" id="org_reason_cabinate">
                                 <option value="">Select an Organization</option>
                                 @foreach($organizationM as $organizationMM)
                                     <option value="{{ $organizationMM->id }}">{{ $organizationMM->org_desc }}</option>
                                 @endforeach
                             </select>
                         </div>
+
+                        <div class="mb-3" id="reasonM" style="display: none;">
+                            <select class="form-control" name="org_reason_M" id="org_reason_M">
+                                <option value="">Select a Reason</option>
+                                @foreach($reasonM as $reason)
+                                    <option value="{{ $reason->id }}">{{ $reason->reason_desc }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="reasonN" style="display: none;">
+                            <select class="form-control" name="org_reason_N" id="org_reason_N">
+                                <option value="">Select a Reason</option>
+                                @foreach($reasonN as $reason)
+                                    <option value="{{ $reason->id }}">{{ $reason->reason_desc }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                            <div style="display:none;" id="org">
+                                <button type="submit" class="btn btn-outline-primary" name="submit" value="forwardTable">Forward Cases</button>
+                                <button type="submit" class="btn btn-outline-primary" name="submit" value="final_Reply">Final Reply</button>
+                            </div>
+                            <div style="display:none;" id="report">
+                                <button type="submit" class="btn btn-outline-primary" name="submit" value="reportMN">Report</button>
+                            </div>
+                        </div>
+
                         <script>
                             $(document).ready(function() {
-                                $('select[name="orgTT"]').change(function() {
+                                function resetDropdownById(dropdownId) {
+                                    $('#' + dropdownId).val('');
+                                }
+
+                                $('select[name="org_reason"]').change(function() {
+                                    resetDropdownById('org_reason_org');
+                                    resetDropdownById('org_reason_mn');
+                                    resetDropdownById('org_reason_state');
+                                    resetDropdownById('org_reason_cabinate');
+                                    resetDropdownById('org_reason_M');
+                                    resetDropdownById('org_reason_N');
+
                                     var selectedType = $(this).val();
-                                    if (selectedType === "type") {
+                                    if (selectedType === "forwarded") {
+                                        $('#orgTT').show();
+                                        $('#reason_mn').hide();
+                                        $('#org').show();
+                                        $('#report').hide();
+                                        $('#reasonN, #reasonM, #organizationS, #organizationM').hide();
+                                    } else if (selectedType === "noaction") {
+                                        $('#orgTT').hide();
+                                        $('#reason_mn').show();
+                                        $('#reasonN, #reasonM, #organizationS, #organizationM').hide();
+                                        $('#org').hide();
+                                        $('#report').show();
+                                    } else {
+                                        $('#orgTT, #reason_mn, #reasonN, #reasonM, #organizationS, #organizationM').hide();
+                                        $('#org').hide();
+                                        $('#report').hide();
+                                    }
+                                });
+
+                                $('select[name="org_reason_org"]').change(function() {
+                                    var selectedType = $(this).val();
+                                    if (selectedType === "S") {
                                         $('#organizationS').show();
-                                        $('#organizationM').hide();
-                                    } else if (selectedType === "name") {
-                                        $('#organizationS').hide();
+                                        $('#organizationM, #reasonN, #reasonM').hide();
+                                    } else if (selectedType === "F") {
                                         $('#organizationM').show();
-                                    }else{
-                                        $('#organizationS').hide();
-                                        $('#organizationM').hide();
+                                        $('#organizationS, #reasonN, #reasonM').hide();
+                                    } else {
+                                        $('#organizationS, #organizationM, #reasonN, #reasonM').hide();
+                                    }
+                                });
+
+                                $('select[name="org_reason_mn"]').change(function(){
+                                    var selectedType = $(this).val();
+                                    if (selectedType === "N") {
+                                        $('#reasonN').show();
+                                        $('#reasonM, #organizationS, #organizationM').hide();
+                                    } else if (selectedType === "M") {
+                                        $('#reasonM').show();
+                                        $('#reasonN, #organizationS, #organizationM').hide();
+                                    } else {
+                                        $('#organizationS, #organizationM, #reasonN, #reasonM').hide();
                                     }
                                 });
                             });
                         </script>
-
                     </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-outline-primary" name="submit" value="forwardTable">Forward Cases</button>
-                        <button type="submit" class="btn btn-outline-primary" name="submit" value="final_Reply">Final Reply</button>
-
-                    </div>
-                </div>
+                
             </form>
         </div>
     </div>
