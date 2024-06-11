@@ -148,11 +148,5 @@ class OrganizationController extends Controller
     
         return view('show_organization', compact('organization_ministry','organizations_state'));
     }
-
-    public function Noaction(){
-        $No_action_report = Application::orderBy('letter_date','desc')->where('action_org','N') ->join('reasons as reason', 'reason.id', '=', 'applications.reason_id')->get();
-
-        // dd($No_action_report);
-        return view('Noaction_report', compact('No_action_report'));
-    }
+    
 }
