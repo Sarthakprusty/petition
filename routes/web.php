@@ -56,6 +56,8 @@ Route::group(['middleware' => ['web']], function () {
 
     Route::resource('organizations', OrganizationController::class)->middleware('auth');
     Route::post('org/change', [OrganizationController::class, 'changeorganization'])->name('organizations.change')->middleware('auth');
+
+
     Route::get('organizations', [OrganizationController::class, 'ministries'])->name('organizations.ministries')->middleware('auth');
    
 });

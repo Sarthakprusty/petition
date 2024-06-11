@@ -148,5 +148,5 @@ class OrganizationController extends Controller
     
         return view('show_organization', compact('organization_ministry','organizations_state'));
     }
-
+    
 }

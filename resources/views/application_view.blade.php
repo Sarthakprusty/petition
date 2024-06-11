@@ -197,6 +197,58 @@
     </style>
 
     <div class="container" style="width: 90%">
+        
+    @if($notecheck)
+                @if (isset($statuses) && $statuses->isNotEmpty())
+                    @for ($i = 0; $i < count($statuses); $i++)
+                        <div class="card text-white bg-info mb-3">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col-3">
+                                        Note: {{ $i + 1 }}
+                                    </div>
+                                    <div class="col-9" style="text-align:right">
+                                    @if($statuses[$i]->pivot->status_id ===0)
+                                        <b><div style="font-style: italic">Draft</div></b>
+                                    @elseif($i == 0)
+                                        Forwarded
+                                    @elseif($i > 0)
+                                        @if($statuses[$i]->pivot->status_id ==4)
+                                            <div style="color:lawngreen;">Approved</div>
+                                        @elseif($statuses[$i]->pivot->status_id ==5)
+                                            <b><div style="color:#fddd00;"> Final Reply</div></b>
+                                        @elseif($statuses[$i]->pivot->status_id > $statuses[$i-1]->pivot->status_id)
+                                            Forwarded
+                                        @elseif(($statuses[$i]->pivot->status_id < $statuses[$i-1]->pivot->status_id) && ($statuses[$i]->pivot->created_by == $statuses[$i-1]->pivot->created_by))
+                                            <div style="color:red;">Pulled Back</div>    
+                                        @elseif($statuses[$i]->pivot->status_id < $statuses[$i-1]->pivot->status_id)
+                                            <div style="color:red;">Returned</div>
+                                        @endif
+                                    @endif
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <p>
+                                    {{$statuses[$i]->pivot->remarks ? $statuses[$i]->pivot->remarks :'N/A' }}
+                                </p>
+                            </div>
+                            <div class="card-footer" >
+                                <div class="row">
+                                    <div class="col-3">
+                                        {{ $statuses[$i]->user ? $statuses[$i]->user->employee_name : 'N/A' }}
+                                    </div>
+                                    <div class="col-9" style="text-align: right;">
+                                        {{ $statuses[$i]->user ? $statuses[$i]->user->username : 'N/A' }} <br>
+                                        {{ $statuses[$i]->pivot->created_at->format("d/m/Y h:i:s") }}
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endfor
+                @endif
+            @endif
         <div class="row">
             @if (($noteblock) || (isset($_GET['submit']) && $_GET['submit'] === 'final reply' && $finalreplyblock) || (isset($_GET['submit']) && $_GET['submit'] === 'Details' && $signbutton))
                 <div class="col-md-9">
@@ -215,7 +267,7 @@
                             <div class="m-b-md">
                                 <div class="row">
                                     <div class="col-md-8">
-                                        <h1 style="font-size: 250%;margin-left: 1%; color: #005fff;">Applicant info</h1>
+                                        <h1 style="font-size: 250%;margin-left: 1%; color: #005fff;">Applicant info </h1>
                                     </div>
                                 </div>
                             </div>
@@ -435,57 +487,6 @@
             </div>
             <br>
 
-            @if($notecheck)
-                @if (isset($statuses) && $statuses->isNotEmpty())
-                    @for ($i = 0; $i < count($statuses); $i++)
-                        <div class="card text-white bg-info mb-3">
-                            <div class="card-header">
-                                <div class="row">
-                                    <div class="col-3">
-                                        Note: {{ $i + 1 }}
-                                    </div>
-                                    <div class="col-9" style="text-align:right">
-                                    @if($statuses[$i]->pivot->status_id ===0)
-                                        <b><div style="font-style: italic">Draft</div></b>
-                                    @elseif($i == 0)
-                                        Forwarded
-                                    @elseif($i > 0)
-                                        @if($statuses[$i]->pivot->status_id ==4)
-                                            <div style="color:lawngreen;">Approved</div>
-                                        @elseif($statuses[$i]->pivot->status_id ==5)
-                                            <b><div style="color:#fddd00;"> Final Reply</div></b>
-                                        @elseif($statuses[$i]->pivot->status_id > $statuses[$i-1]->pivot->status_id)
-                                            Forwarded
-                                        @elseif(($statuses[$i]->pivot->status_id < $statuses[$i-1]->pivot->status_id) && ($statuses[$i]->pivot->created_by == $statuses[$i-1]->pivot->created_by))
-                                            <div style="color:red;">Pulled Back</div>    
-                                        @elseif($statuses[$i]->pivot->status_id < $statuses[$i-1]->pivot->status_id)
-                                            <div style="color:red;">Returned</div>
-                                        @endif
-                                    @endif
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <p>
-                                    {{$statuses[$i]->pivot->remarks ? $statuses[$i]->pivot->remarks :'N/A' }}
-                                </p>
-                            </div>
-                            <div class="card-footer" >
-                                <div class="row">
-                                    <div class="col-3">
-                                        {{ $statuses[$i]->user ? $statuses[$i]->user->employee_name : 'N/A' }}
-                                    </div>
-                                    <div class="col-9" style="text-align: right;">
-                                        {{ $statuses[$i]->user ? $statuses[$i]->user->username : 'N/A' }} <br>
-                                        {{ $statuses[$i]->pivot->created_at->format("d/m/Y h:i:s") }}
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endfor
-                @endif
-            @endif
 
             @if ($noteblock)
                 </div>
