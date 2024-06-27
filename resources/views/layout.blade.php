@@ -121,6 +121,13 @@
                                 <i class="fs-4 bi-printer"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Print Letter</span>
                             </a>
                         </li>
+                       
+                        <br>
+                        <li>
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#chnage_pwd">
+                                <i class="fs-4 bi bi-gear-fill"></i> <span class="ms-1 d-none d-sm-inline" style="color: #FFE6C3;">Change Password</span>
+                            </a>
+                        </li>
                         @endif
                         <br>
                         <li>
@@ -630,7 +637,55 @@
         </div>
     </div>
 </div>
-
+<div>
+    <!-- change password -->
+    <div class="modal fade" id="chnage_pwd" style="z-index: 1051" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" data-bs-backdrop="false">
+    <div class="modal-dialog modal-dialog-top">
+        <form method="post" action="{{ route('users.checkPassword') }}" id="change">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="mb-3">
+                            <label for="current_pwd" class="form-label">Enter Current Password<span style="color: red;" class="required">*</span></label>
+                            <input type="password" class="form-control" id="current_pwd" name="current_pwd" placeholder="Enter Current Password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_pwd" class="form-label">Enter New Password<span style="color: red;" class="required">*</span></label>
+                            <input type="password" class="form-control" id="new_pwd" name="new_pwd" placeholder="Enter New Password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirm_pwd" class="form-label">Confirm Password<span style="color: red;" class="required">*</span></label>
+                            <input type="password" class="form-control" id="confirm_pwd" name="new_pwd_confirmation" placeholder="Confirm Password" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-outline-primary" name="submit" value="change" id="change_pwd">Save Password</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+    <script>
+         $(document).ready(function() {
+        // SELECT * FROM petition.applications WHERE reg_no = 'P2/A/202406182147';
+        //         // Get the values from the input fields Petition2@2
+            $(document).on('click','#change_pwd',function(){
+                var newPassword = document.getElementById("new_pwd").value;
+                var confirmPassword = document.getElementById("confirm_pwd").value;
+                if (newPassword !== confirmPassword) {
+                    alert("Passwords do not match. Please try again.");
+                    document.getElementById("new_pwd").value = "";
+                    document.getElementById("confirm_pwd").value = "";
+                    document.getElementById("new_pwd").focus();
+                }
+               
+            });
+         });
+    </script>
+</div>
 <script>
     //orgType
 

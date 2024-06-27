@@ -141,5 +141,27 @@ class AuthController extends Controller
             else
                 return response(array("code" => 400, "msg" => "Bad request"), 400);
             }
+
+            public function checkPassword(Request $request){
+                // dd($request);
+                $user_id = Auth::user()->id;
+                $user_data = User::find($user_id);
+                $request->validate([
+                    'current_pwd' => 'required|string',
+                    'new_pwd' => 'required|string',
+                ]);
+                if(!Hash::check($request->current_pwd, $user_data->password)){
+                    return back()->withErrors(['current_pwd' => 'The provided password does not match our records.']);
+                }else{
+                    $user_data->password = Hash::make($request->new_pwd);
+                    $user_data->updated_at = Carbon::now()->toDateTimeLocalString();
+                    $user_data->last_updated_by = Auth::user()->id;
+                    $user_data->last_updated_from = $request->ip();
+                  
+                    if ($user_data->save())
+                    return Redirect::to(route('login'));
+                }
+
+            }
 }
     
