@@ -179,7 +179,7 @@ class ApplicationController extends Controller
                 $application->allowFinalReply = false;
             }
 
-            if(auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)) && 
+            if(auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)) &&
             ( $this->arraysAreEqual(auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray(),$application->createdBy->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray()))) {
                 $application->allowPullBack = true;
             }else if(auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && ($application->created_by == auth()->user()->id) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))){
@@ -196,10 +196,14 @@ class ApplicationController extends Controller
                 $remark = $application->reason->reason_desc;
                 $application->trimmedremark = strlen($remark) > 30 ? substr($remark, 0, 25) . '...' : $remark;
             }
-            
+
         }
         $notpaginate=true;
         return view('application_list', compact('applications','states','organizations','notpaginate'));
+
+    }
+
+    public function checkDiaryNo(){
 
     }
 
@@ -220,12 +224,11 @@ class ApplicationController extends Controller
         $reasonM = Reason::where('action_code',99)->get();
         $reasonN = Reason::where('action_code',10)->get();
         $states=State::all();
-
-        $application  = Application::where('active','1')->get();
         $existed_letter_no=[];
+        /*$application  = Application::where('active','1')->get();
         foreach($application as $appli){
             $existed_letter_no[] = $appli->letter_no;
-        }
+        }*/
 
         $app = new Application();
         $allowOnlyForward = $this->Forwardbuttoncommon($app);
@@ -609,7 +612,7 @@ class ApplicationController extends Controller
     public function show(string $id)
     {
         $app = Application::find($id);
-        
+
         if(!$app)
             abort(404);
         return $this->ReturnapplicationView($app);
@@ -1589,7 +1592,7 @@ class ApplicationController extends Controller
             if ($request->from && $request->from != '') {
                 $arr[]=   ['created_by','=',  auth()->user()->id ];
             }
-            
+
             $us = SignAuthority::where('active', 1)->first();
 
 //        if ($request->state && $request->state != '') {
@@ -1875,7 +1878,7 @@ class ApplicationController extends Controller
        $userDetailsp2 = User::getUsersWithCountsForOrg175();
 
 
-        
+
 
         if(auth()->check() && auth()->user()->roles->pluck('id')->contains(1)){
             $applicationMailCount = Application::where('applications.active', 1)
@@ -1931,7 +1934,7 @@ class ApplicationController extends Controller
             ->get();
         }else{
             $applicationStatusCounts = Application::where('applications.active', 1)
-        
+
             ->whereIn('applications.created_by', function ($query) use ($org_id) {
                 $query->select('user_organization.user_id')
                     ->from('user_organization')
@@ -2096,7 +2099,7 @@ class ApplicationController extends Controller
                 $application->allowFinalReply = false;
             }
 
-            if(auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)) && 
+            if(auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)) &&
             ( $this->arraysAreEqual(
                 auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray(),
                 $application->createdBy->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray()
@@ -2181,9 +2184,9 @@ class ApplicationController extends Controller
             $notecheck = true;}
         else{
             $notecheck = false;}
-            
+
         if ((auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && $app->statuses->first() && ($app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))) || (auth()->check() && auth()->user()->roles->pluck('id')->contains(3)&& Auth::user()->authority && Auth::user()->authority->Sign_path && Auth::user()->authority->Sign_path!=null && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3))){
-            
+
             $noteblock=true;}
         else{
             $noteblock=false;
@@ -2230,7 +2233,7 @@ class ApplicationController extends Controller
                 $application->allowFinalReply = false;
             }
 
-            if(auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)) && 
+            if(auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)) &&
             ( $this->arraysAreEqual(
                 auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray(),
                 $application->createdBy->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray()
@@ -2325,10 +2328,10 @@ class ApplicationController extends Controller
             'remark' => 'required',
             'app_no' => 'required'
         ]);
-      
+
         $remarks = $request->remark;
         $application = Application::findOrFail($request->app_no);
-        if(auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)) && 
+        if(auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)) &&
         ( $this->arraysAreEqual(auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray(),$application->createdBy->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray()))){
             $status = $application->statuses()->wherePivot('active', 1)->get();
             $application->statuses()->updateExistingPivot(
@@ -2349,7 +2352,7 @@ class ApplicationController extends Controller
                     'created_at'=>carbon::now()->toDateTimeLocalString()
                 ]
             );
-    
+
             return redirect(url(route('applications.show',  ['application' => $application])))->with('success', 'Status created successfully.');
 
         }
