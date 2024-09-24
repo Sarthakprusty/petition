@@ -260,11 +260,11 @@ class ApplicationController extends Controller
         $organizationM = Organization::where('org_type','M')->get();
         $reasonM = Reason::where('action_code',99)->get();
         $reasonN = Reason::where('action_code',10)->get();
-        $application  = Application::where('active','1')->where('id','<>',$id)->get();
+        // $application  = Application::where('active','1')->where('id','<>',$id)->get();
         $existed_letter_no=[];
-        foreach($application as $appli){
-            $existed_letter_no[] = $appli->letter_no;
-        }
+        // foreach($application as $appli){
+        //     $existed_letter_no[] = $appli->letter_no;
+        // }
         $statuses = $app->statuses()
             ->whereIn('application_status.active', [0, 1])
             ->whereNotNull('remarks')
