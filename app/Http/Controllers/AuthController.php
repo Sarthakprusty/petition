@@ -25,15 +25,15 @@ class AuthController extends Controller
         ]);
         $credentials = $request->only('username', 'password');
 
-        if(Auth::attempt($credentials)){
-            if( Auth::user()->active==1)
-            return redirect(route('applications.dashboard'));
-            else{
+        if (Auth::attempt($credentials)) {
+            if (Auth::user()->active == 1)
+                return redirect(route('applications.index'));
+            else {
                 Auth::logout();
-            return Redirect::to(route('login'));
+                return Redirect::to(route('login'));
             }
 
-//            $request->session()->regenerate();
+            //            $request->session()->regenerate();
 //            Log::debug('User logged in');
 //            $user = Auth::user();
 //            Log::debug('The user is :{'.json_encode($user).'}');
@@ -56,13 +56,14 @@ class AuthController extends Controller
         return Redirect::to(route('login'));
     }
 
-    public function register(Request $request){
+    public function register(Request $request)
+    {
         $request->validate([
             'username' => 'required|string|max:255|unique:users',
             'password' => 'required|string|min:6',
         ]);
 
-        DB::transaction(function() use ($request) {
+        DB::transaction(function () use ($request) {
             $user = User::create([
                 'name' => $request->name,
                 'username' => $request->username,
@@ -78,7 +79,7 @@ class AuthController extends Controller
                 'message' => 'User created successfully',
                 'user' => [
                     'username' => $user->username,
-                    'org_id'=>$user->org_id
+                    'org_id' => $user->org_id
 
                 ],
                 'authorisation' => [
@@ -91,77 +92,78 @@ class AuthController extends Controller
         });
     }
 
-    public function employees(){
+    public function employees()
+    {
         // $states=State::all();
         // $organizations=Organization::all();
-    
-        
-        $org_id =auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
-       
+
+
+        $org_id = auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+
         if (in_array(174, $org_id)) {
-            $employees=User::whereHas('organizations', function ($query)  {
+            $employees = User::whereHas('organizations', function ($query) {
                 $query->where('org_id', 174)
                     ->where('user_organization.active', 1);
             })
-            ->whereHas('roles', function ($query) {
-                $query->where('role_id','<>', 3)
-                    ->where('user_roles.active', 1);
+                ->whereHas('roles', function ($query) {
+                    $query->where('role_id', '<>', 3)
+                        ->where('user_roles.active', 1);
                 })
-                    ->get();
+                ->get();
         }
-    
+
         if (in_array(175, $org_id)) {
-            $employees=User::whereHas('organizations', function ($query)  {
+            $employees = User::whereHas('organizations', function ($query) {
                 $query->where('org_id', 175)
                     ->where('user_organization.active', 1);
             })
-            ->whereHas('roles', function ($query) {
-                $query->where('role_id','<>', 3)
-                    ->where('user_roles.active', 1);
+                ->whereHas('roles', function ($query) {
+                    $query->where('role_id', '<>', 3)
+                        ->where('user_roles.active', 1);
                 })->get();
         }
 
-            return view('employeedt', compact('employees'));
+        return view('employeedt', compact('employees'));
+    }
+
+    public function save_employee(Request $request)
+    {
+
+        $user = User::find($request->user_id);
+        if ($user && $user != NULL) {
+            $user->employee_name = $request->employee_name;
+            $user->active = $request->active;
+            if ($request->password && $request->password !== null)
+                $user->password = Hash::make($request->password);
+            $user->updated_at = Carbon::now()->toDateTimeLocalString();
+            $user->last_updated_by = Auth::user()->id;
+            $user->last_updated_from = $request->ip();
+            if ($user->save())
+                return redirect(route('applications.dashboard'));
+        } else
+            return response(array("code" => 400, "msg" => "Bad request"), 400);
+    }
+
+    public function checkPassword(Request $request)
+    {
+        // dd($request);
+        $user_id = Auth::user()->id;
+        $user_data = User::find($user_id);
+        $request->validate([
+            'current_pwd' => 'required|string',
+            'new_pwd' => 'required|string',
+        ]);
+        if (!Hash::check($request->current_pwd, $user_data->password)) {
+            return back()->withErrors(['current_pwd' => 'The provided password does not match our records.']);
+        } else {
+            $user_data->password = Hash::make($request->new_pwd);
+            $user_data->updated_at = Carbon::now()->toDateTimeLocalString();
+            $user_data->last_updated_by = Auth::user()->id;
+            $user_data->last_updated_from = $request->ip();
+
+            if ($user_data->save())
+                return Redirect::to(route('login'));
         }
 
-        public function save_employee(Request $request){
-            
-            $user = User::find($request->user_id);
-            if($user && $user != NULL){
-                $user->employee_name = $request->employee_name;
-                $user->active = $request->active;
-                if($request->password && $request->password !== null)
-                    $user->password = Hash::make($request->password);
-                $user->updated_at = Carbon::now()->toDateTimeLocalString();
-                $user->last_updated_by = Auth::user()->id;
-                $user->last_updated_from = $request->ip();
-                if ($user->save())
-                return redirect(route('applications.dashboard'));
-            }           
-            else
-                return response(array("code" => 400, "msg" => "Bad request"), 400);
-            }
-
-            public function checkPassword(Request $request){
-                // dd($request);
-                $user_id = Auth::user()->id;
-                $user_data = User::find($user_id);
-                $request->validate([
-                    'current_pwd' => 'required|string',
-                    'new_pwd' => 'required|string',
-                ]);
-                if(!Hash::check($request->current_pwd, $user_data->password)){
-                    return back()->withErrors(['current_pwd' => 'The provided password does not match our records.']);
-                }else{
-                    $user_data->password = Hash::make($request->new_pwd);
-                    $user_data->updated_at = Carbon::now()->toDateTimeLocalString();
-                    $user_data->last_updated_by = Auth::user()->id;
-                    $user_data->last_updated_from = $request->ip();
-                  
-                    if ($user_data->save())
-                    return Redirect::to(route('login'));
-                }
-
-            }
+    }
 }
-    
