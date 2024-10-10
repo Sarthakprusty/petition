@@ -30,8 +30,7 @@ final class ExpectationPipeline
      */
     public function __construct(
         private readonly Closure $closure
-    ) {
-    }
+    ) {}
 
     /**
      * Creates a new instance of Expectation Pipeline with given closure.
@@ -84,6 +83,6 @@ final class ExpectationPipeline
      */
     public function carry(): Closure
     {
-        return fn ($stack, $pipe): Closure => fn () => $pipe($stack, ...$this->passables);
+        return fn (mixed $stack, callable $pipe): Closure => fn () => $pipe($stack, ...$this->passables);
     }
 }

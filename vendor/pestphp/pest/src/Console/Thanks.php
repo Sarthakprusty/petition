@@ -23,9 +23,10 @@ final class Thanks
      * @var array<string, string>
      */
     private const FUNDING_MESSAGES = [
-        'Star the project on GitHub' => 'https://github.com/pestphp/pest',
-        'Tweet about the project' => 'https://twitter.com/pestphp',
-        'Sponsor the project' => 'https://github.com/sponsors/nunomaduro',
+        'Star' => 'https://github.com/pestphp/pest',
+        'News' => 'https://twitter.com/pestphp',
+        'Videos' => 'https://youtube.com/@nunomaduro',
+        'Sponsor' => 'https://github.com/sponsors/nunomaduro',
     ];
 
     /**
@@ -49,7 +50,7 @@ final class Thanks
         $wantsToSupport = false;
 
         if (getenv('PEST_NO_SUPPORT') !== 'true' && $this->input->isInteractive()) {
-            $wantsToSupport = (new SymfonyQuestionHelper())->ask(
+            $wantsToSupport = (new SymfonyQuestionHelper)->ask(
                 new ArrayInput([]),
                 $this->output,
                 new ConfirmationQuestion(

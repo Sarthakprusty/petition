@@ -134,10 +134,12 @@
                 </div>
             </div>
         @endforeach
-        {{--            {{ $applications->links() }}--}}
 
-            @if (!isset($notpaginate))
-        <div class="row">
+
+            {{-- @if (!isset($notpaginate)) --}}
+            {{ $applications->links() }}
+            {{-- {{$applications->onEachSide(5)->links()}} --}}
+        {{-- <div class="row">
             <nav role="navigation" aria-label="Pagination Navigation" class="flex items-center justify-between" style="margin-left: 1.5%">
                 <span class="relative z-0 inline-flex shadow-sm rounded-md" style="margin-left: 43%">
                     @if ($applications->previousPageUrl())
@@ -171,8 +173,8 @@
                     @endif
                 </span>
             </nav>
-        </div>
-            @endif
+        </div> --}}
+            {{-- @endif --}}
     </div>
     @endsection
     @section('modal')
@@ -192,7 +194,7 @@
                             <div>
                                 <label class="form-check-label" id="pullback" >Remarks</label><span class="text-danger">*</span>
                                     <input type="text" name="remark" id="pullback" class="form-control" required>
-                                  
+
                             </div>
                         </div>
                     </div>
@@ -204,7 +206,7 @@
                 <script>
                     $(document).ready(function() {
                         $(document).on("click", ".pullbck", function () {
-                            var application_no = $(this).data('id'); 
+                            var application_no = $(this).data('id');
                             $(".modal-body #app_no").val(application_no);
                         });
                     });
