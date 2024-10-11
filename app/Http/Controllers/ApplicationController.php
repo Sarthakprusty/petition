@@ -305,6 +305,10 @@ class ApplicationController extends Controller
     public function store(Request $request)
     {
         $app = new Application();
+
+        if(isset($request->id) && $request->id){
+            $app = Application::find($request->id);
+        }
         // if (isset($request->id) && $request->id) {
         //     $app = Application::find($request->id);
         //     if ($request->letter_no && $request->letter_no !== null && Application::where('letter_no', $request->letter_no)->where('id', '<>', $request->id)->exists()) {
