@@ -2,31 +2,31 @@
 
 @section('content')
 
-@if($message = session()->get('error'))
-    <div class="alert alert-danger alert-block">
-        <button type="button" class="btn btn-outline-secondary" id="session" data-dismiss="alert">x</button>
-        <strong>{{ $message }}</strong>
-    </div>
-@endif
-    
-   <!--@php
-         print_r( session()->all());
+    @if ($message = session()->get('error'))
+        <div class="alert alert-danger alert-block">
+            <button type="button" class="btn btn-outline-secondary" id="session" data-dismiss="alert">x</button>
+            <strong>{{ $message }}</strong>
+        </div>
+    @endif
+
+    <!--@php
+        print_r(session()->all());
     @endphp  -->
-    <!-- {{--@if ($errors->any())--}}
-    {{--    <div class="alert alert-danger">--}}
-    {{--        <strong>Whoops!</strong> There were some problems with your input.<br><br>--}}
-    {{--        <ul>--}}
-    {{--            @foreach ($errors->all() as $error)--}}
-    {{--                <li>{{ $error }}</li>--}}
-    {{--            @endforeach--}}
-    {{--        </ul>--}}
-    {{--    </div>--}}
-    {{--@endif--}}
-    {{--@if (session('error'))--}}
-    {{--    <script>--}}
-    {{--        alert("{{ session('error') }}");--}}
-    {{--    </script>--}}
-    {{--@endif--}} -->
+    <!-- {{-- @if ($errors->any()) --}}
+        {{--    <div class="alert alert-danger"> --}}
+        {{--        <strong>Whoops!</strong> There were some problems with your input.<br><br> --}}
+        {{--        <ul> --}}
+        {{--            @foreach ($errors->all() as $error) --}}
+        {{--                <li>{{ $error }}</li> --}}
+        {{--            @endforeach --}}
+        {{--        </ul> --}}
+        {{--    </div> --}}
+        {{-- @endif --}}
+        {{-- @if (session('error')) --}}
+        {{--    <script> --}}
+        {{--        alert("{{ session('error') }}"); --}}
+        {{--    </script> --}}
+        {{-- @endif --}} -->
 
 
     @if (isset($statuses) && $statuses->isNotEmpty())
@@ -42,35 +42,42 @@
         </div>
     @endif
 
- 
+
     <div class="row"></div>
     <div class="card shadow" xmlns="http://www.w3.org/1999/html">
         <div class="card-body">
-            <form method="POST" action="{{route('applications.store')}}" enctype="multipart/form-data" >
+            <form method="POST" action="{{ route('applications.store') }}" enctype="multipart/form-data">
                 @csrf
-                   
+
                 <div>
                     <div>
-                        @if(isset($app->id))
-                            <input type="hidden" value="{{$app->id}}" name="id" >
+                        @if (isset($app->id))
+                            <input type="hidden" value="{{ $app->id }}" name="id">
                         @endif
                         <div class="row">
                         </div>
                         <div class="row">
                             <div class="col-md-3" style="text-align: right">
-                                <label class="form-label" >Language of Letter:<span style="color: red;">*</span></label>
+                                <label class="form-label">Language of Letter:<span style="color: red;">*</span></label>
                             </div>
                             <div class="col">
                                 <label class="form-check-label">
-                                    <input type="radio" name="language_of_letter" value="E" id="language_of_letter_english" {{ $app->language_of_letter === 'E' || old('language_of_letter') === 'E' ? 'checked' : '' }} required>
+                                    <input type="radio" name="language_of_letter" value="E"
+                                        id="language_of_letter_english"
+                                        {{ $app->language_of_letter === 'E' || old('language_of_letter') === 'E' ? 'checked' : '' }}
+                                        required>
                                     English
                                 </label>
                                 <label class="form-check-label">
-                                    <input type="radio" name="language_of_letter" value="H" id="language_of_letter_hindi" {{ $app->language_of_letter === 'H' || old('language_of_letter') === 'H' ? 'checked' : '' }}>
+                                    <input type="radio" name="language_of_letter" value="H"
+                                        id="language_of_letter_hindi"
+                                        {{ $app->language_of_letter === 'H' || old('language_of_letter') === 'H' ? 'checked' : '' }}>
                                     Hindi
                                 </label>
                                 <label class="form-check-label">
-                                    <input type="radio" name="language_of_letter" value="O" id="language_of_letter_other" {{ $app->language_of_letter === 'O' || old('language_of_letter') === 'O' ? 'checked' : '' }}>
+                                    <input type="radio" name="language_of_letter" value="O"
+                                        id="language_of_letter_other"
+                                        {{ $app->language_of_letter === 'O' || old('language_of_letter') === 'O' ? 'checked' : '' }}>
                                     Other
                                 </label>
                             </div>
@@ -78,23 +85,46 @@
 
                         <hr class="row-divider">
                         <div class="row">
-                            <div class="col-md-3" style="text-align: right"><label class="form-label">Name:<span style="color: red;" class="required">*</span></label></div>
+                            <div class="col-md-3" style="text-align: right"><label class="form-label">Name:<span
+                                        style="color: red;" class="required">*</span></label></div>
                             <div class="col">
                                 <div class="input-group">
-                                    <select class="form-control col-md-1" name="applicant_title" id="applicant_title" >
+                                    <select class="form-control col-md-1" name="applicant_title" id="applicant_title">
                                         <option value="">-Title-</option>
-                                        <option value="Shri" {{ (old('applicant_title') ?: $app->applicant_title) === "Shri" ? 'selected' : '' }}>Shri</option>
-                                        <option value="Smt" {{ (old('applicant_title') ?: $app->applicant_title) === "Smt" ? 'selected' : '' }}>Shrimati</option>
-                                        <option value="Sushree" {{ (old('applicant_title') ?: $app->applicant_title) === "Sushree" ? 'selected' : '' }}>Sushree</option>
-                                        <option value="Mr" {{ (old('applicant_title') ?: $app->applicant_title) === "Mr" ? 'selected' : '' }}>Mr</option>
-                                        <option value="Mrs" {{ (old('applicant_title') ?: $app->applicant_title) === "Mrs" ? 'selected' : '' }}>Mrs</option>
-                                        <option value="Ms" {{ (old('applicant_title') ?: $app->applicant_title) === "Ms" ? 'selected' : '' }}>Ms</option>
-                                        <option value="Km" {{ (old('applicant_title') ?: $app->applicant_title) === "Km" ? 'selected' : '' }}>Km</option>
-                                        <option value="Prof" {{ (old('applicant_title') ?: $app->applicant_title) === "Prof" ? 'selected' : '' }}>Prof</option>
-                                        <option value="Dr" {{ (old('applicant_title') ?: $app->applicant_title) === "Dr" ? 'selected' : '' }}>Dr</option>
-                                        <option value="The" {{ (old('applicant_title') ?: $app->applicant_title) === "The" ? 'selected' : '' }}>The</option>
+                                        <option value="Shri"
+                                            {{ (old('applicant_title') ?: $app->applicant_title) === 'Shri' ? 'selected' : '' }}>
+                                            Shri</option>
+                                        <option value="Smt"
+                                            {{ (old('applicant_title') ?: $app->applicant_title) === 'Smt' ? 'selected' : '' }}>
+                                            Shrimati</option>
+                                        <option value="Sushree"
+                                            {{ (old('applicant_title') ?: $app->applicant_title) === 'Sushree' ? 'selected' : '' }}>
+                                            Sushree</option>
+                                        <option value="Mr"
+                                            {{ (old('applicant_title') ?: $app->applicant_title) === 'Mr' ? 'selected' : '' }}>
+                                            Mr</option>
+                                        <option value="Mrs"
+                                            {{ (old('applicant_title') ?: $app->applicant_title) === 'Mrs' ? 'selected' : '' }}>
+                                            Mrs</option>
+                                        <option value="Ms"
+                                            {{ (old('applicant_title') ?: $app->applicant_title) === 'Ms' ? 'selected' : '' }}>
+                                            Ms</option>
+                                        <option value="Km"
+                                            {{ (old('applicant_title') ?: $app->applicant_title) === 'Km' ? 'selected' : '' }}>
+                                            Km</option>
+                                        <option value="Prof"
+                                            {{ (old('applicant_title') ?: $app->applicant_title) === 'Prof' ? 'selected' : '' }}>
+                                            Prof</option>
+                                        <option value="Dr"
+                                            {{ (old('applicant_title') ?: $app->applicant_title) === 'Dr' ? 'selected' : '' }}>
+                                            Dr</option>
+                                        <option value="The"
+                                            {{ (old('applicant_title') ?: $app->applicant_title) === 'The' ? 'selected' : '' }}>
+                                            The</option>
                                     </select>
-                                    <input type="text" class="form-control col-md-3" id="applicant_name" aria-label="Applicant Name" placeholder="Applicant Name" name="applicant_name"  required value="{{ old('applicant_name') ?: $app->applicant_name}}">
+                                    <input type="text" class="form-control col-md-3" id="applicant_name"
+                                        aria-label="Applicant Name" placeholder="Applicant Name" name="applicant_name"
+                                        required value="{{ old('applicant_name') ?: $app->applicant_name }}">
                                 </div>
                             </div>
                         </div>
@@ -103,13 +133,15 @@
                                 <label class="form-label" for="org_from">Organization From:</label>
                             </div>
                             <div class="col">
-                                <input type="text" class="form-control" name="org_from" id="org_from"  placeholder="Org/Dept from"  value="{{ old('org_from') ?: $app->org_from}}">
+                                <input type="text" class="form-control" name="org_from" id="org_from"
+                                    placeholder="Org/Dept from" value="{{ old('org_from') ?: $app->org_from }}">
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-3" style="text-align: right"><label class="form-label">Address:<span style="color: red;" class="required">*</span></label></div>
+                            <div class="col-md-3" style="text-align: right"><label class="form-label">Address:<span
+                                        style="color: red;" class="required">*</span></label></div>
                             <div class="col">
-                                <textarea class="form-control"  name="address" id="address"  required>{{ old('address') ?: $app->address }}</textarea>
+                                <textarea class="form-control" name="address" id="address" required>{{ old('address') ?: $app->address }}</textarea>
                             </div>
                         </div>
 
@@ -117,21 +149,30 @@
                             <div class="col-md-3"></div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <select class="form-control" name="country" id="country"  required>
+                                    <select class="form-control" name="country" id="country" required>
                                         <option value="">-Select a Country-*</option>
-                                        <option value="I" {{ old('country') === 'I' || $app->country === 'I' ? 'selected' : '' }}>India</option>
-                                        <option value="U" {{ old('country') === 'U' || $app->country === 'U' ? 'selected' : '' }}>USA</option>
-                                        <option value="O" {{ old('country') === 'O' || $app->country === 'O' ? 'selected' : '' }}>Others</option>
+                                        <option value="I"
+                                            {{ old('country') === 'I' || $app->country === 'I' ? 'selected' : '' }}>India
+                                        </option>
+                                        <option value="U"
+                                            {{ old('country') === 'U' || $app->country === 'U' ? 'selected' : '' }}>USA
+                                        </option>
+                                        <option value="O"
+                                            {{ old('country') === 'O' || $app->country === 'O' ? 'selected' : '' }}>Others
+                                        </option>
                                     </select>
                                 </div>
                             </div>
 
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <select class="form-control" name="state_id" id="state_id"{{ old('country') !== 'I' && $app->country !== 'I' ? ' disabled' : '' }} >
+                                    <select class="form-control" name="state_id"
+                                        id="state_id"{{ old('country') !== 'I' && $app->country !== 'I' ? ' disabled' : '' }}>
                                         <option value="">-Select a State-</option>
-                                        @foreach($states as $state)
-                                            <option value="{{ $state->id }}" {{ old('state_id') == $state->id || $app->state_id == $state->id ? 'selected' : '' }}>{{ $state->state_name }}</option>
+                                        @foreach ($states as $state)
+                                            <option value="{{ $state->id }}"
+                                                {{ old('state_id') == $state->id || $app->state_id == $state->id ? 'selected' : '' }}>
+                                                {{ $state->state_name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -139,7 +180,10 @@
 
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" name="pincode" id="pincode" {{ old('country') !== 'I' && $app->country !== 'I' ? ' disabled' : '' }} pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="Pincode" value="{{ old('pincode') ?: $app->pincode}}">
+                                    <input type="text" class="form-control" name="pincode" id="pincode"
+                                        {{ old('country') !== 'I' && $app->country !== 'I' ? ' disabled' : '' }}
+                                        pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="Pincode"
+                                        value="{{ old('pincode') ?: $app->pincode }}">
                                 </div>
                             </div>
                         </div>
@@ -152,25 +196,31 @@
                             </div>
                             <div class="col">
                                 <label class="form-check-label">
-                                    <input type="radio" name="gender" value="M" id="gender_male" {{ $app->gender === 'M' || old('gender') === 'M' ? 'checked' : '' }}>
+                                    <input type="radio" name="gender" value="M" id="gender_male"
+                                        {{ $app->gender === 'M' || old('gender') === 'M' ? 'checked' : '' }}>
                                     Male
                                 </label>
                                 <label class="form-check-label">
-                                    <input type="radio" name="gender" value="F" id="gender_female" {{ $app->gender === 'F' || old('gender') === 'F' ? 'checked' : '' }}>
+                                    <input type="radio" name="gender" value="F" id="gender_female"
+                                        {{ $app->gender === 'F' || old('gender') === 'F' ? 'checked' : '' }}>
                                     Female
                                 </label>
                                 <label class="form-check-label">
-                                    <input type="radio" name="gender" value="O" id="gender_other" {{ $app->gender === 'O' || old('gender') === 'O' ? 'checked' : '' }}>
+                                    <input type="radio" name="gender" value="O" id="gender_other"
+                                        {{ $app->gender === 'O' || old('gender') === 'O' ? 'checked' : '' }}>
                                     Other
                                 </label>
-{{--                                <span class="text-danger">@error('gender'){{$message}}@enderror</span>--}}
+                                {{--                                <span class="text-danger">@error('gender'){{$message}}@enderror</span> --}}
                             </div>
                             <div class="col-md-3" style="text-align: right">
-                                <label class="form-label" for="mobile_no" >Mobile number:</label>
+                                <label class="form-label" for="mobile_no">Mobile number:</label>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group row">
-                                    <input type="text" class="form-control" name="mobile_no" id="mobile_no" pattern="[0-9]{10}" minlength="10" maxlength="10" placeholder="mobile no" style="width: 89%; margin-left: 5%;" value="{{ old('mobile_no') ?: substr($app->mobile_no, 3)}}">
+                                    <input type="text" class="form-control" name="mobile_no" id="mobile_no"
+                                        pattern="[0-9]{10}" minlength="10" maxlength="10" placeholder="mobile no"
+                                        style="width: 89%; margin-left: 5%;"
+                                        value="{{ old('mobile_no') ?: substr($app->mobile_no, 3) }}">
                                 </div>
                             </div>
                             <div class="col-md-3" style="text-align: right">
@@ -178,7 +228,10 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group row">
-                                    <input type="text" class="form-control"  name="phone_no" id="phone_no" pattern="[0-9]{11}" minlength="11" maxlength="11" placeholder="phone no" style="width: 89%; margin-left: 5%;" value="{{ old('phone_no') ?: $app->phone_no}}">
+                                    <input type="text" class="form-control" name="phone_no" id="phone_no"
+                                        pattern="[0-9]{11}" minlength="11" maxlength="11" placeholder="phone no"
+                                        style="width: 89%; margin-left: 5%;"
+                                        value="{{ old('phone_no') ?: $app->phone_no }}">
                                 </div>
                             </div>
 
@@ -187,7 +240,9 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group ">
-                                    <input type="email" class="form-control" name="email_id" id="email_id" title="If acknowledgement is requested, this email will be used for sending mail to the applicant." placeholder="email" value="{{ old('email_id') ?: $app->email_id }}">
+                                    <input type="email" class="form-control" name="email_id" id="email_id"
+                                        title="If acknowledgement is requested, this email will be used for sending mail to the applicant."
+                                        placeholder="email" value="{{ old('email_id') ?: $app->email_id }}">
                                 </div>
                             </div>
                         </div>
@@ -196,11 +251,14 @@
 
                         <div class="row" id="alignment">
                             <div class="col-md-3" style="text-align: right">
-                                <label class="form-label" for="letter_no">Letter No:<span style="color: red;" >*</span></label>
+                                <label class="form-label" for="letter_no">Letter No:<span
+                                        style="color: red;">*</span></label>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group row">
-                                    <input type="text" class="form-control" name="letter_no" id="letter_no" style="width: 89%; margin-left: 5%;" placeholder="letter no"  value="{{ old('letter_no') ?: $app->letter_no}}" required>
+                                    <input type="text" class="form-control" name="letter_no" id="letter_no"
+                                        style="width: 89%; margin-left: 5%;" placeholder="letter no"
+                                        value="{{ old('letter_no') ?: $app->letter_no }}" required>
                                 </div>
                             </div>
 
@@ -209,17 +267,22 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group row">
-                                    <input type="date" class="form-control datepicker" name="letter_date" id="letter_date" style="width: 89%; margin-left: 5%;" value="{{ old('letter_date') ?: ($app->letter_date ? \Carbon\Carbon::parse($app->letter_date)->format('Y-m-d') : '') }}">
+                                    <input type="date" class="form-control datepicker" name="letter_date"
+                                        id="letter_date" style="width: 89%; margin-left: 5%;"
+                                        value="{{ old('letter_date') ?: ($app->letter_date ? \Carbon\Carbon::parse($app->letter_date)->format('Y-m-d') : '') }}">
                                 </div>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-3" style="text-align: right">
-                                <label class="form-label" for="letter_subject">Letter Subject:<span style="color: red;" class="required">*</span></label>
+                                <label class="form-label" for="letter_subject">Letter Subject:<span style="color: red;"
+                                        class="required">*</span></label>
                             </div>
                             <div class="col">
-                                <input type="text" class="form-control" name="letter_subject" id="letter_subject"  required  placeholder="letter subject"  value="{{ old('letter_subject') ?: $app->letter_subject}}">
+                                <input type="text" class="form-control" name="letter_subject" id="letter_subject"
+                                    required placeholder="letter subject"
+                                    value="{{ old('letter_subject') ?: $app->letter_subject }}">
                             </div>
                         </div>
 
@@ -228,22 +291,25 @@
                                 <label class="form-label" for="letter_body">Letter Body:</label>
                             </div>
                             <div class="col">
-                                <textarea class="form-control" name="letter_body" id="letter_body"   rows="7" placeholder="letter body" >{{ old('letter_body') ?: $app->letter_body}}</textarea>
+                                <textarea class="form-control" name="letter_body" id="letter_body" rows="7" placeholder="letter body">{{ old('letter_body') ?: $app->letter_body }}</textarea>
                             </div>
                         </div>
                         <hr class="row-divider">
 
                         <div class="row">
-                            <div class="col-md-3" style="text-align: right" >
+                            <div class="col-md-3" style="text-align: right">
                                 <label class="form-label">Acknowledgement:<span style="color: red;">*</span></label>
                             </div>
                             <div class="col">
                                 <label class="form-check-label">
-                                    <input type="radio" name="acknowledgement" value="Y" {{ (old('acknowledgement') === 'Y' || $app->acknowledgement === 'Y') ? 'checked' : '' }}>
+                                    <input type="radio" name="acknowledgement" value="Y"
+                                        {{ old('acknowledgement') === 'Y' || $app->acknowledgement === 'Y' ? 'checked' : '' }}>
                                     Yes
                                 </label>
                                 <label class="form-check-label">
-                                    <input type="radio" name="acknowledgement" value="N" {{ (old('acknowledgement') === 'N' || $app->acknowledgement === 'N') ? 'checked' : '' }} required>
+                                    <input type="radio" name="acknowledgement" value="N"
+                                        {{ old('acknowledgement') === 'N' || $app->acknowledgement === 'N' ? 'checked' : '' }}
+                                        required>
                                     No
                                 </label>
                             </div>
@@ -252,19 +318,21 @@
 
 
                         <div class="row">
-                            <div class="col-md-3" style="text-align: right" >
+                            <div class="col-md-3" style="text-align: right">
                                 <label class="form-label" for="grievance_category_id">Grievance Subject:</label>
                             </div>
-                            <div class="col-md-9" >
+                            <div class="col-md-9">
                                 <select class="form-control " name="grievance_category_id" id="grievance_category_id">
                                     <option value="">-Select a Grievance Subject-</option>
-                                    @foreach($grievances as $grievance)
-                                        <option value="{{ $grievance->id }}" {{ old('grievance_category_id') == $grievance->id || $app->grievance_category_id == $grievance->id ? 'selected' : '' }}>{{ $grievance->grievances_desc }}</option>
+                                    @foreach ($grievances as $grievance)
+                                        <option value="{{ $grievance->id }}"
+                                            {{ old('grievance_category_id') == $grievance->id || $app->grievance_category_id == $grievance->id ? 'selected' : '' }}>
+                                            {{ $grievance->grievances_desc }}</option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
-                            <hr class="row-divider">
+                        <hr class="row-divider">
 
                         <div class="row">
 
@@ -273,7 +341,9 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="input-group">
-                                    <input type="text" class="form-control" name="min_dept_gov_code" id="min_dept_gov_code" placeholder="Search" value="{{ old('min_dept_gov_code') ?: $app->min_dept_gov_code }}">
+                                    <input type="text" class="form-control" name="min_dept_gov_code"
+                                        id="min_dept_gov_code" placeholder="Search"
+                                        value="{{ old('min_dept_gov_code') ?: $app->min_dept_gov_code }}">
                                     <span class="input-group-text"><i class="bi bi-search"></i></span>
                                 </div>
                             </div>
@@ -281,87 +351,104 @@
 
                         <div class="row">
                             <div class="col-md-3" style="text-align: right">
-                                <label class="form-label" for="action_org" >Action:<span style="color: red;">*</span></label>
+                                <label class="form-label" for="action_org">Action:<span
+                                        style="color: red;">*</span></label>
                             </div>
                             <div class="col-md-9">
                                 <select class="form-control" name="action_org" id="action_org" required>
                                     <option value="">-Select an Action-</option>
-                                    <option  id="option_no_action" value="N" {{ (old('action_org') == 'N' || $app->action_org == 'N') ? 'selected' : '' }}>No Action </option>
-                                    <option id="option_forward_central" value="F" {{ (old('action_org') == 'F' || $app->action_org == 'F') ? 'selected' : '' }}>Forward to Central Govt. Ministry/Department</option>
-                                    <option id="option_forward_state" value="S" {{ (old('action_org') == 'S' || $app->action_org == 'S') ? 'selected' : '' }}>Forward to State Govt. </option>
-                                    <option id="option_miscellaneous" value="M" {{ (old('action_org') == 'M' || $app->action_org == 'M') ? 'selected' : '' }}>Miscellaneous</option>
+                                    <option id="option_no_action" value="N"
+                                        {{ old('action_org') == 'N' || $app->action_org == 'N' ? 'selected' : '' }}>No
+                                        Action </option>
+                                    <option id="option_forward_central" value="F"
+                                        {{ old('action_org') == 'F' || $app->action_org == 'F' ? 'selected' : '' }}>
+                                        Forward to Central Govt. Ministry/Department</option>
+                                    <option id="option_forward_state" value="S"
+                                        {{ old('action_org') == 'S' || $app->action_org == 'S' ? 'selected' : '' }}>
+                                        Forward to State Govt. </option>
+                                    <option id="option_miscellaneous" value="M"
+                                        {{ old('action_org') == 'M' || $app->action_org == 'M' ? 'selected' : '' }}>
+                                        Miscellaneous</option>
                                 </select>
                             </div>
                         </div>
 
 
-                            <div class="row" id="orgS_dropdown_row" style="display: none">
-                                <div class="col-md-3" style="text-align: right">
-                                    <label class="form-label" for="department_org_idS">
-                                        <span id="org_label">State Government</span><span style="color: red;">*</span>
-                                    </label>
-                                </div>
-                                <div class="col-md-9">
-                                    <select class="form-control" name="department_org_id" id="department_org_idS" required>
-                                        <option value="">-Select a State-</option>
-                                        @foreach($organizationStates as $organizationS)
-                                            <option value="{{ $organizationS->id }}" data-v-code="{{ $organizationS->v_code }}" {{ old('department_org_id') == $organizationS->id || $app->department_org_id == $organizationS->id ? 'selected' : '' }}>
-                                                {{ $organizationS->org_desc }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                        <div class="row" id="orgS_dropdown_row" style="display: none">
+                            <div class="col-md-3" style="text-align: right">
+                                <label class="form-label" for="department_org_idS">
+                                    <span id="org_label">State Government</span><span style="color: red;">*</span>
+                                </label>
                             </div>
+                            <div class="col-md-9">
+                                <select class="form-control" name="department_org_id" id="department_org_idS" required>
+                                    <option value="">-Select a State-</option>
+                                    @foreach ($organizationStates as $organizationS)
+                                        <option value="{{ $organizationS->id }}"
+                                            data-v-code="{{ $organizationS->v_code }}"
+                                            {{ old('department_org_id') == $organizationS->id || $app->department_org_id == $organizationS->id ? 'selected' : '' }}>
+                                            {{ $organizationS->org_desc }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
 
-                            <div class="row" id="orgM_dropdown_row"style="display: none">
-                                <div class="col-md-3" style="text-align: right">
-                                    <label class="form-label" for="department_org_idM">
-                                        <span id="org_label">Ministry/Department:</span><span style="color: red;">*</span>
-                                    </label>
-                                </div>
-                                <div class="col-md-9">
-                                    <select class="form-control" name="department_org_id" id="department_org_idM" required>
-                                        <option value="">-Select a Ministry/Department-</option>
-                                        @foreach($organizationM as $organization)
-                                            <option value="{{ $organization->id }}" data-v-code="{{ $organization->v_code }}" {{ old('department_org_id') == $organization->id || $app->department_org_id == $organization->id ? 'selected' : '' }}>
-                                                {{ $organization->org_desc }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                        <div class="row" id="orgM_dropdown_row"style="display: none">
+                            <div class="col-md-3" style="text-align: right">
+                                <label class="form-label" for="department_org_idM">
+                                    <span id="org_label">Ministry/Department:</span><span style="color: red;">*</span>
+                                </label>
                             </div>
+                            <div class="col-md-9">
+                                <select class="form-control" name="department_org_id" id="department_org_idM" required>
+                                    <option value="">-Select a Ministry/Department-</option>
+                                    @foreach ($organizationM as $organization)
+                                        <option value="{{ $organization->id }}"
+                                            data-v-code="{{ $organization->v_code }}"
+                                            {{ old('department_org_id') == $organization->id || $app->department_org_id == $organization->id ? 'selected' : '' }}>
+                                            {{ $organization->org_desc }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
 
-                            <div class="row" id="reasonM_dropdown_row" style="display: none">
-                                <div class="col-md-3" style="text-align: right">
-                                    <label class="form-label" for="reasonM">Reason:<span style="color: red;">*</span></label>
-                                </div>
-                                <div class="col-md-9">
-                                    <select class="form-control" name="reason_id" id="reasonM" required>
-                                        <option value="">-Select a Reason-</option>
-                                        @foreach($reasonM as $reason)
-                                            <option value="{{ $reason->id }}" {{ old('reason_id') == $reason->id || $app->reason_id == $reason->id ? 'selected' : '' }}>
-                                                {{ $reason->reason_desc }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                        <div class="row" id="reasonM_dropdown_row" style="display: none">
+                            <div class="col-md-3" style="text-align: right">
+                                <label class="form-label" for="reasonM">Reason:<span
+                                        style="color: red;">*</span></label>
                             </div>
+                            <div class="col-md-9">
+                                <select class="form-control" name="reason_id" id="reasonM" required>
+                                    <option value="">-Select a Reason-</option>
+                                    @foreach ($reasonM as $reason)
+                                        <option value="{{ $reason->id }}"
+                                            {{ old('reason_id') == $reason->id || $app->reason_id == $reason->id ? 'selected' : '' }}>
+                                            {{ $reason->reason_desc }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
 
-                            <div class="row" id="reasonN_dropdown_row" style="display: none">
-                                <div class="col-md-3" style="text-align: right">
-                                    <label class="form-label" for="reasonN">Reason:<span style="color: red;">*</span></label>
-                                </div>
-                                <div class="col-md-9">
-                                    <select class="form-control" name="reason_id" id="reasonN" required>
-                                        <option value="">-Select a Reason-</option>
-                                        @foreach($reasonN as $reasons)
-                                            <option value="{{ $reasons->id }}" {{ old('reason_id') == $reasons->id || $app->reason_id == $reasons->id ? 'selected' : '' }}>
-                                                {{ $reasons->reason_desc }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                        <div class="row" id="reasonN_dropdown_row" style="display: none">
+                            <div class="col-md-3" style="text-align: right">
+                                <label class="form-label" for="reasonN">Reason:<span
+                                        style="color: red;">*</span></label>
                             </div>
+                            <div class="col-md-9">
+                                <select class="form-control" name="reason_id" id="reasonN" required>
+                                    <option value="">-Select a Reason-</option>
+                                    @foreach ($reasonN as $reasons)
+                                        <option value="{{ $reasons->id }}"
+                                            {{ old('reason_id') == $reasons->id || $app->reason_id == $reasons->id ? 'selected' : '' }}>
+                                            {{ $reasons->reason_desc }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
 
                         <div class="row">
                             <div class="col-md-3" style="text-align: right">
@@ -374,47 +461,57 @@
 
                         <hr class="row-divider">
 
-                        @if($app->file_path)
+                        @if ($app->file_path)
                             <div class="row">
                                 <div class="col-6" style="text-align: right">
-                                    <a href="{{url('/api/getFile/'.$app->file_path)}}" target="_blank">
+                                    <a href="{{ url('/api/getFile/' . $app->file_path) }}" target="_blank">
                                         <button type="button" class="btn btn-outline-primary">View old File</button>
                                     </a>
                                 </div>
-                                <div class="col-6" >
+                                <div class="col-6">
                                     <div class="input-group">
                                         <div class="custom-file">
-                                            <input type="file" class="custom-file-input" id="file_path" name="file_path" accept=".pdf">(.pdf)(max-20MB)<span style="color: red;">*</span>
+                                            <input type="file" class="custom-file-input" id="file_path"
+                                                name="file_path" accept=".pdf">(.pdf)(max-20MB)<span
+                                                style="color: red;">*</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                                <div class="row">
-                                    <div class="col-6" style="padding-left: 32.8%">
-                                        <button type="button" class="btn btn-outline-primary" id="openFileButton" onclick="openSelectedFile()" style="display: none;">Open Selected File</button>
-                                    </div>
-                                    <div class="col-6" >
-                                        <button type="button" class="btn btn-outline-danger" id="removeFileButton" onclick="removeSelectedFile()" style="display: none;">Remove selected File</button>
-                                    </div>
+                            <div class="row">
+                                <div class="col-6" style="padding-left: 32.8%">
+                                    <button type="button" class="btn btn-outline-primary" id="openFileButton"
+                                        onclick="openSelectedFile()" style="display: none;">Open Selected File</button>
                                 </div>
+                                <div class="col-6">
+                                    <button type="button" class="btn btn-outline-danger" id="removeFileButton"
+                                        onclick="removeSelectedFile()" style="display: none;">Remove selected
+                                        File</button>
+                                </div>
+                            </div>
                         @else
                             <div class="row">
                                 <div class="col-md-6 offset-md-4" style="margin-left: 38%">
                                     <div class="input-group">
                                         <div class="custom-file">
-                                            <input type="file" class="custom-file-input" id="file_path" name="file_path" accept=".pdf" required> (.pdf)(max-20MB)<span style="color: red;">*</span>
+                                            <input type="file" class="custom-file-input" id="file_path"
+                                                name="file_path" accept=".pdf" required> (.pdf)(max-20MB)<span
+                                                style="color: red;">*</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                                <div class="row">
-                                    <div class="col-6" style="padding-left: 32.8%">
-                                        <button type="button" class="btn btn-outline-primary" id="openFileButton" onclick="openSelectedFile()" style="display: none;">Open Selected File</button>
-                                    </div>
-                                    <div class="col-6" >
-                                        <button type="button" class="btn btn-outline-danger" id="removeFileButton" onclick="removeSelectedFile()" style="display: none;">Remove selected File</button>
-                                    </div>
+                            <div class="row">
+                                <div class="col-6" style="padding-left: 32.8%">
+                                    <button type="button" class="btn btn-outline-primary" id="openFileButton"
+                                        onclick="openSelectedFile()" style="display: none;">Open Selected File</button>
                                 </div>
+                                <div class="col-6">
+                                    <button type="button" class="btn btn-outline-danger" id="removeFileButton"
+                                        onclick="removeSelectedFile()" style="display: none;">Remove selected
+                                        File</button>
+                                </div>
+                            </div>
                         @endif
 
                         <hr class="row-divider">
@@ -423,16 +520,21 @@
 
                         <div class="row">
                             <span id="file-status"></span>
-                            @if($allowDraft)
+                            @if ($allowDraft)
                                 <div class="col-6" style="text-align: right">
-                                    <input type="submit" class="btn btn-outline-warning" name="submit" value="Draft"></div>
-                                <div class="col-6" style="text-align: left" >
-                                    <button type="submit" class="btn btn-outline-success" name="submit" value="Forward" onclick="return confirm('Are you sure,you want to forward?')">Forward</button>
+                                    <input type="submit" class="btn btn-outline-warning" name="submit" value="Draft">
+                                </div>
+                                <div class="col-6" style="text-align: left">
+                                    <button type="submit" class="btn btn-outline-success" name="submit"
+                                        value="Forward"
+                                        onclick="return confirm('Are you sure,you want to forward?')">Forward</button>
                                 </div>
                             @endif
-                            @if($allowOnlyForward)
-                                <div style="text-align: center" >
-                                    <button type="submit" class="btn btn-outline-success" name="submit" value="Forward" onclick="return confirm('Are you sure,you want to forward?')">Forward</button>
+                            @if ($allowOnlyForward)
+                                <div style="text-align: center">
+                                    <button type="submit" class="btn btn-outline-success" name="submit"
+                                        value="Forward"
+                                        onclick="return confirm('Are you sure,you want to forward?')">Forward</button>
                                 </div>
                             @endif
                         </div>
@@ -441,7 +543,6 @@
             </form>
         </div>
         <script>
-
             $('input[name=gender]').click(function() {
                 if (this.previous) {
                     this.checked = false;
@@ -450,57 +551,58 @@
             });
 
             //open and remove file
-                function openSelectedFile() {
+            function openSelectedFile() {
                 // Get the file input element
                 var fileInput = document.getElementById('file_path');
 
                 // Check if a file has been selected
                 if (fileInput.files.length > 0) {
-                var selectedFile = fileInput.files[0];
+                    var selectedFile = fileInput.files[0];
 
-                // Check if the selected file is a PDF (you can add more file type checks)
-                if (selectedFile.type === 'application/pdf') {
-                // Construct the URL to open the file
-                var fileURL = URL.createObjectURL(selectedFile);
+                    // Check if the selected file is a PDF (you can add more file type checks)
+                    if (selectedFile.type === 'application/pdf') {
+                        // Construct the URL to open the file
+                        var fileURL = URL.createObjectURL(selectedFile);
 
-                // Open the file in a new tab
-                window.open(fileURL, '_blank');
-            } else {
-                alert('Please select a PDF file.');
+                        // Open the file in a new tab
+                        window.open(fileURL, '_blank');
+                    } else {
+                        alert('Please select a PDF file.');
+                    }
+                } else {
+                    alert('Please select a file first.');
+                }
             }
-            } else {
-                alert('Please select a file first.');
-            }
-            }
-                function removeSelectedFile() {
-                    // Get the file input element
-                    var fileInput = document.getElementById('file_path');
 
-                    // Clear the selected file by setting its value to an empty string
-                    fileInput.value = '';
+            function removeSelectedFile() {
+                // Get the file input element
+                var fileInput = document.getElementById('file_path');
 
-                    // Hide both the "Open Selected File" and "Remove File" buttons
-                    var openFileButton = document.getElementById('openFileButton');
-                    var removeFileButton = document.getElementById('removeFileButton');
+                // Clear the selected file by setting its value to an empty string
+                fileInput.value = '';
+
+                // Hide both the "Open Selected File" and "Remove File" buttons
+                var openFileButton = document.getElementById('openFileButton');
+                var removeFileButton = document.getElementById('removeFileButton');
+                openFileButton.style.display = 'none';
+                removeFileButton.style.display = 'none';
+            }
+            // Add an event listener to show the button when a file is selected
+            var fileInput = document.getElementById('file_path');
+            fileInput.addEventListener('change', function() {
+                var openFileButton = document.getElementById('openFileButton');
+                var removeFileButton = document.getElementById('removeFileButton');
+                if (fileInput.files.length > 0) {
+                    openFileButton.style.display = 'block';
+                    removeFileButton.style.display = 'block';
+                } else {
                     openFileButton.style.display = 'none';
                     removeFileButton.style.display = 'none';
                 }
-                // Add an event listener to show the button when a file is selected
-                var fileInput = document.getElementById('file_path');
-                fileInput.addEventListener('change', function () {
-                    var openFileButton = document.getElementById('openFileButton');
-                    var removeFileButton = document.getElementById('removeFileButton');
-                    if (fileInput.files.length > 0) {
-                        openFileButton.style.display = 'block';
-                        removeFileButton.style.display = 'block';
-                    } else {
-                        openFileButton.style.display = 'none';
-                        removeFileButton.style.display = 'none';
-                    }
-                });
+            });
 
 
-        // calender
+            // calender
             $(function() {
                 var today = new Date().toISOString().split('T')[0];
                 $(".datepicker").attr('max', today);
@@ -740,7 +842,7 @@
 
 
 
-        //if language selected to other all required field will be removed
+            //if language selected to other all required field will be removed
             // Attach change event listener to the radio buttons
             $('input[name="language_of_letter"]').on('change', toggleFields);
 
@@ -802,40 +904,31 @@
             //         }
             //     });
             // });
+
             
-            $(document).ready(function () {
-                $('#letter_no').blur(function() {
-                    let letter_no = document.getElementById('letter_no').value;
 
-                    var pausecontent = <?php echo json_encode($existed_letter_no); ?>;
+            //shubham
+            $(document).ready(function() {
+                $('#letter_no').on('blur', function() {
 
-                    if (pausecontent.includes(letter_no)) {
-                        alert('Letter no already exists');
-                    }
-                });
+                    var inputValue = $(this).val();
+                    var idEdit = '<?php echo $app->id; ?>';
 
-                $('#session').click(function(){
-                    // alert(2344);
-                   <?php session()->forget('error'); ?>
-                });
+                    var url1 = "{{ route('application.checkDiaryNo') }}";
+                    // Perform AJAX request
 
-                $('button[name="submit"]').click(function() {
-                    <?php 
-                        if(session()->has('error')) {
-                            session()->forget('error');
+                    $.post(url1, {
+                        inputValue: inputValue,
+                        idEdit: idEdit,  // Send inputValue as POST data
+                        _token: '{{ csrf_token() }}' // Include the CSRF token for Laravel
+                    }, function(data) {
+                        if(data){
+                            $('#letter_no').val('');
+                            alert(inputValue+" Letter Number Already Exists");
                         }
-                    ?>
-                });
-            });
 
-            document.addEventListener('DOMContentLoaded', function() {
-                document.querySelector('button[name="submit"]').addEventListener('click', function(event) {
-                    let letter_no = document.getElementById('letter_no').value;
-                    var pausecontent = <?php echo json_encode($existed_letter_no); ?>;
-                    if (pausecontent.includes(letter_no)) {
-                        alert('Letter no already exists');
-                        event.preventDefault();
-                    }
+                    });
+
                 });
             });
         </script>

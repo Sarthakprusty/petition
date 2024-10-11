@@ -37,7 +37,7 @@ Route::group(['middleware' => ['web']], function () {
     Route::post('applications/{application_id}/update-status', [ApplicationController::class, 'updateStatus'])->name('applications.updateStatus')->middleware('auth');
     Route::post('applications/update-print', [ApplicationController::class, 'updatePrint'])->name('applications.updatePrint')->middleware('auth');
     Route::get('applications/pullback', [ApplicationController::class, 'pullback'])->name('applications.pullback')->middleware('auth');
-
+    Route::post('applications/checkDiaryNo', [ApplicationController::class, 'checkDiaryNo'])->name('application.checkDiaryNo')->middleware('auth');
 
     Route::get('employees', [AuthController::class, 'employees'])->name('users.employees')->middleware('auth');
     Route::post('employees_data', [AuthController::class, 'save_employee'])->name('users.employees_save')->middleware('auth');
@@ -60,5 +60,5 @@ Route::group(['middleware' => ['web']], function () {
     Route::post('checkpassword', [AuthController::class, 'checkPassword'])->name('users.checkPassword')->middleware('auth');
 
     Route::get('organizations', [OrganizationController::class, 'ministries'])->name('organizations.ministries')->middleware('auth');
-   
+
 });

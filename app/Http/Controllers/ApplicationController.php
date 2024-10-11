@@ -208,8 +208,24 @@ class ApplicationController extends Controller
 
     public function checkDiaryNo()
     {
+        // Get the POST data
+        $inputValue = $_POST['inputValue'] ?? null;
+        $idEdit = $_POST['idEdit'] ?? null;
 
+        // Start building the query
+        $query = Application::where('letter_no', $inputValue);
+
+        // If idEdit is provided, exclude that record
+        if ($idEdit) {
+            $query->where('id', '!=', $idEdit);
+        }
+
+        // Check if any records exist that match the query
+        $exists = $query->exists();
+
+        return response()->json($exists);
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -227,7 +243,7 @@ class ApplicationController extends Controller
         $reasonM = Reason::where('action_code', 99)->get();
         $reasonN = Reason::where('action_code', 10)->get();
         $states = State::all();
-        $existed_letter_no = [];
+        //$existed_letter_no = [];
         /*$application  = Application::where('active','1')->get();
         foreach($application as $appli){
             $existed_letter_no[] = $appli->letter_no;
@@ -241,7 +257,7 @@ class ApplicationController extends Controller
             $allowDraft = false;
         }
         //  $appStatusRemark = $app->statuses()->wherePivot('active', 0)->pluck('pivot.remarks')->with('created by');
-        return view('application', compact('app', 'organizationStates', 'states', 'grievances', 'reasonM', 'reasonN', 'organizationM', 'allowDraft', 'allowOnlyForward', 'existed_letter_no'));
+        return view('application', compact('app', 'organizationStates', 'states', 'grievances', 'reasonM', 'reasonN', 'organizationM', 'allowDraft', 'allowOnlyForward'));
     }
 
     /**
@@ -262,7 +278,7 @@ class ApplicationController extends Controller
         $reasonM = Reason::where('action_code', 99)->get();
         $reasonN = Reason::where('action_code', 10)->get();
         // $application  = Application::where('active','1')->where('id','<>',$id)->get();
-        $existed_letter_no = [];
+        // $existed_letter_no = [];
         // foreach($application as $appli){
         //     $existed_letter_no[] = $appli->letter_no;
         // }
@@ -280,7 +296,7 @@ class ApplicationController extends Controller
         } else {
             $allowDraft = false;
         }
-        return view('application', compact('app', 'organizationStates', 'states', 'grievances', 'reasonM', 'reasonN', 'organizationM', 'statuses', 'allowDraft', 'allowOnlyForward', 'existed_letter_no'));
+        return view('application', compact('app', 'organizationStates', 'states', 'grievances', 'reasonM', 'reasonN', 'organizationM', 'statuses', 'allowDraft', 'allowOnlyForward'));
     }
 
     /**
@@ -289,19 +305,19 @@ class ApplicationController extends Controller
     public function store(Request $request)
     {
         $app = new Application();
-        if (isset($request->id) && $request->id) {
-            $app = Application::find($request->id);
-            if ($request->letter_no && $request->letter_no !== null && Application::where('letter_no', $request->letter_no)->where('id', '<>', $request->id)->exists()) {
-                $letter_no_msg = "Letter no already exist!";
-                session()->put('error', $letter_no_msg);
-                return back()->withInput($request->input());
-            }
-        }
-        if ($request->letter_no && $request->letter_no !== null && (!$request->id || $request->id == null) && Application::where('letter_no', $request->letter_no)->exists()) {
-            $letter_no_msg = "Letter no already exist!";
-            session()->put('error', $letter_no_msg);
-            return back()->withInput($request->input());
-        }
+        // if (isset($request->id) && $request->id) {
+        //     $app = Application::find($request->id);
+        //     if ($request->letter_no && $request->letter_no !== null && Application::where('letter_no', $request->letter_no)->where('id', '<>', $request->id)->exists()) {
+        //         $letter_no_msg = "Letter no already exist!";
+        //         session()->put('error', $letter_no_msg);
+        //         return back()->withInput($request->input());
+        //     }
+        // }
+        // if ($request->letter_no && $request->letter_no !== null && (!$request->id || $request->id == null) && Application::where('letter_no', $request->letter_no)->exists()) {
+        //     $letter_no_msg = "Letter no already exist!";
+        //     session()->put('error', $letter_no_msg);
+        //     return back()->withInput($request->input());
+        // }
 
         if ($request->language_of_letter != 'O') {
             if ($request->input('submit') == 'Forward') {
