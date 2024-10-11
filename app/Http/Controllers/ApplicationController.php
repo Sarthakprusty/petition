@@ -2110,7 +2110,7 @@ class ApplicationController extends Controller
     {
         $fname = str_replace('/', '_', $app->reg_no);
         if ($fname || $fname == null)
-            $fname = 'file';
+            $fname = 'file_'.date('Ymd_His');
         $filename = $fname . '.' . $request->file('file_path')->getClientOriginalExtension();
         $path = $request->file('file_path')->storeAs('applications/' . $app->id, $filename, 'upload');
         $app->file_path = base64_encode($path);
