@@ -48,7 +48,7 @@
         <div class="card-body">
             <form method="POST" action="{{ route('applications.store') }}" enctype="multipart/form-data">
                 @csrf
-
+                
                 <div>
                     <div>
                         @if (isset($app->id))
@@ -81,6 +81,23 @@
                                     Other
                                 </label>
                             </div>
+                            @if ($isCr)
+                            <div class="col-md-3" style="text-align: right">
+                                <label class="form-label">Forwarded To: <span style="color: red;">*</span></label>
+                            </div>
+                            <div class="col-md-3">
+                            <div class="form-group">
+                                    <select class="form-control" name="forwarded_to" id="forwarded_to" required>
+                                        <option value="">-Select-</option>
+                                        <option value="174" {{ (old('forwarded_section') ?: $app->forwarded_section) === '174' ? 'selected' : '' }}>Public 1</option>
+                                        <option value="175" {{ (old('forwarded_section') ?: $app->forwarded_section) === '175' ? 'selected' : '' }}>Public 2</option>
+                                        
+                                        </option>
+                                        
+                                    </select>
+                                </div>
+                            </div>
+                            @endif
                         </div>
 
                         <hr class="row-divider">
@@ -146,11 +163,12 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-3"></div>
+                        <div class="col-md-3" style="text-align: right"><label class="form-label">Country:<span
+                        style="color: red;" class="required">*</span></label></div>
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <select class="form-control" name="country" id="country" required>
-                                        <option value="">-Select a Country-*</option>
+                                        <option value="">-Select a Country-</option>
                                         <option value="I"
                                             {{ old('country') === 'I' || $app->country === 'I' ? 'selected' : '' }}>India
                                         </option>
@@ -294,6 +312,7 @@
                                 <textarea class="form-control" name="letter_body" id="letter_body" rows="7" placeholder="letter body">{{ old('letter_body') ?: $app->letter_body }}</textarea>
                             </div>
                         </div>
+                        @if (!$isCr)
                         <hr class="row-divider">
 
                         <div class="row">
@@ -332,6 +351,7 @@
                                 </select>
                             </div>
                         </div>
+                        
                         <hr class="row-divider">
 
                         <div class="row">
@@ -458,9 +478,9 @@
                                 <textarea class="form-control" id="remarks" name="remarks">{{ old('remarks') ?: $app->remarks }}</textarea>
                             </div>
                         </div>
-
+                        @endif  
                         <hr class="row-divider">
-
+                          
                         @if ($app->file_path)
                             <div class="row">
                                 <div class="col-6" style="text-align: right">

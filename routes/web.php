@@ -31,10 +31,14 @@ Route::group(['middleware' => ['web']], function () {
     Route::get('applications/indDetails', [ApplicationController::class, 'indDetails'])->name('application.indDetails')->middleware('auth');
     Route::get('applications/reportprint', [ApplicationController::class, 'reportprint'])->name('application.reportprint')->middleware('auth');
     Route::get('applications/dashboard', [ApplicationController::class, 'dashboard'])->name('applications.dashboard')->middleware('auth');
-
+    Route::get('applications/sendByCR', [ApplicationController::class, 'sendByCR'])->name('applications.sendByCR')->middleware('auth');
     Route::get('applications/{id}/acknowledgement', [ApplicationController::class, 'generateAcknowledgementLetter'])->name('application.acknowledgement')->middleware('auth');
     Route::get('applications/{id}/forwarded', [ApplicationController::class, 'generateForwardLetter'])->name('application.forward')->middleware('auth');
     Route::post('applications/{application_id}/update-status', [ApplicationController::class, 'updateStatus'])->name('applications.updateStatus')->middleware('auth');
+    Route::post('applications/{application_id}/acceptFromCR', [ApplicationController::class, 'acceptFromCR'])->name('applications.acceptFromCR')->middleware('auth');
+    Route::post('applications/{application_id}/forwardTo', [ApplicationController::class, 'forwardTo'])->name('applications.forwardTo')->middleware('auth');
+    Route::get('/applications/{application_id}/edit', [ApplicationController::class, 'edit'])
+    ->name('applications.edit');   
     Route::post('applications/update-print', [ApplicationController::class, 'updatePrint'])->name('applications.updatePrint')->middleware('auth');
     Route::get('applications/pullback', [ApplicationController::class, 'pullback'])->name('applications.pullback')->middleware('auth');
     Route::post('applications/checkDiaryNo', [ApplicationController::class, 'checkDiaryNo'])->name('application.checkDiaryNo')->middleware('auth');

@@ -83,9 +83,10 @@
                         <div class="card-title"></div>
 
                         <div>
-                            Status.
+                            Status
+                            <!-- {{$application}} -->
                             <span class="float-end">{{ $application->statuses()->where('application_status.active', 1)->first()?->status_desc ?? '' }}</span>
-                        </div>
+                        </div>   
 
                         <div class="card-title"></div>
 

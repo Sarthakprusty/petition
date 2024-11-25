@@ -41,6 +41,8 @@ use App\Models\Status;
 use PhpParser\Node\Stmt\Echo_;
 use Twilio\Http\CurlClient;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 class ApplicationController extends Controller
 {
     /**
@@ -50,8 +52,6 @@ class ApplicationController extends Controller
     {
         $states = State::all();
         $organizations = Organization::all();
-
-
         //getting application based on role
         $role_ids = auth()->user()->roles()->where('user_roles.active', 1)->pluck('role_id')->toArray();
         $org_id = auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
@@ -59,7 +59,7 @@ class ApplicationController extends Controller
         $qr = [];
         $arr[] = ['active', 1];
         if (in_array(1, $role_ids)) {
-            $arr[] = ['created_by', Auth::user()->id];
+            $arr[] = ['received_by', Auth::user()->id];
             $qr[] = 1;
             $qr[] = 0;
         }
@@ -69,22 +69,101 @@ class ApplicationController extends Controller
         if (in_array(3, $role_ids)) {
             $qr[] = 3;
         }
+        if (in_array(4, $role_ids)) {
+            $qr[] = 0;//CR DRAFT  STATUS_ID =4,FORWARD =1
+            $qr[] = 0.5;
+        }
 
-        $applications = Application::where($arr)
-            ->whereIn('created_by', function ($query) use ($org_id) {
-                $query->select('users.id')
-                    ->from('users')
-                    ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
-                    ->whereIn('user_organization.org_id', $org_id);
-            })
-            ->whereHas('statuses', function ($query) use ($qr) {
-                $query->whereIn('status_id', $qr)
-                    ->where('application_status.active', 1);
-            })
-            ->paginate(18)
-            ->appends($request->except('page'));
+        if (in_array(176, $org_id)) {
+            $applications = Application::join('application_status as ast', 'ast.application_id', '=', 'applications.id')
+                ->where('applications.active', 1)
+                ->where('ast.active', 1)
+                ->where('applications.created_by', auth()->user()->id)
+                ->whereIn('ast.status_id', $qr)
+                ->select('applications.*')
+                ->orderBy('applications.created_at', 'desc')
+                ->paginate(18)
+                ->appends($request->except('page'));
+       } else {
+            $applications = Application::where($arr)
+                ->whereIn('received_by', function ($query) use ($org_id) {
+                    $query->select('users.id')
+                        ->from('users')
+                        ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
+                        ->whereIn('user_organization.org_id', $org_id);
+                })
+                ->whereHas('statuses', function ($query) use ($qr) {
+                    $query->whereIn('status_id', $qr)
+                        ->where('application_status.active', 1);
+                })
+                ->paginate(18)
+                ->appends($request->except('page'));
+       }
+
+
+
+
+
+
+        // $applications=Application::where('id', 35297
+        // )->paginate(18);
         $this->applicationlistRequirements($applications);
         return view('application_list', compact('applications', 'states', 'organizations'));
+
+    }
+    public function sendByCR(Request $request)
+    {
+        $states = State::all();
+        $organizations = Organization::all();
+        $role_ids = auth()->user()->roles()->where('user_roles.active', 1)->pluck('role_id')->toArray();
+        $org_id = auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+        $arr = [];
+        $qr = [];
+        $arr[] = ['active', 1];
+        // if (in_array(1, $role_ids)) {
+        //     $arr[] = ['created_by', Auth::user()->id];
+        //     $qr[] = 1;
+        //     $qr[] = 0;
+        // }
+        // print_r($qr);die;
+        // if (in_array(2, $role_ids)) {
+        //     $qr[] = 2;
+        // }
+        // if (in_array(3, $role_ids)) {
+        //     $qr[] = 3;
+        // }
+        if (in_array(1, $role_ids)) {
+            //$qr[] = 0;//CR DRAFT  STATUS_ID =4,FORWARD =1
+            $qr[] = 0.5;
+        }
+        $applications = Application::join('application_status as ast', 'ast.application_id', '=', 'applications.id')
+            ->where('applications.active', 1)
+            ->where('ast.active', 1)
+            ->whereIn('ast.status_id', $qr)
+            ->whereIn('ast.forwarded_section', $org_id)
+            ->select('applications.*')
+            ->orderBy('applications.created_at', 'desc')
+            ->paginate(18)
+            ->appends($request->except('page'));
+
+
+        // $applications = Application::join('application_status as ast', 'ast.application_id', '=', 'applications.id')
+        //     ->where('applications.active', 1)
+        //     ->where('ast.active', 1)
+        //     ->whereIn('ast.status_id', $qr)
+        //     ->select('applications.*')
+        //     ->paginate(18)
+        //     ->appends($request->except('page'));
+        //   echo "<pre>";print_r($applications);die;
+
+
+
+        // $applications=Application::where('id', 35297
+        // )->paginate(18);
+        //$applications->$sentByCr=true;
+        $sentByCr = true;
+        // $this->applicationlistRequirements($applications);
+        return view('application_list_cr', compact('applications', 'states', 'organizations', 'sentByCr'));
 
     }
 
@@ -233,6 +312,7 @@ class ApplicationController extends Controller
     public function create()
     {
         $org_id = auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+        $grievances = [];
         if (in_array(174, $org_id)) {
             $grievances = Grievance::where('section', 11)->get();
         } elseif (in_array(175, $org_id)) {
@@ -257,7 +337,13 @@ class ApplicationController extends Controller
             $allowDraft = false;
         }
         //  $appStatusRemark = $app->statuses()->wherePivot('active', 0)->pluck('pivot.remarks')->with('created by');
-        return view('application', compact('app', 'organizationStates', 'states', 'grievances', 'reasonM', 'reasonN', 'organizationM', 'allowDraft', 'allowOnlyForward'));
+        $isCr = false;
+        if (in_array(176, $org_id)) {
+            $isCr = true;
+        }
+
+
+        return view('application', compact('app', 'organizationStates', 'states', 'grievances', 'reasonM', 'reasonN', 'organizationM', 'allowDraft', 'allowOnlyForward', 'isCr'));
     }
 
     /**
@@ -265,13 +351,20 @@ class ApplicationController extends Controller
      */
     public function edit(string $id)
     {
+        // echo "Here";die;
+        $isCr = false;
         $org_id = auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+        //echo "<pre>"; print_r($org_id);die;
+        $grievances = [];
         if (in_array(174, $org_id)) {
             $grievances = Grievance::where('section', 11)->get();
         } elseif (in_array(175, $org_id)) {
             $grievances = Grievance::where('section', 12)->get();
+        } else if (in_array(176, $org_id)) {
+            $isCr = true;
         }
         $app = Application::find($id);
+        // echo "<pre>"; print_r($app);die;
         $states = State::all();
         $organizationStates = Organization::where('org_type', 'S')->get();
         $organizationM = Organization::where('org_type', 'M')->get();
@@ -282,33 +375,45 @@ class ApplicationController extends Controller
         // foreach($application as $appli){
         //     $existed_letter_no[] = $appli->letter_no;
         // }
+        // $statuses = $app->statuses()
+        //     ->whereIn('application_status.active', [0, 1])
+        //     ->whereNotNull('remarks')
+        //     ->get();
         $statuses = $app->statuses()
             ->whereIn('application_status.active', [0, 1])
             ->whereNotNull('remarks')
+            ->where('received_by', auth()->user()->id)
             ->get();
+        // print_r($statuses);die;
+
+
+
         foreach ($statuses as $status)
-            $status->user = User::findorfail($status->pivot->created_by);
+            $status->user = User::findorfail($status->pivot->received_by);
 
         $allowOnlyForward = $this->Forwardbuttoncommon($app);
 
-        if ($app->created_by == auth()->user()->id && auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0)) {
+        if ($app->received_by == auth()->user()->id && auth()->check() && auth()->user()->roles->pluck('id')->intersect([1, 4])->isNotEmpty() && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0)) {
             $allowDraft = true;
+            $allowOnlyForward=false;
         } else {
             $allowDraft = false;
         }
-        return view('application', compact('app', 'organizationStates', 'states', 'grievances', 'reasonM', 'reasonN', 'organizationM', 'statuses', 'allowDraft', 'allowOnlyForward'));
+
+        return view('application', compact('app', 'organizationStates', 'states', 'grievances', 'reasonM', 'reasonN', 'organizationM', 'statuses', 'allowDraft', 'allowOnlyForward', 'isCr'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
+    {  //  echo "<pre>";print_r($request->all());die;
         $app = new Application();
 
-        if(isset($request->id) && $request->id){
+        if (isset($request->id) && $request->id) {
             $app = Application::find($request->id);
         }
+        $org_id = auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
         // if (isset($request->id) && $request->id) {
         //     $app = Application::find($request->id);
         //     if ($request->letter_no && $request->letter_no !== null && Application::where('letter_no', $request->letter_no)->where('id', '<>', $request->id)->exists()) {
@@ -326,7 +431,37 @@ class ApplicationController extends Controller
         if ($request->language_of_letter != 'O') {
             if ($request->input('submit') == 'Forward') {
                 //                $validatedData=$request->validate([
-                $request->validate([
+                // $request->validate([
+                //     'reg_no' => 'nullable',
+                //     'applicant_title' => 'nullable',
+                //     'applicant_name' => 'required',
+                //     'address' => 'required',
+                //     'pincode' => ['nullable', 'digits:6'],
+                //     'state_id' => 'nullable|numeric',
+                //     'org_from' => 'nullable',
+                //     'letter_date' => 'nullable|date_format:Y-m-d|before_or_equal:today',
+                //     'gender' => ['nullable', new Gender],
+                //     'language_of_letter' => ['nullable', new Language],
+                //     'country' => ['required', new Country],
+                //     'phone_no' => ['nullable', 'digits:11'],
+                //     'mobile_no' => ['nullable', 'digits:10'],
+                //     'email_id' => 'nullable|email',
+                //     'letter_no' => 'required',
+                //     'letter_subject' => 'required',
+                //     'letter_body' => 'nullable',
+                //     if($request->org_id=="176"){
+                //     'acknowledgement' => ['nullable', new Acknowledgement],
+                //     'grievance_category_id' => 'nullable|numeric',
+                //     //                    'action_org' => ['required', 'string', 'size:1', 'in:N,F,M,S'],'department_org_id',reason_id
+                //     'action_org' => ['required', new ActionOrg],
+                //     'reason_id' => 'required_if:action_org,==,M,N|nullable|numeric',
+                //     'department_org_id' => 'required_if:action_org,==,F,S|nullable|numeric',
+                //     'remarks' => 'nullable',
+                //     'reply' => 'nullable',
+                //     }
+                //     'file_path' => $app->file_path && $app->file_path != null ? 'nullable|file|mimes:pdf|max:20480' : 'required|file|mimes:pdf|max:20480',
+                // ]);
+                $rules = [
                     'reg_no' => 'nullable',
                     'applicant_title' => 'nullable',
                     'applicant_name' => 'required',
@@ -344,16 +479,34 @@ class ApplicationController extends Controller
                     'letter_no' => 'required',
                     'letter_subject' => 'required',
                     'letter_body' => 'nullable',
-                    'acknowledgement' => ['nullable', new Acknowledgement],
-                    'grievance_category_id' => 'nullable|numeric',
-                    //                    'action_org' => ['required', 'string', 'size:1', 'in:N,F,M,S'],'department_org_id',reason_id
-                    'action_org' => ['required', new ActionOrg],
-                    'reason_id' => 'required_if:action_org,==,M,N|nullable|numeric',
-                    'department_org_id' => 'required_if:action_org,==,F,S|nullable|numeric',
-                    'remarks' => 'nullable',
-                    'reply' => 'nullable',
                     'file_path' => $app->file_path && $app->file_path != null ? 'nullable|file|mimes:pdf|max:20480' : 'required|file|mimes:pdf|max:20480',
-                ]);
+
+                ];
+
+                // Add additional rules if org_id is 176
+
+                if (!in_array(176, $org_id)) {
+                    $rules = array_merge($rules, [
+                        'acknowledgement' => ['nullable', new Acknowledgement],
+                        'grievance_category_id' => 'nullable|numeric',
+                        'action_org' => ['required', new ActionOrg],
+                        'reason_id' => 'required_if:action_org,M,N|nullable|numeric',
+                        'department_org_id' => 'required_if:action_org,F,S|nullable|numeric',
+                        'remarks' => 'nullable',
+                        'reply' => 'nullable',
+                    ]);
+                }
+                if (in_array(176, $org_id)) {
+                    $rules = array_merge($rules, [
+                        'forwarded_to' => 'required',
+
+                    ]);
+                }
+
+
+                // Validate the request
+                $request->validate($rules);
+
                 //                if(!$validatedData)
 //                    return back()->with('error',$validatedData);
             }
@@ -403,6 +556,9 @@ class ApplicationController extends Controller
             $app->fwd_mail_sent = "NR";
             $app->fwd_offline_post = "NR";
         }
+        // if($request->org_id=="176"){
+        //$app->forwarded_section = $request->org_id;
+        // }
 
 
         //        if ($request->hasFile('file_path')) {
@@ -439,7 +595,7 @@ class ApplicationController extends Controller
 //            }
 //        }
         if ($request->input('submit') == 'Forward') {
-            if ($app->id == null || ($app->created_by == auth()->user()->id && auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses->first() && ($app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0) || $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(1)))) {
+            if ($app->id == null || ($app->received_by == auth()->user()->id && auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses->first() && ($app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0) || $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(1)))) {
 
                 //reg_no
                 if ($app->reg_no && $app->reg_no !== null) {
@@ -450,52 +606,54 @@ class ApplicationController extends Controller
                     $app->save();
 
                 } else {
-                    $currentYear = Carbon::now()->format('Y');
-                    $currentMonth = Carbon::now()->format('m');
-                    $currentDay = Carbon::now()->format('d');
+                    if (in_array(175, $org_id) || in_array(174, $org_id)) {
+                        $currentYear = Carbon::now()->format('Y');
+                        $currentMonth = Carbon::now()->format('m');
+                        $currentDay = Carbon::now()->format('d');
 
-                    $givenString = Auth::user()->username;
-                    $modifiedString = substr($givenString, 0, 2) . '/' . substr($givenString, 2);
+                        $givenString = Auth::user()->username;
+                        $modifiedString = substr($givenString, 0, 2) . '/' . substr($givenString, 2);
 
-                    if ($currentMonth >= 4) {
-                        // Financial year starts from April of the current year
-                        $startYear = $currentYear;
-                        $endYear = Carbon::now()->addYear()->format('Y');
-                    } else {
-                        // Financial year starts from April of the previous year
-                        $startYear = Carbon::now()->subYear()->format('Y');
-                        $endYear = $currentYear;
+                        if ($currentMonth >= 4) {
+                            // Financial year starts from April of the current year
+                            $startYear = $currentYear;
+                            $endYear = Carbon::now()->addYear()->format('Y');
+                        } else {
+                            // Financial year starts from April of the previous year
+                            $startYear = Carbon::now()->subYear()->format('Y');
+                            $endYear = $currentYear;
+                        }
+
+                        $startDate = Carbon::createFromFormat('Y-m-d', $startYear . '-04-01')->startOfDay();
+                        $endDate = Carbon::createFromFormat('Y-m-d', $endYear . '-03-31')->endOfDay();
+
+                        $matchingRowCount = Application::whereBetween('created_at', [$startDate, $endDate])
+                            ->whereNotNull('reg_no')
+                            ->where('reg_no', 'LIKE', $modifiedString . '%')
+                            ->count();
+
+                        if ($matchingRowCount > 0)
+                            $count = $matchingRowCount + 1;
+                        elseif ($matchingRowCount == 0)
+                            $count = 1;
+
+                        if ($count <= 9999) {
+                            $petitionNumber = sprintf('%04d', $count);
+                        } else {
+                            $petitionNumber = $count;
+                        }
+
+                        $month = sprintf('%02d', $currentMonth);
+                        $day = sprintf('%02d', $currentDay);
+
+                        $app->reg_no = $modifiedString . '/' . $currentYear . $month . $day . $petitionNumber;
                     }
-
-                    $startDate = Carbon::createFromFormat('Y-m-d', $startYear . '-04-01')->startOfDay();
-                    $endDate = Carbon::createFromFormat('Y-m-d', $endYear . '-03-31')->endOfDay();
-
-                    $matchingRowCount = Application::whereBetween('created_at', [$startDate, $endDate])
-                        ->whereNotNull('reg_no')
-                        ->where('reg_no', 'LIKE', $modifiedString . '%')
-                        ->count();
-
-                    if ($matchingRowCount > 0)
-                        $count = $matchingRowCount + 1;
-                    elseif ($matchingRowCount == 0)
-                        $count = 1;
-
-                    if ($count <= 9999) {
-                        $petitionNumber = sprintf('%04d', $count);
-                    } else {
-                        $petitionNumber = $count;
-                    }
-
-                    $month = sprintf('%02d', $currentMonth);
-                    $day = sprintf('%02d', $currentDay);
-
-                    $app->reg_no = $modifiedString . '/' . $currentYear . $month . $day . $petitionNumber;
-
                     //if reg no does not exist it means it is a new record that's why create details are here.
                     $app->created_at = Carbon::now()->toDateTimeLocalString();
                     $app->created_by = Auth::user()->id;
                     $app->created_from = $request->ip();
                     $app->save();
+
                 }
 
                 //file save
@@ -531,20 +689,26 @@ class ApplicationController extends Controller
                         'updated_at' => carbon::now()->toDateTimeLocalString()
                     ]
                 );
-                $statusId = 2;
-                $status = Status::find($statusId);
-                if ($status) {
-                    $app->statuses()->attach($status, [
-                        'created_from' => $request->ip(),
-                        'created_by' => Auth::user()->id,
-                        'created_at' => carbon::now()->toDateTimeLocalString()
-                    ]);
+                if (in_array(176, $org_id)) {
+                    $statusId = 0.5; // For "DH" status
+                } else {
+                    $statusId = 2; // For "SO" status
                 }
+
+                $forwarded_section = $request->forwarded_to ?? null;
+
+                // Attach the status_id directly to the pivot table
+                $app->statuses()->attach($statusId, [
+                    'created_from' => $request->ip(),
+                    'created_by' => Auth::user()->id,
+                    'created_at' => Carbon::now()->toDateTimeLocalString(),
+                    'forwarded_section' => $forwarded_section,
+                ]);
 
                 return $this->ReturnapplicationView($app);
             }
         } elseif ($request->input('submit') === 'Draft') {
-            if ($app->id == null || ($app->created_by == auth()->user()->id && auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0))) {
+            if ($app->id == null || ($app->received_by == auth()->user()->id && auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0))) {
                 if ($app->id) {
                     $app->updated_at = Carbon::now()->toDateTimeLocalString();
                     $app->last_updated_by = Auth::user()->id;
@@ -637,6 +801,8 @@ class ApplicationController extends Controller
      */
     public function updateStatus(Request $request, string $application_id)
     {
+        // echo "<pre>";print_r($request->all());echo "<br>";
+        // print_r($application_id);die;
         $action = $request->input('submit');
         $application = Application::findOrFail($application_id);
         if ($application->statuses->first() && $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2)) {
@@ -1151,6 +1317,174 @@ class ApplicationController extends Controller
             return redirect()->back()->with('error', 'role not found');
         }
     }
+    public function acceptFromCR(Request $request, string $application_id)
+    {
+        // Validate the incoming request data
+        $validator = Validator::make(['application_id' => $application_id], [
+            'application_id' => 'required|integer|exists:application_status,application_id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => 'Invalid application ID.'], 400);
+        }
+
+        try {
+            // Check if the application and its status are active
+            // $isActiveInApplications = DB::table('applications')
+            //     ->where('id', $application_id)
+            //     ->where('active', 1)
+            //     ->exists();
+
+            // $isActiveInApplicationStatus = DB::table('application_status')
+            //     ->where('application_id', $application_id)
+            //     ->where('active', 1)
+            //     ->exists();
+
+            // If either check fails, return an error
+            // if (!$isActiveInApplications || !$isActiveInApplicationStatus) {
+            //     return response()->json(['error' => 'The application or its status is not active.'], 400);
+            // }
+
+            // Begin transaction
+            DB::beginTransaction();
+
+            // Deactivate previous application_status record
+            DB::table('application_status')
+                ->where('application_id', $application_id)
+                ->update(['active' => 0]);
+
+
+            // Insert new application_status record
+            DB::table('application_status')->insert([
+                'application_id' => $application_id,
+                'status_id' => 0,
+                'remarks' => null, // Adjust this if dynamic remarks are needed
+                'created_at' => now(),
+                'active' => 1,
+                'created_from' => $request->ip(), // System IP address
+                'created_by' => auth()->id(), // Current authenticated user ID
+            ]);
+
+            // Update the applications table only where active = 1
+            $userId = auth()->id();
+            $affectedRows = DB::table('applications')
+                ->where('id', $application_id)
+                ->where('active', 1)
+                ->update(['received_by' => $userId]);
+
+            // Check if the applications table was updated successfully
+            if ($affectedRows === 0) {
+                DB::rollBack();
+                return response()->json(['error' => 'Failed to update the applications table.'], 400);
+            }
+
+            // Commit transaction
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Application status updated successfully.',
+                'redirect_url' => route('applications.edit', ['application' => $application_id]),
+            ]);
+        } catch (\Exception $e) {
+            // Rollback transaction on failure
+            DB::rollBack();
+
+            // Log the error for debugging
+            \Log::error('Error accepting application from CR: ', [
+                'message' => $e->getMessage(),
+                'application_id' => $application_id,
+            ]);
+
+            return response()->json(['error' => 'An error occurred while accepting the application.'], 500);
+        }
+    }
+
+    public function forwardTo(Request $request, string $application_id)
+    {
+        // Validate the incoming request data
+        // echo "<pre>";print_r($request->all());die;
+        $validator = Validator::make(
+            [
+                'application_id' => $application_id,
+                'event_id' => $request->input('event_id'),
+                'remarks' => $request->input('remarks'),
+            ],
+            [
+                'application_id' => 'required',
+                'event_id' => 'required',
+                'remarks' => 'required|max:255',
+            ]
+        );
+
+        // Return validation errors if any
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 400);
+        }
+
+        // Check if the application and its status are active
+        // $isActiveInApplications = DB::table('applications')
+        //     ->where('id', $application_id)
+        //     ->where('active', 1)
+        //     ->exists();
+
+        // $isActiveInApplicationStatus = DB::table('application_status')
+        //     ->where('application_id', $application_id)
+        //     ->where('active', 1)
+        //     ->exists();
+        // print_r($isActiveInApplicationStatus,$isActiveInApplications);die;
+        // If either check fails, return an error
+        // if (!$isActiveInApplications || !$isActiveInApplicationStatus) {
+        //     return response()->json(['error' => 'The application or its status is not active.'], 400);
+        // }
+
+        try {
+            // Begin transaction
+            DB::beginTransaction();
+
+            // Deactivate previous application_status record
+            DB::table('application_status')
+                ->where('application_id', $application_id)
+                ->update(['active' => 0]);
+
+
+            // Insert new application_status record
+            DB::table('application_status')->insert([
+                'application_id' => $application_id,
+                'status_id' => 0.5,
+                'remarks' => $request->input('remarks'),
+                'created_at' => now(),
+                'active' => 1,
+                'forwarded_section' => $request->input('event_id'),
+                'created_from' => $request->ip(), // System IP address
+                'created_by' => auth()->id(), // Current authenticated user ID
+            ]);
+
+            // Update the applications table
+            DB::table('applications')
+                ->where('id', $application_id)
+                ->update([
+                    'forwarded_section' => $request->input('event_id'),
+                ]);
+
+            // Commit transaction
+            DB::commit();
+
+            // Return success response
+            return response()->json([
+                'message' => 'Application forwarded successfully.',
+                'redirect_url' => route('applications.index'),
+            ]);
+        } catch (\Exception $e) {
+            // Rollback transaction on failure
+            DB::rollBack();
+            return response()->json(['error' => 'An error occurred while forwarding the application.'], 500);
+        }
+    }
+
+
+
+
+
 
 
     public function updatePrint(Request $request)
@@ -1794,6 +2128,12 @@ class ApplicationController extends Controller
      */
     public function dashboard(Request $request)
     {
+
+        //echo "<pre>";print_r(auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->first());die;
+        $isCrOrgId = auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->first();
+        if ($isCrOrgId == 176) {
+            return redirect()->action([self::class, 'index']);
+        }
         $org_id = auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
         $org = "All";
         $org_idclick = [];
@@ -2097,12 +2437,27 @@ class ApplicationController extends Controller
      */
     public function Forwardbuttoncommon($app): bool
     {
-        if (($app->created_by == auth()->user()->id) && (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(1))) {
+
+
+        $org_id = auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+        $condition = false;
+        if (in_array(176, $org_id)) {
+            $condition = $app->created_by == auth()->user()->id;
+        } else {
+            $condition = $app->received_by == auth()->user()->id;
+        }
+
+        // return $allowOnlyForward;
+        if ($condition && (auth()->check() && auth()->user()->roles->pluck('id')->intersect([1, 4])->isNotEmpty())) {
             $allowOnlyForward = true;
+            // echo "Here";die;
         } else {
             $allowOnlyForward = false;
+            // echo "Here2";die;
         }
+       // $allowOnlyForward = false;
         return $allowOnlyForward;
+
     }
 
     /**
@@ -2114,7 +2469,7 @@ class ApplicationController extends Controller
     {
         $fname = str_replace('/', '_', $app->reg_no);
         if ($fname || $fname == null)
-            $fname = 'file_'.date('Ymd_His');
+            $fname = 'file_' . date('Ymd_His');
         $filename = $fname . '.' . $request->file('file_path')->getClientOriginalExtension();
         $path = $request->file('file_path')->storeAs('applications/' . $app->id, $filename, 'upload');
         $app->file_path = base64_encode($path);
@@ -2127,42 +2482,71 @@ class ApplicationController extends Controller
      */
     public function ReturnapplicationView($app): \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Foundation\Application|\Illuminate\Contracts\View\View
     {
-        if ($app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->whereIn('status_id', [1, 2, 3])) {
-            $notecheck = true;
-        } else {
-            $notecheck = false;
+        $notecheck = false;
+        $noteblock = false;
+        $finalreplyblock = false;
+        $hasActiveStatusFive = false;
+        $signbutton = false;
+        $transferOrAccept = false;
+        $canForward = false;
+        $statuses=[];
+        //echo "<pre>";print_r($app['forwarded_section']);die;
+        $org_id = auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+
+        if ((in_array(175, $org_id)) || (in_array(174, $org_id))) {
+            if ($app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->whereIn('status_id', [1, 2, 3])) {
+                $notecheck = true;
+            } else {
+                $notecheck = false;
+            }
+
+            if ((auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && $app->statuses->first() && ($app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))) || (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) && Auth::user()->authority && Auth::user()->authority->Sign_path && Auth::user()->authority->Sign_path != null && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3))) {
+
+                $noteblock = true;
+            } else {
+                $noteblock = false;
+            }
+            if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(4) && $app->reply == '') {
+                $finalreplyblock = true;
+            } else {
+                $finalreplyblock = false;
+            }
+            if ($app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(5)) {
+                $hasActiveStatusFive = true;
+            } else {
+                $hasActiveStatusFive = false;
+            }
+            if (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3) && (!Auth::user()->authority || !Auth::user()->authority->Sign_path || Auth::user()->authority->Sign_path == null)) {
+                $signbutton = true;
+            } else {
+                $signbutton = false;
+            }
+            if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0.5)) {
+                $transferOrAccept = true;
+            } else {
+                $transferOrAccept = false;
+            }
+
+            $canForward = true; // Default value
+
+            if (empty($app['forwarded_section'])) {
+                $canForward = true; // Forward is allowed if 'forwarded_section' is null or blank
+            } else {
+                $canForward = false; // Forward is not allowed if 'forwarded_section' has a value
+            }
+            $org_id = auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
+
+            $statuses = $app->statuses()
+                ->whereIn('application_status.active', [0, 1])
+                // ->whereNotNull('remarks')
+                ->get();
+            //echo '<pre>';print_r($statuses);die;
+            foreach ($statuses as $status)
+                $status->user = User::findorfail($status->pivot->created_by);
+
         }
 
-        if ((auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && $app->statuses->first() && ($app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))) || (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) && Auth::user()->authority && Auth::user()->authority->Sign_path && Auth::user()->authority->Sign_path != null && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3))) {
-
-            $noteblock = true;
-        } else {
-            $noteblock = false;
-        }
-        if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(4) && $app->reply == '') {
-            $finalreplyblock = true;
-        } else {
-            $finalreplyblock = false;
-        }
-        if ($app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(5)) {
-            $hasActiveStatusFive = true;
-        } else {
-            $hasActiveStatusFive = false;
-        }
-        if (auth()->check() && auth()->user()->roles->pluck('id')->contains(3) && $app->statuses->first() && $app->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3) && (!Auth::user()->authority || !Auth::user()->authority->Sign_path || Auth::user()->authority->Sign_path == null)) {
-            $signbutton = true;
-        } else {
-            $signbutton = false;
-        }
-
-        $statuses = $app->statuses()
-            ->whereIn('application_status.active', [0, 1])
-            // ->whereNotNull('remarks')
-            ->get();
-        // echo '<pre>';print_r($statuses);die;
-        foreach ($statuses as $status)
-            $status->user = User::findorfail($status->pivot->created_by);
-        return view('application_view', compact('app', 'noteblock', 'signbutton', 'finalreplyblock', 'notecheck', 'statuses', 'hasActiveStatusFive'));
+        return view('application_view', compact('app', 'noteblock', 'signbutton', 'finalreplyblock', 'notecheck', 'statuses', 'hasActiveStatusFive', 'transferOrAccept', 'org_id', 'canForward'));
     }
 
     /**
@@ -2171,12 +2555,29 @@ class ApplicationController extends Controller
      */
     public function applicationlistRequirements(\Illuminate\Contracts\Pagination\LengthAwarePaginator $applications): void
     {
+        $org_id = auth()->user()->organizations()->where('user_organization.active', 1)->pluck('org_id')->toArray();
         foreach ($applications as $application) {
-            if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && ($application->created_by == auth()->user()->id) && ($application->statuses->isEmpty() || $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(1) || $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0))) {
+           $condition = false;
+            if (in_array(176, $org_id)) {
+                $condition = $application->created_by == auth()->user()->id;
+            } else {
+                $condition = $application->received_by == auth()->user()->id;
+            }
+            if (
+                auth()->check() &&
+                auth()->user()->roles->pluck('id')->intersect([1, 4])->isNotEmpty() &&
+                $condition &&
+                (
+                    $application->statuses->isEmpty() ||
+                    $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(1) ||
+                    $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(0)
+                )
+            ) {
                 $application->allowEdit = true;
             } else {
                 $application->allowEdit = false;
             }
+
 
             if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && $application->statuses->first() && $application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(4) && $application->reply == '') {
                 $application->allowFinalReply = true;
@@ -2187,9 +2588,9 @@ class ApplicationController extends Controller
             if (
                 auth()->check() && auth()->user()->roles->pluck('id')->contains(2) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(3)) &&
                 ($this->arraysAreEqual(
-                    auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray(),
-                    $application->createdBy->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray()
-                ))
+                        auth()->user()->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray(),
+                        $application->createdBy->organizations()->wherePivot('active', 1)->pluck('org_id')->toArray()
+                    ))
             ) {
                 $application->allowPullBack = true;
             } else if (auth()->check() && auth()->user()->roles->pluck('id')->contains(1) && ($application->created_by == auth()->user()->id) && ($application->statuses()->where('application_status.active', 1)->pluck('status_id')->contains(2))) {
