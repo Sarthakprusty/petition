@@ -553,7 +553,7 @@
                             <div class="spacing" style="margin-top: 2%;"></div>
                             <div class="row" style="margin-left: 0%; margin-right: 1.5%;">
                                 <textarea class="form-control" id="remarks" name="remarks" style="height: 200px;"
-                                    placeholder="abc...." required>{{ old('remarks') }}</textarea>
+                                    placeholder="abc....">{{ old('remarks') }}</textarea>
                             </div>
                             <div class="row">
                                 <div class="col-6" style="text-align: right">
