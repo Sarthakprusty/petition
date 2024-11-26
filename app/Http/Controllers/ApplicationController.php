@@ -73,6 +73,7 @@ class ApplicationController extends Controller
             $qr[] = 0;//CR DRAFT  STATUS_ID =4,FORWARD =1
             $qr[] = 0.5;
         }
+      //  print_r($qr);die;
 
         if (in_array(176, $org_id)) {
             $applications = Application::join('application_status as ast', 'ast.application_id', '=', 'applications.id')
@@ -99,6 +100,8 @@ class ApplicationController extends Controller
                 ->paginate(18)
                 ->appends($request->except('page'));
        }
+
+     //  echo "<pre>";print_r($applications);die;
 
 
 
@@ -651,6 +654,7 @@ class ApplicationController extends Controller
                     //if reg no does not exist it means it is a new record that's why create details are here.
                     $app->created_at = Carbon::now()->toDateTimeLocalString();
                     $app->created_by = Auth::user()->id;
+                    $app->received_by = Auth::user()->id;
                     $app->created_from = $request->ip();
                     $app->save();
 
@@ -717,6 +721,7 @@ class ApplicationController extends Controller
                     $app->created_at = Carbon::now()->toDateTimeLocalString();
                     $app->created_by = Auth::user()->id;
                     $app->created_from = $request->ip();
+                    $app->received_by = Auth::user()->id;
                 }
                 if ($app->save()) {
                     if ($request->hasFile('file_path')) {
