@@ -558,12 +558,11 @@
                             <div class="row">
                                 <div class="col-6" style="text-align: right">
                                     <button type="submit" class="button" name="submit" value="Approve"
-                                        onclick="return confirm('Are you sure, You want to Approve this petition?')">Approve</button>
+                                        id="approve_button">Approve</button>
                                 </div>
                                 <div class="col-6" style="text-align: left">
                                     <button type="submit" class="buttonRed" name="submit" value="Return"
-                                        id="submit_return">Return</button>
-                                    <!-- <button type="submit" class="buttonRed" name="submit" value="Return" id='submit_return' onclick="return confirm('Are you sure, You want to Return this petition?(While Returning Note is Mandatory)')">Return</button> -->
+                                        id="return_button">Return</button>
                                 </div>
                             </div>
                         </div>
@@ -665,50 +664,51 @@
         <!-- Accept Form -->
         <form method="post" action="{{ route('applications.acceptFromCR', ['application_id' => $app->id]) }}"
             id="acceptForm" data-redirect-url="{{ route('applications.edit', ['application' => $app->id]) }}">
-                @csrf
-                <button type=" button" class="btn w-100" name="submit" value="Approve"
-            onclick="event.preventDefault();submitAcceptForm()"
-            style="background-color: #28a745; color: #fff; border: none;">
-            Accept
+            @csrf
+            <button type=" button" class="btn w-100" name="submit" value="Approve"
+                onclick="event.preventDefault();submitAcceptForm()"
+                style="background-color: #28a745; color: #fff; border: none;">
+                Accept
             </button>
         </form>
 
     </div>
     <script>
-       function submitAcceptForm() {
-    if (confirm('Are you sure you want to approve this petition?')) {
-        const form = document.getElementById('acceptForm');
-        const formData = new FormData(form);
-        const redirectUrl = form.dataset.redirectUrl; // Use redirect URL from the form attribute
+        function submitAcceptForm() {
+            if (confirm('Are you sure you want to approve this petition?')) {
+                const form = document.getElementById('acceptForm');
+                const formData = new FormData(form);
+                const redirectUrl = form.dataset.redirectUrl; // Use redirect URL from the form attribute
 
-        fetch(form.action, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: formData
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.message) {
-                  //  alert(data.message); // Show success message
-                    window.location.href = redirectUrl; // Redirect based on form attribute
-                } else if (data.error) {
-                    alert('Error: ' + data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while processing your request.');
-            });
-    }
-}
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.message) {
+                            //  alert(data.message); // Show success message
+                            window.location.href = redirectUrl; // Redirect based on form attribute
+                        } else if (data.error) {
+                            alert('Error: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while processing your request.');
+                    });
+            }
+        }
+
 
 
 
@@ -752,13 +752,41 @@
                     alert('An error occurred while processing your request. Please try again.');
                 });
         }
+
     </script>
 @endif
 
 
+<script>
+    $(document).ready(function () {
+        let submitAction = '';
 
+        // Detect which button is clicked
+        $('#approve_button').on('click', function (e) {
+            submitAction = 'Approve';
+        });
+
+        $('#return_button').on('click', function (e) {
+            submitAction = 'Return';
+        });
+
+        // Form submission validation
+        $('#submitstatusform').on('submit', function (e) {
+            if (submitAction === 'Return') {
+                const remarks = $('#remarks').val().trim();
+                if (!remarks) {
+                    alert('Remarks are required when returning the application.');
+                    e.preventDefault(); // Prevent form submission
+                    return false;
+                }
+            }
+            return true; // Allow form submission for other cases
+        });
+    });
+</script>
 
 <script>
+
     {
         { --$(document).ready(function () { --}}
         {
