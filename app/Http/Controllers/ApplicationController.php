@@ -1933,7 +1933,7 @@ class ApplicationController extends Controller
 
 
             $query = Application::where($arr)
-                ->whereIn('created_by', function ($query) use ($org_id) {
+                ->whereIn('received_by', function ($query) use ($org_id) {
                     $query->select('users.id')
                         ->from('users')
                         ->join('user_organization', 'users.id', '=', 'user_organization.user_id')
@@ -2341,7 +2341,7 @@ class ApplicationController extends Controller
         $states = State::all();
 
         $query = Application::with('state')
-            ->where('created_by', $request->userId)
+            ->where('received_by', $request->userId)
             ->where('active', 1);
 
         switch ($request->countDetail) {
