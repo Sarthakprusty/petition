@@ -27,8 +27,8 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             if (Auth::user()->active == 1)
-                //return redirect(route('applications.dashboard'));
-                return redirect(route('applications.index'));
+                return redirect(route('applications.dashboard'));
+               // return redirect(route('applications.index'));
            
             else {
                 Auth::logout();
