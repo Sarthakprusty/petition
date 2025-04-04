@@ -15,6 +15,7 @@ use App\Models\Grievance;
 use App\Models\Organization;
 use App\Models\SignAuthority;
 use App\Models\State;
+use App\Models\EmailLog;
 use App\Rules\Acknowledgement;
 use App\Rules\ActionOrg;
 use App\Rules\Country;
@@ -1000,6 +1001,19 @@ class ApplicationController extends Controller
                                     ],
                                 ]
                             ];
+
+                            $emailData = new EmailLog();
+                            $emailData->sent_to = json_encode([
+                                'to' => $to,
+                                'cc' => $cc
+                            ]);
+                            $emailData->application_id = $application->id;
+                            $emailData->email_type = 'A';
+                            $jsonData = json_encode($data);
+                            $jsonSizeInBytes = strlen($jsonData);
+                            $jsonSizeInKB = $jsonSizeInBytes / 1024;
+                            $jsonSizeInKB = round($jsonSizeInKB, 2);
+                            $emailData->json_size = $jsonSizeInKB;
                             if ($base644data && $base644data != null) {
                                 $headers = [
                                     'Authorization: Bearer YourAccessToken',
@@ -1009,6 +1023,8 @@ class ApplicationController extends Controller
                                 $jsonData = json_encode($data);
 
                                 $apiUrl = 'https://rb.nic.in/emailapi/api/emailsend';
+                                $emailData->email_api = $apiUrl;
+                                $emailData->sent_at = carbon::now()->toDateTimeLocalString();
                                 $curl = curl_init();
                                 curl_setopt($curl, CURLOPT_URL, $apiUrl);
                                 curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
@@ -1018,17 +1034,34 @@ class ApplicationController extends Controller
                                 curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
 
                                 $curlResponse = curl_exec($curl);
+                                $responseCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
                                 $decode_curlResponse = json_decode($curlResponse);
+                                $emailData->response_code = $responseCode;
+                                $emailData->response_message = $decode_curlResponse;
                                 if ($decode_curlResponse == "Email sent successfully") {
                                     $application->ack_mail_sent = "T";
                                     $application->ack_offline_post = "NR";
+                                    $emailData->received_at = carbon::now()->toDateTimeLocalString();
                                     $application->save();
                                 } else {
                                     //                                    $error = curl_error($curl);
                                     $application->ack_mail_sent = "F";
                                     $application->save();
+                                    $emailData->received_at = carbon::now()->toDateTimeLocalString();
                                     Log::error('Failed to send ack email: ' . $curlResponse);
                                 }
+                                $sentAtCarbon = Carbon::parse($emailData->sent_at);
+                                $receivedAtCarbon = Carbon::parse($emailData->received_at);
+                                $responseTimeInSeconds = $sentAtCarbon->diffInSeconds($receivedAtCarbon);
+                                $hours = floor($responseTimeInSeconds / 3600);
+                                $minutes = floor(($responseTimeInSeconds % 3600) / 60);
+                                $seconds = $responseTimeInSeconds % 60;
+                                $responseTimeFormatted = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+                                $emailData->response_time = $responseTimeFormatted;
+                                $emailData->created_at = carbon::now()->toDateTimeLocalString();
+                                $emailData->created_by = Auth::user()->id;
+                                $emailData->created_from = $request->ip();
+                                $emailData->save();
                                 curl_close($curl);
                             } else {
                                 $application->ack_mail_sent = "F";
@@ -1189,6 +1222,18 @@ class ApplicationController extends Controller
                                 "Body" => $body,
                                 "Attachments" => $attachments,
                             ];
+                            $emailData = new EmailLog();
+                            $emailData->sent_to = json_encode([
+                                'to' => $to,
+                                'cc' => $cc
+                            ]);
+                            $emailData->application_id = $application->id;
+                            $emailData->email_type = 'F';
+                            $jsonData = json_encode($data);
+                            $jsonSizeInBytes = strlen($jsonData);
+                            $jsonSizeInKB = $jsonSizeInBytes / 1024;
+                            $jsonSizeInKB = round($jsonSizeInKB, 2);
+                            $emailData->json_size = $jsonSizeInKB;
                             if ($base64co && $base64co != null) {
                                 $headers = [
                                     'Authorization: Bearer YourAccessToken',
@@ -1197,6 +1242,8 @@ class ApplicationController extends Controller
                                 ];
                                 $jsonData = json_encode($data);
                                 $apiUrl = 'https://rb.nic.in/emailapi/api/emailsend';
+                                $emailData->email_api = $apiUrl;
+                                $emailData->sent_at = carbon::now()->toDateTimeLocalString();
                                 $curl = curl_init();
                                 curl_setopt($curl, CURLOPT_URL, $apiUrl);
                                 curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
@@ -1206,17 +1253,34 @@ class ApplicationController extends Controller
                                 curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
 
                                 $curlResponse = curl_exec($curl);
+                                $responseCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
                                 $decode_curlResponse = json_decode($curlResponse);
+                                $emailData->response_code = $responseCode;
+                                $emailData->response_message = $decode_curlResponse;
                                 if ($decode_curlResponse == "Email sent successfully") {
+                                    $emailData->received_at = carbon::now()->toDateTimeLocalString();
                                     $application->fwd_mail_sent = "T";
                                     $application->fwd_email_id = $application->department_org->mail;
                                     $application->fwd_offline_post = "NR";
                                     $application->save();
                                 } else {
+                                    $emailData->received_at = carbon::now()->toDateTimeLocalString();
                                     $application->fwd_mail_sent = "F";
                                     $application->save();
                                     Log::error('Failed to send forward email: ' . $curlResponse);
                                 }
+                                $sentAtCarbon = Carbon::parse($emailData->sent_at);
+                                $receivedAtCarbon = Carbon::parse($emailData->received_at);
+                                $responseTimeInSeconds = $sentAtCarbon->diffInSeconds($receivedAtCarbon);
+                                $hours = floor($responseTimeInSeconds / 3600);
+                                $minutes = floor(($responseTimeInSeconds % 3600) / 60);
+                                $seconds = $responseTimeInSeconds % 60;
+                                $responseTimeFormatted = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+                                $emailData->response_time = $responseTimeFormatted;
+                                $emailData->created_at = carbon::now()->toDateTimeLocalString();
+                                $emailData->created_by = Auth::user()->id;
+                                $emailData->created_from = $request->ip();
+                                $emailData->save();
                                 curl_close($curl);
                             } else {
                                 $application->fwd_mail_sent = "F";
@@ -1486,12 +1550,6 @@ class ApplicationController extends Controller
         }
     }
 
-
-
-
-
-
-
     public function updatePrint(Request $request)
     {
         $applications = Application::find($request->input('selectedId'));
@@ -1603,6 +1661,18 @@ class ApplicationController extends Controller
                                         ],
                                     ]
                                 ];
+                                $emailData = new EmailLog();
+                                $emailData->sent_to = json_encode([
+                                    'to' => $to,
+                                    'cc' => $cc
+                                ]);
+                                $emailData->application_id = $application->id;
+                                $emailData->email_type = 'A';
+                                $jsonData = json_encode($data);
+                                $jsonSizeInBytes = strlen($jsonData);
+                                $jsonSizeInKB = $jsonSizeInBytes / 1024;
+                                $jsonSizeInKB = round($jsonSizeInKB, 2);
+                                $emailData->json_size = $jsonSizeInKB;
                                 if ($base644data && $base644data != null) {
                                     $headers = [
                                         'Authorization: Bearer YourAccessToken',
@@ -1610,8 +1680,9 @@ class ApplicationController extends Controller
                                         'Custom-Header: Value'
                                     ];
                                     $jsonData = json_encode($data);
-
                                     $apiUrl = 'https://rb.nic.in/emailapi/api/emailsend';
+                                    $emailData->email_api = $apiUrl;
+                                    $emailData->sent_at = carbon::now()->toDateTimeLocalString();
                                     $curl = curl_init();
                                     curl_setopt($curl, CURLOPT_URL, $apiUrl);
                                     curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
@@ -1619,18 +1690,34 @@ class ApplicationController extends Controller
                                     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
                                     curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
                                     curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-
                                     $curlResponse = curl_exec($curl);
+                                    $responseCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
                                     $decode_curlResponse = json_decode($curlResponse);
+                                    $emailData->response_code = $responseCode;
+                                    $emailData->response_message = $decode_curlResponse;
                                     if ($decode_curlResponse == "Email sent successfully") {
+                                        $emailData->received_at = carbon::now()->toDateTimeLocalString();
                                         $application->ack_mail_sent = "T";
                                         $application->ack_offline_post = "NR";
                                         $application->save();
                                     } else {
+                                        $emailData->received_at = carbon::now()->toDateTimeLocalString();
                                         $application->ack_mail_sent = "F";
                                         $application->save();
                                         Log::error('Failed to send ack email: ' . $curlResponse);
                                     }
+                                    $sentAtCarbon = Carbon::parse($emailData->sent_at);
+                                    $receivedAtCarbon = Carbon::parse($emailData->received_at);
+                                    $responseTimeInSeconds = $sentAtCarbon->diffInSeconds($receivedAtCarbon);
+                                    $hours = floor($responseTimeInSeconds / 3600);
+                                    $minutes = floor(($responseTimeInSeconds % 3600) / 60);
+                                    $seconds = $responseTimeInSeconds % 60;
+                                    $responseTimeFormatted = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+                                    $emailData->response_time = $responseTimeFormatted;
+                                    $emailData->created_at = carbon::now()->toDateTimeLocalString();
+                                    $emailData->created_by = Auth::user()->id;
+                                    $emailData->created_from = $request->ip();
+                                    $emailData->save();
                                     curl_close($curl);
                                 } else {
                                     $application->ack_mail_sent = "F";
@@ -1730,18 +1817,18 @@ class ApplicationController extends Controller
                                     Rashtrapati Bhavan, New Delhi";
                                 $subject = $application->reg_no;
                                 $to = $application->department_org->mail;
-                                //                            $to = "us.petitions@rb.nic.in";
+                                //$to = "us.petitions@rb.nic.in";
                                 $cc = [];
-                                //                                $cc[]="sayantan.saha@gov.in";
-//                                $cc[]="prustysarthak123@gmail.com";
+                                //$cc[]="sayantan.saha@gov.in";
+                                //$cc[]="prustysarthak123@gmail.com";
                                 $cc[] = "us.petitions@rb.nic.in";
                                 if ($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(174)) {
                                     $cc[] = "so-public1@rb.nic.in";
-                                    //                                    $cc[] = "suman.kumari55@rb.nic.in";
+                                    //$cc[] = "suman.kumari55@rb.nic.in";
                                 }
                                 if ($application->createdBy->organizations()->where('user_organization.active', 1)->pluck('org_id')->contains(175)) {
                                     $cc[] = "so-public2@rb.nic.in";
-                                    //                                    $cc[] = "rakesh.kumar.rb.@nic.in";
+                                    //$cc[] = "rakesh.kumar.rb.@nic.in";
                                 }
                                 $data = [
                                     "From" => "us.petitions@rb.nic.in",
@@ -1751,6 +1838,18 @@ class ApplicationController extends Controller
                                     "Body" => $body,
                                     "Attachments" => $attachments,
                                 ];
+                                $emailData = new EmailLog();
+                                $emailData->sent_to = json_encode([
+                                    'to' => $to,
+                                    'cc' => $cc
+                                ]);
+                                $emailData->application_id = $application->id;
+                                $emailData->email_type = 'F';
+                                $jsonData = json_encode($data);
+                                $jsonSizeInBytes = strlen($jsonData);
+                                $jsonSizeInKB = $jsonSizeInBytes / 1024;
+                                $jsonSizeInKB = round($jsonSizeInKB, 2);
+                                $emailData->json_size = $jsonSizeInKB;
                                 if ($base64co && $base64co != null) {
                                     $headers = [
                                         'Authorization: Bearer YourAccessToken',
@@ -1759,6 +1858,8 @@ class ApplicationController extends Controller
                                     ];
                                     $jsonData = json_encode($data);
                                     $apiUrl = 'https://rb.nic.in/emailapi/api/emailsend';
+                                    $emailData->email_api = $apiUrl;
+                                    $emailData->sent_at = carbon::now()->toDateTimeLocalString();
                                     $curl = curl_init();
                                     curl_setopt($curl, CURLOPT_URL, $apiUrl);
                                     curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'POST');
@@ -1766,19 +1867,35 @@ class ApplicationController extends Controller
                                     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
                                     curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
                                     curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-
                                     $curlResponse = curl_exec($curl);
+                                    $responseCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
                                     $decode_curlResponse = json_decode($curlResponse);
+                                    $emailData->response_code = $responseCode;
+                                    $emailData->response_message = $decode_curlResponse;
                                     if ($decode_curlResponse == "Email sent successfully") {
+                                        $emailData->received_at = carbon::now()->toDateTimeLocalString();
                                         $application->fwd_mail_sent = "T";
                                         $application->fwd_email_id = $application->department_org->mail;
                                         $application->fwd_offline_post = "NR";
                                         $application->save();
                                     } else {
+                                        $emailData->received_at = carbon::now()->toDateTimeLocalString();
                                         $application->fwd_mail_sent = "F";
                                         $application->save();
                                         Log::error('Failed to send forward email: ' . $curlResponse);
                                     }
+                                    $sentAtCarbon = Carbon::parse($emailData->sent_at);
+                                    $receivedAtCarbon = Carbon::parse($emailData->received_at);
+                                    $responseTimeInSeconds = $sentAtCarbon->diffInSeconds($receivedAtCarbon);
+                                    $hours = floor($responseTimeInSeconds / 3600);
+                                    $minutes = floor(($responseTimeInSeconds % 3600) / 60);
+                                    $seconds = $responseTimeInSeconds % 60;
+                                    $responseTimeFormatted = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+                                    $emailData->response_time = $responseTimeFormatted;
+                                    $emailData->created_at = carbon::now()->toDateTimeLocalString();
+                                    $emailData->created_by = Auth::user()->id;
+                                    $emailData->created_from = $request->ip();
+                                    $emailData->save();
                                     curl_close($curl);
                                 } else {
                                     $application->fwd_mail_sent = "F";

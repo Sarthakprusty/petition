@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Application extends Model
 {
@@ -33,6 +34,12 @@ class Application extends Model
     {
         return $this->belongsTo(State::class, 'state_id', 'id');
     }
+
+    public function email_log(): HasMany
+    {
+        return $this->hasMany(EmailLog::class,'application_id','id');
+    }
+
 
     public function grievance_category(): BelongsTo
     {
